@@ -29,7 +29,7 @@ print(results)
 ```
 
 You can also directly use awadb to do the text semantic retrieval
-Here the text is embedded by SentenceTransformer which is supported by Hugging Face[https://huggingface.co]   
+Here the text is embedded by SentenceTransformer which is supported by [Hugging Face](https://huggingface.co)
 ```another example
 import awadb
 # 1. Initialize awadb client!
@@ -56,9 +56,10 @@ print(results)
 
 ## What are the Embeddings?
 
-Any unstructured data(image/text/audio/video) can be transferred to vectors which are generally understanded by computers through AI(LLMs or other deep neural networks). For example, "The man is happy"-this sentence can be transferred to a 384-dimension vector(a list of numbers `[0.23, 1.98, ....]`) by SentenceTransformer language model. This process is called embedding.
+Any unstructured data(image/text/audio/video) can be transferred to vectors which are generally understanded by computers through AI(LLMs or other deep neural networks). 
+For example, "The man is happy"-this sentence can be transferred to a 384-dimension vector(a list of numbers `[0.23, 1.98, ....]`) by SentenceTransformer language model. This process is called embedding.
 
-More detailed information about embeddings can be read from OpenAI(https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)
+More detailed information about embeddings can be read from [OpenAI](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)
 
 Awadb uses [Sentence Transformers](https://huggingface.co/sentence-transformers) to embed the sentence by default, while you can also use OpenAI or other LLMs to do the embeddings according to your needs.
 
