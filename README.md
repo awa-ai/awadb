@@ -8,7 +8,7 @@
 pip3 install awadb # Install awadb 
 ```
 
-The core API is only 4 steps 
+The core API is only 4 steps: 
 
 ```python
 import awadb
@@ -33,8 +33,8 @@ print(results)
 ```
 
 You can also directly use awadb to do the text semantic retrieval
-Here the text is embedded by SentenceTransformer which is supported by Hugging Face()   
-```another example```
+Here the text is embedded by SentenceTransformer which is supported by Hugging Face(https://huggingface.co)   
+```another example
 import awadb
 # 1. Initialize awadb client!
 awadb_client = awadb.Client()
@@ -72,8 +72,8 @@ Awadb uses [Sentence Transformers](https://huggingface.co/sentence-transformers)
 ## Get involved
 
 Welcome any PR contributors or ideas to improve the project. 
-- [Roadmap and your ideas](https://github.com/awa/awadb/roadmap)
-- [Issues and PR](https://github.com/awa/awadb/issues)
+- [Roadmap and your ideas](https://github.com/awa-ai/awadb/roadmap)
+- [Issues and PR](https://github.com/awa-ai/awadb/issues)
 
 ## License
 
