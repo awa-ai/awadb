@@ -5,7 +5,7 @@
 
 
 ```bash
-pip3 install awadb # Install awadb 
+pip3 install awadb -r requrements.txt # Install awadb 
 ```
 
 The core API is only 4 steps: 
