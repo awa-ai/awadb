@@ -56,7 +56,7 @@ print(results)
 
 ## What are the Embeddings?
 
-Any unstructured data(image/text/audio/video) can be transferred to vectors which are generally understanded by computers through AI(LLMs or other deep neural networks). 
+Any unstructured data(image/text/audio/video) can be transferred to vectors which are generally understanded by computers through AI(LLMs or other deep neural networks).   
 For example, "The man is happy"-this sentence can be transferred to a 384-dimension vector(a list of numbers `[0.23, 1.98, ....]`) by SentenceTransformer language model. This process is called embedding.
 
 More detailed information about embeddings can be read from [OpenAI](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)
@@ -70,7 +70,6 @@ Awadb uses [Sentence Transformers](https://huggingface.co/sentence-transformers)
 ## Get involved
 
 Welcome any PR contributors or ideas to improve the project. 
-- [Roadmap and your ideas](https://github.com/awa-ai/awadb/roadmap)
 - [Issues and PR](https://github.com/awa-ai/awadb/issues)
 
 ## License
