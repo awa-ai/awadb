@@ -7,9 +7,10 @@
 # Install awadb
 pip3 install awadb -r requirements  
 ```
-If not available, please try `pip3 install --index-url https://pypi.org/simple/ --no-deps awadb`
-Now support Linux(python>=3.6), MacOS(python>=3.9)
-
+If not available, please try `pip3 install --index-url https://pypi.org/simple/ --no-deps awadb`  
+Now support Linux(python>=3.6), MacOS(python>=3.9)  
+  
+  
 
 
 
