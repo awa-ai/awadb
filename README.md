@@ -3,6 +3,11 @@
     Store and search embedding vectors for LLM Applications!
 </p>
 
+```bash
+# Install awadb, if not available,please try `pip3 install --index-url https://pypi.org/simple/ --no-deps awadb`
+pip3 install awadb -r requirements  
+```
+
 
 The core API is only 4 steps: 
 
