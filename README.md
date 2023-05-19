@@ -15,10 +15,10 @@ awadb_client = awadb.Client()
 awadb_client.Create("testdb")
 
 # 3. Add docs to the table. Can also update and delete the doc!
-awadb_client.Add([{'id':'123'}, {'name':'jim'}, {'gender':'male'}, {'age':39}, 'hello', 'world', [1, 3.5, 3]])
-awadb_client.Add([{'id':'235'}, {'name':'vincent'}, {'gender':'male'}, {'age':28}, 'what', 'doing', [1, 3.4, 2]])
-awadb_client.Add([{'id':'398'}, {'name':'david'}, {'gender':'female'}, {'age':45}, 'yu', 'hi', [1, 2.4, 4]])
-awadb_client.Add([{'id':'345'}, {'name':'tom'}, {'gender':'female'}, {'age':25}, 'hhuhu', 'hello', [1.3, 2.9, 8.9]])
+awadb_client.Add([{'name':'jim'}, {'age':39}, 'hello', [1, 3.5, 3]])
+awadb_client.Add([{'name':'vincent'}, {'age':28}, 'world', [1, 3.4, 2]])
+awadb_client.Add([{'name':'david'}, {'age':45}, 'hi',  [1, 2.4, 4]])
+awadb_client.Add([{'name':'tom'}, {'age':25}, 'dolly', [1.3, 2.9, 8.9]])
 
 # 4. Search by specified vector query and the most TopK similar results
 results = awadb_client.Search([3.0, 3.1, 4.2], 3)
@@ -29,7 +29,7 @@ print(results)
 ```
 
 You can also directly use awadb to do the text semantic retrieval
-Here the text is embedded by SentenceTransformer which is supported by Hugging Face(https://huggingface.co)   
+Here the text is embedded by SentenceTransformer which is supported by Hugging Face[https://huggingface.co]   
 ```another example
 import awadb
 # 1. Initialize awadb client!
@@ -38,7 +38,8 @@ awadb_client = awadb.Client()
 # 2. Create table
 awadb_client.Create("test_llm1") 
 
-# 3. Add sentences, the sentence is embedded with SentenceTransformer by default, you can also embed the sentences all by yourself with OpenAI or other LLMs
+# 3. Add sentences, the sentence is embedded with SentenceTransformer by default
+#    You can also embed the sentences all by yourself with OpenAI or other LLMs
 awadb_client.Add([{'embedding_text':'The man is happy'}, {'source' : 'pic1'}])
 awadb_client.Add([{'embedding_text':'The man is very happy'}, {'source' : 'pic2'}])
 awadb_client.Add([{'embedding_text':'The cat is happy'}, {'source' : 'pic3'}])
