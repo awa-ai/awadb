@@ -81,7 +81,7 @@ Awadb uses [Sentence Transformers](https://huggingface.co/sentence-transformers)
 ## Get involved
 
 - [Issues and PR](https://github.com/awa-ai/awadb/issues)  
-- [Roadmap and Contribute](https://github.com/awa-ai/awadb/ROADMAP.md)
+- [Roadmap and Contribution](https://github.com/awa-ai/awadb/blob/main/ROADMAP.md)
 
 
 ## License
