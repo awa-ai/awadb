@@ -8,7 +8,7 @@
 pip3 install awadb -r requirements.txt 
 ```
 If not available, please try `pip3 install --index-url https://pypi.org/simple/ --no-deps awadb`  
-Now support Linux(python>=3.6), MacOS(python>=3.9)  
+Now support Linux(python>=3.6), MacOS(python>=3.7), both x86-64 cpu architecture
   
   
   
