@@ -75,7 +75,7 @@ More detailed information about embeddings can be read from [OpenAI](https://pla
 Awadb uses [Sentence Transformers](https://huggingface.co/sentence-transformers) to embed the sentence by default, while you can also use OpenAI or other LLMs to do the embeddings according to your needs.
 
 
-## Combined with LLMs(OpenAI, Llama, Vicuna, Alpace, ChatGLM, Dolly) and Langchain
+## Combined with LLMs(OpenAI, Llama, Vicuna, Alpaca, ChatGLM, Dolly) and Langchain
 
 
 ## Get involved
