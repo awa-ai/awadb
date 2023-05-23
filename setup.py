@@ -42,6 +42,12 @@ class CMakeBuild(build_ext):
         # Can be set with Conda-Build, for example.
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
 
+        str_cc = os.popen("which gcc").read()
+        env_cc = str_cc.split("\n")
+        
+        str_cxx = os.popen("which g++").read()
+        env_cxx = str_cxx.split("\n")
+        
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
         # from Python.
@@ -49,6 +55,8 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+            f"-DCMAKE_C_COMPILER={env_cc[0]}",
+            f"-DCMAKE_CXX_COMPILER={env_cxx[0]}",
         ]
         build_args = []
         # Adding CMake arguments set as environment variable
@@ -128,7 +136,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="awadb",
-    version="0.2.1",
+    version="0.1.0",
     author="Vincent",
     author_email="awadb.jie@gmail.com",
     description="AI Native database for embedding vectors",
