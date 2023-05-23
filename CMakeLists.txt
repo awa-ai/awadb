@@ -23,8 +23,14 @@ set(THIRDPARTY ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party)
 set(BTREE ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/btree)
 set(GAMMA_C_API ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/c_api)
 
+if(APPLE)
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-deprecated")
+else(APPLE)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-deprecated")
+endif(APPLE)
+
 
 if(DEFINED ENV{ROCKSDB_HOME})
     message(STATUS "RocksDB home is set=$ENV{ROCKSDB_HOME}")
@@ -41,6 +47,16 @@ if(DEFINED ENV{ZFP_HOME})
 else(DEFINED ENV{ZFP_HOME})
     MESSAGE(STATUS "ZFP home isn't set, so COMPRESS is not supported! ")
 endif(DEFINED ENV{ZFP_HOME})
+
+if(APPLE)
+include_directories(
+        /usr/local/include   # clang compiler for omp.h
+	)
+	
+link_directories(
+        /usr/local/lib       # clang compiler for libomp
+	)
+endif(APPLE)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
