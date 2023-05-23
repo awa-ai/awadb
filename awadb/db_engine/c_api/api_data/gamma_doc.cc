@@ -19,7 +19,7 @@ int Field::GetVecData(std::vector<float> &vec_data)  {
   memcpy((void *)&v, this->value.c_str(), sizeof(int)); 
   for (int j = 0; j < v / sizeof(float); j++)  {
     float f_value;
-    memcpy((void *)&f_value, (void *)this->value.c_str() + sizeof(int) + j * sizeof(float), sizeof(float));
+    memcpy((void *)&f_value, (void *)(this->value.c_str() + sizeof(int) + j * sizeof(float)), sizeof(float));
     vec_data.push_back(f_value);
   }
   return 0;
