@@ -14,6 +14,10 @@ if [ ! -d OpenBLAS ]; then
     tar -xf v0.3.23.tar.gz
     mv OpenBLAS-0.3.23 OpenBLAS 
     cd OpenBLAS
+    c_compiler=`which gcc`
+    cxx_compiler=`which g++`
+    export CC=$c_compiler
+    export CXX=$cxx_compiler
     make -j4
     make install
     cd ..
@@ -53,7 +57,6 @@ if [ ! -d openssl ]; then
 fi
 
 # Download and install tbb
-
 if [ ! -d TBB ]; then
     wget --no-check-certificate https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.9.0.tar.gz
     tar -xf v2021.9.0.tar.gz
