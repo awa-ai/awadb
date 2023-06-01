@@ -9,6 +9,7 @@ import io
 
 from enum import Enum
 
+from typing import Optional
 import awa
 
 
@@ -223,27 +224,56 @@ class Client:
                 table_info.SetRetrievalParam('{"ncentroids" : 256, "nsubvector" : 16}')
                 self.tables_attr[table_name] = table_info
 
-    def Create(self, name):
-        if name in self.tables:
-            print('Table %s exist! Please directly Use(%s)' % (name, name))
+    def Create(self, table_name):
+        if table_name in self.tables:
+            print('Table %s exist! Please directly Use(%s)' % (table_name, table_name))
             return False
         log_dir = self.root_dir + '/log/'
-        log_dir = log_dir + name 
+        log_dir = log_dir + table_name 
         data_dir = self.root_dir + '/data/'
-        data_dir = data_dir + name
+        data_dir = data_dir + table_name
         new_table = awa.Init(log_dir, data_dir)
-        self.tables[name] = new_table
-        self.using_table_name = name
+        self.tables[table_name] = new_table
+        self.using_table_name = table_name
         self.using_table_engine = new_table
-        self.tables_fields_check[name] = False
-        self.tables_have_obvious_primary_key[name] = False
-        self.tables_primary_key_fid_no[name] = None
-        self.tables_doc_count[name] = 0
- 
+        self.tables_fields_check[table_name] = False
+        self.tables_have_obvious_primary_key[table_name] = False
+        self.tables_primary_key_fid_no[table_name] = None
+        self.tables_doc_count[table_name] = 0
+
+    def Close(self, table_name: Optional[str] = None):
+        if table_name is None:
+            if self.using_table_engine is None:
+                return False
+            if awa.Close(self.using_table_engine) == 0:
+                return True
+            return False
+
+        if table_name is not None and (not table_name  in self.tables):
+            print('Table %s not exist!' % table_name)
+            return False
+        self.using_table_engine = self.tables[table_name]
+        if self.using_table_engine is None:
+            return False
+        if awa.Close(self.using_table_engine) == 0:
+            return True
+        return False
+
+
+    def Load(self, table_name):
+        if not table_name in self.tables:
+            self.Create(table_name)
+
+        self.using_table_name = table_name
+        self.using_table_engine = self.tables[table_name]
+        if not awa.LoadFromLocal(self.using_table_engine):
+            print('Table %s can not be loaded!' % self.using_table_name)
+            return False
+        return True
 
     def Use(self, table_name):
         if not table_name in self.tables:
-            print('Table %s not exist! Please create first!')
+            print('Table %s not exist! Please create first!' % table_name)
             return False
         self.using_table_name = table_name 
         self.using_table_engine = self.tables[table_name]
@@ -411,8 +441,6 @@ class Client:
                     doc.append(self.llm.Embedding(field_value))
                     
             field_no = field_no + 1
-
-
 
     '''
     primary_key : format @name

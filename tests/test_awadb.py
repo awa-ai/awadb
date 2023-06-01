@@ -45,8 +45,16 @@ def Test_Vector2(awadb_client):
     awadb_client.Add([{'primary':'298'}, {'name':'lv'}, {'gender':'male'}, {'age':39}, 'hello', 'world', [1, 3.5, 3]])
     awadb_client.Add([{'primary':'209'}, {'name':'ho'}, {'gender':'male'}, {'age':28}, 'what', 'doing', [1, 3.4, 2]])
 
+def Test_Load(awadb_client):
+    ret = awadb_client.Load('testdb3')
+    if ret : print('awadb load table success')
+    else:
+        print('awadb load table failed')
+
+
 if __name__ == "__main__":
     awadb_client = awadb.Client()
     #Test_EmbeddingText(awadb_client)
     Test_Vector1(awadb_client) 
-    #Test_Vector2(awadb_client) 
+    #Test_Vector2(awadb_client)
+    #Test_Load(awadb_client)

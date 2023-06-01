@@ -28,6 +28,12 @@ bool Create(void *engine, awadb::TableInfo &table_info)  {
   return false;
 }	
 
+bool LoadFromLocal(void *engine)  {
+  int ret = static_cast<awadb::GammaEngine *>(engine)->Load();
+  return ret == 0 ? true : false; 
+}
+
+
 bool AddDoc(void *engine, const std::string &name, awadb::Doc &doc)  {
 
   int ret = static_cast<awadb::GammaEngine *>(engine)->AddOrUpdate(doc);
@@ -200,6 +206,7 @@ PYBIND11_MODULE(awa, m) {
     m.def("Init", &Init, "Init engine");   
     m.def("Close", &Close, "Close engine");   
     m.def("Create", &Create, "Create Table");   
+    m.def("LoadFromLocal", &LoadFromLocal, "Load Table");
     m.def("AddDoc", &AddDoc, "Add Or UpdateDoc");   
     m.def("Delete", &Delete, "Delete Document");
     m.def("GetDoc", &GetDoc, "GetDoc");   
