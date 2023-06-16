@@ -17,8 +17,11 @@ PYBIND11_MAKE_OPAQUE(std::vector<int>);
 PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 PYBIND11_MAKE_OPAQUE(std::vector<float>);
 
-PYBIND11_MAKE_OPAQUE(std::vector<awadb::Field>);
+
+
+PYBIND11_MAKE_OPAQUE(std::vector<awadb::Doc>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::ResultItem>);
+PYBIND11_MAKE_OPAQUE(std::vector<awadb::Field>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::SearchResult>);
 
 bool Create(void *engine, awadb::TableInfo &table_info)  {
@@ -38,6 +41,21 @@ bool AddDoc(void *engine, const std::string &name, awadb::Doc &doc)  {
 
   int ret = static_cast<awadb::GammaEngine *>(engine)->AddOrUpdate(doc);
   
+  return ret == 0 ? true : false;
+}
+
+
+bool AddTexts(
+  void *engine,
+  std::vector<awadb::Doc> &docs)  {
+  awadb::Docs batch_docs;
+  for (auto &doc: docs)  {
+    batch_docs.AddDoc(doc);
+  }
+
+  awadb::BatchResult batch_results;
+  int ret = static_cast<awadb::GammaEngine *>(engine)->AddOrUpdateDocs(batch_docs, batch_results);
+
   return ret == 0 ? true : false;
 }
 
@@ -68,7 +86,6 @@ PYBIND11_MODULE(awa, m) {
 
     py::bind_vector<std::vector<std::string>>(m, "StrVec");
     py::bind_vector<std::vector<float>>(m, "FloatVec");
-
     py::enum_<awadb::DataType>(m, "DataType")
 	.value("INT", awadb::DataType::INT)
 	.value("LONG", awadb::DataType::LONG)
@@ -199,6 +216,7 @@ PYBIND11_MODULE(awa, m) {
         .def("Results", &awadb::Response::Results)
         .def("PackResults", (void(awadb::Response::*)(std::vector<std::string> &)) &awadb::Response::PackResults);
 
+    py::bind_vector<std::vector<awadb::Doc>>(m, "DocsVec");
     py::bind_vector<std::vector<awadb::Field>>(m, "FieldsVec");
     py::bind_vector<std::vector<awadb::ResultItem>>(m, "ResultItemsVec");
     py::bind_vector<std::vector<awadb::SearchResult>>(m, "SearchResultVec");
@@ -208,7 +226,9 @@ PYBIND11_MODULE(awa, m) {
     m.def("Create", &Create, "Create Table");   
     m.def("LoadFromLocal", &LoadFromLocal, "Load Table");
     m.def("AddDoc", &AddDoc, "Add Or UpdateDoc");   
+    m.def("AddTexts", &AddTexts, "Add Or Update Texts and Embeddings");
     m.def("Delete", &Delete, "Delete Document");
     m.def("GetDoc", &GetDoc, "GetDoc");   
     m.def("DoSearch", &DoSearch, "DoSearch");
+
 }
