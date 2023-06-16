@@ -6,10 +6,12 @@ import numpy as np
 import struct
 import json
 import io
+import hashlib
 
 from enum import Enum
 
-from typing import Optional
+from typing import Optional, List, Any, Iterable
+import time
 import awa
 
 
@@ -40,6 +42,10 @@ def typeof(variate):
         v_type = FieldDataType.VECTOR
 
     return v_type
+
+def md5str(str):
+    m = hashlib.md5(str.encode(encoding="utf-8"))
+    return m.hexdigest()
 
 
 class Client:
@@ -74,6 +80,7 @@ class Client:
             self.Read()
 
         self.llm = None
+        self.is_duplicate_texts = True
         
 
     def Write(self):
@@ -280,15 +287,13 @@ class Client:
 
 
     def __FieldCheck(self, field_idx, field_name, field_data, fields_type):
+        f_type = typeof(field_data)
         if not self.tables_fields_check[self.using_table_name]:
-            f_type = typeof(field_data)
             if f_type == FieldDataType.ERROR:
                 error_msg = Exception("Field data type error! Please input right data type : int|float|string|vector!")
                 raise error_msg
             fields_type[field_idx] = f_type
         else:
-            f_type = typeof(field_data)
-             
             if self.tables_fields_type[self.using_table_name][field_idx] != f_type: 
                 error_msg = Exception("No. %d field data type not %d, should %d!" % (field_idx, f_type, self.tables_fields_type[self.using_table_name][field_idx]))
                 raise error_msg
@@ -349,7 +354,6 @@ class Client:
             awadb_field.value = field_value
             awadb_field.datatype = awa.DataType.STRING
             self.AddField(field_name, awadb_field.datatype, is_index)
- 
         
         elif field_type == FieldDataType.VECTOR:
             if (type(field_value).__name__ == 'ndarray'):
@@ -441,6 +445,101 @@ class Client:
                     doc.append(self.llm.Embedding(field_value))
                     
             field_no = field_no + 1
+
+    def AddTexts(
+        self,
+        text_field_name: str,
+        embedding_field_name: str,
+        texts: Iterable[str],
+        embeddings: Optional[List[List[float]]] = None,
+        metadatas: Optional[List[dict]] = None,
+        is_duplicate_texts: Optional[bool] = None,
+        **args: Any,
+    ) -> List[str]:
+        added_ids: List[str] = []
+        if not self.tables_fields_check[self.using_table_name]:
+            if (self.using_table_name == ''):
+                print("Please specify your table name!")
+                return added_ids
+
+            self.tables_attr[self.using_table_name] = awa.TableInfo()
+            self.tables_attr[self.using_table_name].SetName(self.using_table_name)
+
+        if is_duplicate_texts is not None:
+            self.is_duplicate_texts = is_duplicate_texts
+
+        if embeddings is None:
+            if self.llm is None:
+                from awadb import llm_embedding
+                self.llm = llm_embedding.LLMEmbedding()
+
+            embeddings = self.llm.EmbeddingBatch(texts)
+
+        awa_docs = awa.DocsVec()
+
+        adding_docs_no = 0
+        for text in texts:
+            fields_type = {}
+            fields_names = {}
+            doc = awa.Doc()
+            key_field = awa.Field()
+            key_field_name = '_id'
+            key_field_value = ''
+            # add unique primary id for each unique document
+            if self.is_duplicate_texts:
+                key_field_value = md5str(text)
+            # auto increasing id
+            else:
+                key_field_value = str(self.tables_doc_count[self.using_table_name])
+            self.tables_primary_key_fid_no[self.using_table_name] = 0
+            self.CheckAddField(key_field, fields_type, 0, key_field_name, key_field_value, True)
+            if (not self.tables_fields_check[self.using_table_name]):
+                fields_names[key_field_name] = 0
+            doc.AddField(key_field)
+            added_ids.append(key_field.value)
+            doc.SetKey(key_field.value)
+            text_field = awa.Field()
+            self.CheckAddField(text_field, fields_type, 1, text_field_name, text, True)
+            if (not self.tables_fields_check[self.using_table_name]):
+                fields_names[text_field_name] = 1
+            embedding_field = awa.Field()
+            self.CheckAddField(embedding_field, fields_type, 2, embedding_field_name, embeddings[adding_docs_no], True)
+            if (not self.tables_fields_check[self.using_table_name]):
+                fields_names[embedding_field_name] = 2
+
+            doc.AddField(text_field)
+            doc.AddField(embedding_field)
+            fid_no = 3
+            if metadatas is not None:
+                for field in metadatas[adding_docs_no]:
+                    meta_field = awa.Field()
+                    self.CheckAddField(meta_field, fields_type, fid_no, field, metadatas[adding_docs_no][field], True)
+                    if (not self.tables_fields_check[self.using_table_name]):
+                        fields_names[field] = fid_no
+
+                    fid_no = fid_no + 1
+                    doc.AddField(meta_field)
+
+            awa_docs.append(doc)
+            self.tables_doc_count[self.using_table_name] += 1
+            adding_docs_no = adding_docs_no + 1
+            if (not self.tables_fields_check[self.using_table_name]):
+                self.tables_attr[self.using_table_name].SetIndexingSize(10000)
+                self.tables_attr[self.using_table_name].SetRetrievalType('IVFPQ')
+                self.tables_attr[self.using_table_name].SetRetrievalParam('{"ncentroids" : 256, "nsubvector" : 16}')
+                self.tables_fields_type[self.using_table_name] = fields_type
+                self.tables_fields_names[self.using_table_name] = fields_names
+
+                if not awa.Create(self.using_table_engine, self.tables_attr[self.using_table_name]):
+                    error_msg = Exception("Create table error!!!")
+                    raise error_msg
+
+                self.tables_fields_check[self.using_table_name] = True
+                self.Write()
+
+        awa.AddTexts(self.using_table_engine, awa_docs)
+
+        return added_ids
 
     '''
     primary_key : format @name
