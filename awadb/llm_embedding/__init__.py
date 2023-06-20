@@ -4,7 +4,7 @@
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModel
 from transformers import AutoTokenizer
-
+from typing import Iterable, Any, List
 
 class LLMEmbedding:
     def __init__(self):
@@ -19,6 +19,16 @@ class LLMEmbedding:
         else:
             tokens.append(sentence)
         return self.model.encode(tokens[0])
+
+    def EmbeddingBatch(
+        self,
+        texts: Iterable[str],
+        **kwargs: Any,
+    ) -> List[List[float]]:
+        results: List[List[float]] = []
+        for text in texts:
+            results.append(self.model.encode(text))
+        return results
 
     #set your own llm
     def SetModel(self, model_name):
