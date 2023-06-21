@@ -1,5 +1,0 @@
-awadb 是一款为大语言模型LLM打造的向量数据库，用于存储和快速搜索模型编码后的向量，帮助打造基于个人知识库的大模型应用
-
-awadb 支持OpenAI, Llama, Vicuna, Alpaca, ChatGLM, Dolly等模型，以及LangChain库
-
-awadb 是基于C语言开发的，并提供python接口，可以直接通过pip安装
