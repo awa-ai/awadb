@@ -253,7 +253,6 @@ class Client:
             if self.using_table_engine is None:
                 return False
             if awa.Close(self.using_table_engine) == 0:
-                self.using_table_engine = None
                 return True
             return False
 
@@ -264,13 +263,12 @@ class Client:
         if self.using_table_engine is None:
             return False
         if awa.Close(self.using_table_engine) == 0:
-            self.using_table_engine = None
             return True
         return False
 
     def ListAllTables(self) -> List[str]:
         results: List[str] = []
-        for table in self.tables_fields_check:
+        for table in self.tables:
             results.append(table)
         return results
 
@@ -288,8 +286,13 @@ class Client:
             return False
         return True
 
-    def Use(self, table_name) -> bool:
-        return self.Load(table_name)
+    def Use(self, table_name):
+        if not table_name in self.tables:
+            print('Table %s not exist! Please create first!' % table_name)
+            return False
+        self.using_table_name = table_name 
+        self.using_table_engine = self.tables[table_name]
+        return True
 
     def __FieldCheck(self, field_idx, field_name, field_data, fields_type):
         f_type = typeof(field_data)
