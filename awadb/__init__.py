@@ -14,7 +14,6 @@ from typing import Optional, List, Any, Iterable
 import time
 import awa
 
-
 class FieldDataType(Enum):
     INT = 1
     FLOAT = 2 
@@ -247,6 +246,7 @@ class Client:
         self.tables_have_obvious_primary_key[table_name] = False
         self.tables_primary_key_fid_no[table_name] = None
         self.tables_doc_count[table_name] = 0
+        return True
 
     def Close(self, table_name: Optional[str] = None):
         if table_name is None:
@@ -266,8 +266,16 @@ class Client:
             return True
         return False
 
+    def ListAllTables(self) -> List[str]:
+        results: List[str] = []
+        for table in self.tables:
+            results.append(table)
+        return results
 
-    def Load(self, table_name):
+    def GetCurrentTable(self) -> str:
+        return self.using_table_name
+
+    def Load(self, table_name) -> bool:
         if not table_name in self.tables:
             self.Create(table_name)
 
@@ -284,7 +292,7 @@ class Client:
             return False
         self.using_table_name = table_name 
         self.using_table_engine = self.tables[table_name]
-
+        return True
 
     def __FieldCheck(self, field_idx, field_name, field_data, fields_type):
         f_type = typeof(field_data)
@@ -364,7 +372,7 @@ class Client:
 
             awadb_field.datatype = awa.DataType.VECTOR 
             self.AddVectorField(field_name, awadb_field.datatype, True,
-                len(field_value), 'Mmap', '{"cache_size" : 1000}',   False)
+                len(field_value), 'Mmap', '{"cache_size" : 2000}',   False)
             self.tables_vector_field_name[self.using_table_name] = field_name
 
 
@@ -377,14 +385,14 @@ class Client:
 
 
     def Get(self, key_id_of_doc):
+        doc_detail = {}
         if self.using_table_name == '' or key_id_of_doc == '':
             print('Please specify the primary key of the current table!')
-            return False
+            return doc_detail
         doc = awa.Doc() 
 
         awa.GetDoc(self.using_table_engine, key_id_of_doc, doc)
 
-        doc_detail = {}
         doc_detail['key'] = doc.Key()
         for field in doc.TableFields():
             if field.datatype == awa.DataType.INT:
@@ -472,7 +480,6 @@ class Client:
             if self.llm is None:
                 from awadb import llm_embedding
                 self.llm = llm_embedding.LLMEmbedding()
-
             embeddings = self.llm.EmbeddingBatch(texts)
 
         awa_docs = awa.DocsVec()
