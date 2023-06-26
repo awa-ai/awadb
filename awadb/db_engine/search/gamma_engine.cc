@@ -24,7 +24,6 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include <set>
 
 #include "cjson/cJSON.h"
 #include "common/gamma_common_data.h"

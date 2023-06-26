@@ -22,11 +22,12 @@
 
 namespace tig_gamma {
 
-struct RawVectorIO;
+class RawVectorIO;
 struct StoreParams;
 
 static const int kInitSize = 1000 * 1000;
 
+class RawVectorIO;
 struct StoreParams : DumpConfig {
   long cache_size;  // bytes
   int segment_size;

@@ -105,7 +105,7 @@ class Response {
  public:
   Response();
   
-  virtual ~Response();
+  ~Response();
 
   virtual int Serialize(std::vector<std::string> &fields_name, char **out, int *out_len);
 

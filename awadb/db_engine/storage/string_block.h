@@ -47,7 +47,6 @@ class StringBlock : public Block {
   int UpdateString(const char *value, str_len_t n_bytes, uint32_t block_id,
                    in_block_pos_t in_block_pos);
 
-  using Block::Read;
   int Read(uint32_t block_id, in_block_pos_t in_block_pos, str_len_t n_bytes,
            std::string &str_out);
 

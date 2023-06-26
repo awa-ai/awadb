@@ -28,6 +28,8 @@
 
 INITIALIZE_EASYLOGGINGPP
 
+static int log_dir_flag = 0;
+
 int SetLogDictionary(const char * log_dir);
 
 
@@ -96,6 +98,9 @@ int CreateTable(void *engine, const char *table_str, int len) {
 */
 
 int CreateTable(void *engine, const char *table_str) {
+  int len = strlen(table_str);
+  //std::cout<<"table "<<table_str<<"; len is "<<len<<std::endl; 
+  //table.Deserialize(table_str, len);
   int ret = static_cast<tig_gamma::GammaEngine *>(engine)->CreateTable(table_str);
   return ret;
 }

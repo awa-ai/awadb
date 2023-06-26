@@ -343,8 +343,9 @@ int GammaIndexHNSWLIB::Search(RetrievalContext *retrieval_context, int n,
   } else {
     fstdistfunc = space_interface_->get_dist_func();
   }
+  int threads_num = n < omp_get_max_threads() ? n : omp_get_max_threads();
 
-#pragma omp parallel for schedule(dynamic) num_threads(n < omp_get_max_threads() ? n : omp_get_max_threads())
+#pragma omp parallel for schedule(dynamic) num_threads(threads_num)
   for (int i = 0; i < n; ++i) {
     int j = 0;
 
