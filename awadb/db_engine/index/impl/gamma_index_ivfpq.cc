@@ -461,13 +461,11 @@ bool GammaIVFPQIndex::Add(int n, const uint8_t *vec) {
   }
   pq.compute_codes(to_encode, xcodes, n);
 
-  size_t n_ignore = 0;
   long vid = indexed_vec_count_;
   for (int i = 0; i < n; i++) {
     long key = idx[i];
     assert(key < (long)nlist);
     if (key < 0) {
-      n_ignore++;
       LOG(WARNING) << "ivfpq add invalid key=" << key
                    << ", vid=" << vid;
       key = vid % nlist;
@@ -767,10 +765,7 @@ void GammaIVFPQIndex::search_preassigned(
 
   bool parallel_mode = retrieval_params->ParallelOnQueries() ? 0 : 1;
 
-  // don't start parallel section if single query
-  bool do_parallel = omp_get_max_threads() >= 2 && (parallel_mode == 0 ? n > 1 : nprobe > 1);
-
-#pragma omp parallel if (do_parallel) reduction(+ : ndis)
+#pragma omp parallel if (omp_get_max_threads() >= 2 && (parallel_mode == 0 ? n > 1 : nprobe > 1)) reduction(+ : ndis)
   {
     GammaInvertedListScanner *scanner =
         GetInvertedListScanner(store_pairs, metric_type);
@@ -804,7 +799,7 @@ void GammaIVFPQIndex::search_preassigned(
           if (max_codes && nscan >= max_codes) break;
         }
 
-        ndis += nscan;
+        ndis = ndis + nscan;
         compute_dis(k, vec_q + i * d, simi, idxi, recall_simi, recall_idxi, recall_num,
                     context->has_rank, metric_type, vector_, retrieval_context);
       }       // parallel for
@@ -873,7 +868,7 @@ void GammaIVFPQIndex::search_preassigned(
       }
     }
   }  // parallel
-
+  
 #ifdef PERFORMANCE_TESTING
   std::string compute_msg = "compute ";
   compute_msg += std::to_string(n);
@@ -892,7 +887,7 @@ void GammaIVFPQIndex::copy_subset_to(faiss::IndexIVF &other, int subset_type,
       subset_type == 0 || subset_type == 1 || subset_type == 2,
       "subset type %d not implemented", subset_type);
 
-  int accu_n = 0;
+  //int accu_n = 0;
 
   faiss::InvertedLists *oivf = other.invlists;
 
@@ -919,7 +914,7 @@ void GammaIVFPQIndex::copy_subset_to(faiss::IndexIVF &other, int subset_type,
         }
       }
     }
-    accu_n += n;
+    //accu_n += n;
   }
   // FAISS_ASSERT(accu_n == indexed_vec_count_);
 }

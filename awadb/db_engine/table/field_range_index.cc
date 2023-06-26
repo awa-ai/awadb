@@ -429,10 +429,9 @@ FieldRangeIndex::~FieldRangeIndex() {
   BtDb *bt = bt_open(main_mgr_);
   BtPageSet set[1];
   uid next, page_no = LEAF_page;  // start on first page of leaves
-  int cnt = 0;
 
   do {
-    if (set->latch = bt_pinlatch(bt, page_no, 1)) {
+    if (NULL != (set->latch = bt_pinlatch(bt, page_no, 1))) {
       set->page = bt_mappage(bt, set->latch);
     } else {
       LOG(ERROR) << "unable to obtain latch";
@@ -447,7 +446,7 @@ FieldRangeIndex::~FieldRangeIndex() {
           BtKey *ptr = keyptr(set->page, slot);
           unsigned char len = ptr->len;
 
-          if (slotptr(set->page, slot)->type == Duplicate) len -= BtId;
+          if (slotptr(set->page, slot)->type == Duplicate) len = len - BtId;
 
           // fwrite(ptr->key, len, 1, stdout);
           BtVal *val = valptr(set->page, slot);
@@ -455,12 +454,11 @@ FieldRangeIndex::~FieldRangeIndex() {
           memcpy(&p_node, val->value, sizeof(Node *));
           delete p_node;
           // fwrite(val->value, val->len, 1, stdout);
-          cnt++;
         }
 
     bt_unlockpage(bt, BtLockRead, set->latch);
     bt_unpinlatch(set->latch);
-  } while (page_no = next);
+  } while (0 != (page_no = next));
 #else
   BtDb *bt = bt_open(cache_mgr_, main_mgr_);
 

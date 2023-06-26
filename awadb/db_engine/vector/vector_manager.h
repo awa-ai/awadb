@@ -67,7 +67,7 @@ class VectorManager {
   int Delete(int docid);
 
   std::map<std::string, RawVector *> RawVectors() { return raw_vectors_; }
-  std::map<std::string, RetrievalModel *> RetrievalModels() {
+  std::map<std::string, RetrievalModel *> &RetrievalModels() {
     return vector_indexes_;
   }
 

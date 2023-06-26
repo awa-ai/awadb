@@ -118,6 +118,7 @@ struct GammaIndexIVFFlat : faiss::IndexIVFFlat, public RetrievalModel {
   GammaIndexIVFFlat();
   virtual ~GammaIndexIVFFlat();
 
+  using faiss::IndexIVFFlat::search_preassigned;
   void search_preassigned(RetrievalContext *retrieval_context, idx_t n,
                           const float *x, int k, const idx_t *keys,
                           const float *coarse_dis, float *distances,

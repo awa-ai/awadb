@@ -904,6 +904,7 @@ struct GammaIVFPQIndex : GammaFLATIndex, faiss::IndexIVFPQ {
   int Search(RetrievalContext *retrieval_context, int n, const uint8_t *x,
              int k, float *distances, idx_t *labels);
 
+  using faiss::IndexIVFPQ::search_preassigned;
   void search_preassigned(RetrievalContext *retrieval_context, int n,
                           const float *x, const float *applied_x, int k, const idx_t *keys,
                           const float *coarse_dis, float *distances,
