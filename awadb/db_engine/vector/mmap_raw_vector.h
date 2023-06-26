@@ -14,7 +14,7 @@
 
 namespace tig_gamma {
 
-class MmapRawVectorIO;
+struct MmapRawVectorIO;
 
 class MmapRawVector : public RawVector {
  public:

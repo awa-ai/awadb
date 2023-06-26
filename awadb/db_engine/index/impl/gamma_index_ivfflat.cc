@@ -320,13 +320,11 @@ bool GammaIndexIVFFlat::Add(int n, const uint8_t *vec) {
   uint8_t *xcodes = new uint8_t[n * code_size];
   faiss::ScopeDeleter<uint8_t> del_xcodes(xcodes);
 
-  size_t n_ignore = 0;
   long vid = indexed_vec_count_;
   for (int i = 0; i < n; i++) {
     long key = idx[i];
     assert(key < (long)nlist);
     if (key < 0) {
-      n_ignore++;
       continue;
     }
     uint8_t *code = (uint8_t *)vec + this->code_size * i;
@@ -451,9 +449,9 @@ void GammaIndexIVFFlat::search_preassigned(RetrievalContext *retrieval_context,
   bool interrupt = false;
 
   int pmode = retrieval_params->ParallelOnQueries() ? 0 : 1;
-  bool do_parallel = pmode == 0 ? n > 1 : nprobe > 1;
+  //bool do_parallel = pmode == 0 ? n > 1 : nprobe > 1;
 
-#pragma omp parallel if (do_parallel) reduction(+ : nlistv, ndis, nheap)
+#pragma omp parallel if (pmode == 0 ? n > 1 : nprobe > 1) reduction(+ : nlistv, ndis, nheap)
   {
     GammaInvertedListScanner *scanner =
         GetGammaInvertedListScanner(store_pairs, metric_type);
@@ -551,7 +549,7 @@ void GammaIndexIVFFlat::search_preassigned(RetrievalContext *retrieval_context,
           }
         }
 
-        ndis += nscan;
+        ndis = ndis + nscan;
         reorder_result(simi, idxi);
 
         // if (faiss::InterruptCallback::is_interrupted()) {

@@ -302,7 +302,7 @@ struct Table FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 };
 
 struct TableBuilder {
-  typedef Table Table;
+  typedef struct Table Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_name(flatbuffers::Offset<flatbuffers::String> name) {

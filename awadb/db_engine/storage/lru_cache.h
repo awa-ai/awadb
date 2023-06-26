@@ -594,7 +594,7 @@ class LRUCache final : public CacheBase<Key, FuncToken, HashFunction> {
 
   int64_t GetMaxSize() { return (int64_t)max_size_ + (int64_t)max_overflow_; }
 
-  size_t Count() const { return cur_size_; }
+  size_t Count() { return cur_size_; }
 
   size_t GetHits() { return hits_; }
 

@@ -677,14 +677,14 @@ int Table::GetFieldType(const std::string &field_name, DataType &type) {
 }
 
 int Table::GetAttrType(std::map<std::string, DataType> &attr_type_map) {
-  for (const auto attr_type : attr_type_map_) {
+  for (const auto &attr_type : attr_type_map_) {
     attr_type_map.insert(attr_type);
   }
   return 0;
 }
 
 int Table::GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map) {
-  for (const auto attr_is_index : attr_is_index_map_) {
+  for (const auto &attr_is_index : attr_is_index_map_) {
     attr_is_index_map.insert(attr_is_index);
   }
   return 0;
