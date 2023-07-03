@@ -26,7 +26,7 @@ set(GAMMA_C_API ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/c_api)
 
 if(APPLE)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Wformat -Wno-inconsistent-missing-override -Wconstant-conversion -Werror=narrowing -Wno-deprecated")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Wformat -Wno-inconsistent-missing-override -Wconstant-conversion -Werror=narrowing -Wno-deprecated")
 else(APPLE)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-error=deprecated-declarations -Wno-deprecated-declarations")
