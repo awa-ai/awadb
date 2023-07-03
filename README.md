@@ -8,9 +8,7 @@
 pip3 install awadb -r requirements.txt 
 ```
 If not available, please try `pip3 install --index-url https://pypi.org/simple/ --no-deps awadb`  
-Now support Linux(python>=3.6), MacOS(python==3.11), both x86-64 cpu architecture
-  
-  
+Now support Linux(python>=3.6), MacOSX(x86-64 architecture python==3.11, m1 or m2 arm64 architecture python>=3.8)
   
 
 
@@ -75,7 +73,10 @@ More detailed information about embeddings can be read from [OpenAI](https://pla
 Awadb uses [Sentence Transformers](https://huggingface.co/sentence-transformers) to embed the sentence by default, while you can also use OpenAI or other LLMs to do the embeddings according to your needs.
 
 
-## Combined with LLMs(OpenAI, Llama, Vicuna, Alpaca, ChatGLM, Dolly) and Langchain
+## Combined with LLMs(OpenAI, Llama, Vicuna, Alpaca, ChatGLM, Dolly)
+Examples of combining LLaMa or quantized Alpaca with llama.cpp to do local knowledge database please see [here](./examples/llama.cpp)  
+Examples of combining ChatGLM to do local knowledge database please see [here](./examples/chatglm)  
+
 
 
 ## Get involved
