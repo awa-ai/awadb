@@ -969,6 +969,16 @@ int GammaEngine::Delete(std::string &key) {
   return ret;
 }
 
+bool GammaEngine::DeleteDocs(std::vector<std::string> &keys)  {
+  bool ret = true;
+  for (auto &key : keys)  {
+    if (Delete(key) != 0)  {
+      ret = false;
+    }
+  }
+  return ret;
+}
+
 int GammaEngine::DelDocByQuery(Request &request) {
 #ifdef DEBUG
 // LOG(INFO) << "delete by query request:" << RequestToString(request);
@@ -1103,6 +1113,19 @@ int GammaEngine::GetDoc(const std::string &key, Doc &doc) {
   }
 
   return GetDoc(docid, doc);
+}
+
+int GammaEngine::GetDocs(
+  const std::vector<std::string> &keys,
+  std::map<std::string, Doc> &docs)  {
+
+  for (auto &key : keys) {
+    if (0 != GetDoc(key, docs[key]))  {
+      docs[key].SetKey("-1");
+      LOG(INFO)<<"key is "<<key;
+    }
+  }
+  return 0;
 }
 
 int GammaEngine::GetDoc(int docid, Doc &doc) {

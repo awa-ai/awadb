@@ -10,9 +10,11 @@ import hashlib
 
 from enum import Enum
 
-from typing import Optional, List, Any, Iterable
+from typing import Optional, List, Set, Any, Iterable
 import time
 import awa
+
+__version__ = "0.3.6"
 
 class FieldDataType(Enum):
     INT = 1
@@ -334,7 +336,6 @@ class Client:
             return True
         return False
 
-
     def CheckAddField(self, awadb_field, fields_type, field_no, field_name, field_value, has_field_name):
         field_type = self.__FieldCheck(field_no, field_name, field_value, fields_type)
 
@@ -372,61 +373,126 @@ class Client:
                 len(field_value), 'Mmap', '{"cache_size" : 2000}',   False)
             self.tables_vector_field_name[self.using_table_name] = field_name
 
+    def Delete(
+        self,
+        ids: List[str],
+    ) -> bool:
+        """Delete the documents which have the specified ids.
 
-    def Delete(self, key_id_of_doc):
-        if self.using_table_name == '' or key_id_of_doc == '':
-            print('Please specify table name and primary key of the table!')
+        Args:
+            ids: The id list of the updating embedding vector.
+        Returns:
+            True or False.
+        """
+
+        if self.using_table_name == '' or len(ids) == 0:
+            print('Please specify table name and primary keys of the table!')
             return False
 
-        return awa.Delete(self.using_table_engine, key_id_of_doc)
+        ids_list = awa.StrVec()
+        for each_id in ids:
+            ids_list.append(each_id)
+        return awa.Delete(self.using_table_engine, ids_list)
 
+    def UpdateTexts(
+        self,
+        ids: List[str],
+        text_field_name: str,
+        texts: Iterable[str],
+        metadatas: Optional[List[dict]] = None,
+        **args: Any,
+    ) -> List[str]:
+        """Update the documents which have the specified ids.
 
-    def Get(self, key_id_of_doc):
-        doc_detail = {}
-        if self.using_table_name == '' or key_id_of_doc == '':
-            print('Please specify the primary key of the current table!')
-            return doc_detail
-        doc = awa.Doc() 
+        Args:
+            ids: The id list of the updating embedding vector.
+            text_field_name: The text field name.
+            texts: The texts of the updating documents.
+            metadatas: The metadatas of the updating documents.
+        Returns:
+            the ids of the updated documents.
+        """
 
-        awa.GetDoc(self.using_table_engine, key_id_of_doc, doc)
+        return self.AddTexts(
+            text_field_name=text_field_name,
+            embedding_field_name="text_embedding",
+            texts=texts,
+            metadatas=metadatas,
+            ids=ids)
 
-        doc_detail['key'] = doc.Key()
-        for field in doc.TableFields():
-            if field.datatype == awa.DataType.INT:
-                int_value = struct.unpack("<i", bytearray(field.value, encoding="utf-8"))[0] 
-                doc_detail[field.name] = int_value
-            elif field.datatype == awa.DataType.FLOAT:
-                float_value = struct.unpack("<f4", field.value)[0]
-                doc_detail[field.name] = float_value
-            elif field.datatype == awa.DataType.STRING:
-                doc_detail[field.name] = field.value 
-            elif field.datatype == awa.DataType.VECTOR:
-                vec_data = awa.FloatVec()
-                ret = field.GetVecData(vec_data)
-                if vec_data.__len__() == 0:
-                    print('Get vector data error!')
-                    break
-                vec_result = [] 
-                for each_vec_data in vec_data:
-                    vec_result.append(each_vec_data)
+    def Get(
+        self,
+        ids: List[str],
+        not_include_fields: Optional[Set[str]] = None,
+        **args: Any,
+    ) -> list:
+        """Get the documents which have the specified ids.
 
-                doc_detail[field.name] = vec_result 
+        Args:
+            ids: The id list of the documents.
+        Returns:
+            the documents which have the id list.
+        """
 
-        for field in doc.VectorFields():
-            if field.datatype == awa.DataType.VECTOR:
-                vec_data = awa.FloatVec()
-                ret = field.GetVecData(vec_data)
-                if vec_data.__len__() == 0:
-                    print('Get vector data error!')
-                    break
-                vec_result = [] 
-                for each_vec_data in vec_data:
-                    vec_result.append(each_vec_data)
+        docs_detail = []
+        if self.using_table_name == '' or len(ids) == 0:
+            print('Please specify the primary keys of the current table!')
+            return docs_detail
 
-                doc_detail[field.name] = vec_result 
+        doc_results = awa.DocsMap()
+        ids_list = awa.StrVec()
 
-        return doc_detail
+        for key_id in ids:
+            doc_results[key_id] = awa.Doc()
+            ids_list.append(key_id)
 
+        awa.GetDocs(self.using_table_engine, ids_list, doc_results)
+
+        for key_id in ids:
+            if doc_results[key_id].Key() == "-1":
+                continue
+
+            doc_detail = {}
+            for field in doc_results[key_id].TableFields():
+                if not_include_fields is not None and field.name in not_include_fields:
+                    continue
+                if field.datatype == awa.DataType.INT:
+                    int_value = struct.unpack("<i", bytearray(field.value, encoding="utf-8"))[0]
+                    doc_detail[field.name] = int_value
+                elif field.datatype == awa.DataType.FLOAT:
+                    float_value = struct.unpack("<f4", field.value)[0]
+                    doc_detail[field.name] = float_vale
+                elif field.datatype == awa.DataType.STRING:
+                    doc_detail[field.name] = field.value
+                elif field.datatype == awa.DataType.VECTOR:
+                    vec_data = awa.FloatVec()
+                    ret = field.GetVecData(vec_data)
+                    if vec_data.__len__() == 0:
+                        print('Get vector data error!')
+                        break
+
+                    vec_result = []
+                    for each_vec_data in vec_data:
+                        vec_result.append(each_vec_data)
+                    doc_detail[field.name] = vec_result
+
+            for field in doc_results[key_id].VectorFields():
+                if not_include_fields is not None and field.name in not_include_fields:
+                    continue
+                if field.datatype == awa.DataType.VECTOR:
+                    vec_data = awa.FloatVec()
+                    ret = field.GetVecData(vec_data)
+                    if vec_data.__len__() == 0:
+                        print('Get vector data error!')
+                        break
+
+                    vec_result = []
+                    for each_vec_data in vec_data:
+                        vec_result.append(each_vec_data)
+                    doc_detail[field.name] = vec_result
+
+            docs_detail.append(doc_detail)
+        return docs_detail
 
     def __ProcessTextEmbedding(self, doc):
         field_no = 0 
@@ -459,6 +525,7 @@ class Client:
         embeddings: Optional[List[List[float]]] = None,
         metadatas: Optional[List[dict]] = None,
         is_duplicate_texts: Optional[bool] = None,
+        ids: Optional[List[str]] = None,
         **args: Any,
     ) -> List[str]:
         added_ids: List[str] = []
@@ -491,10 +558,16 @@ class Client:
             key_field_value = ''
             # add unique primary id for each unique document
             if self.is_duplicate_texts:
-                key_field_value = md5str(text)
+                if ids is None:
+                    key_field_value = md5str(text)
+                else:
+                    key_field_value = ids[adding_docs_no]
             # auto increasing id
             else:
-                key_field_value = str(self.tables_doc_count[self.using_table_name])
+                if ids is None:
+                    key_field_value = str(self.tables_doc_count[self.using_table_name])
+                else:
+                    key_field_value = ids[adding_docs_no]
             self.tables_primary_key_fid_no[self.using_table_name] = 0
             self.CheckAddField(key_field, fields_type, 0, key_field_name, key_field_value, True)
             if (not self.tables_fields_check[self.using_table_name]):
@@ -637,7 +710,13 @@ class Client:
         doc[:]=[]
         return True 
 
-    def Search(self, query, topn, *filters):
+    def Search(
+        self,
+        query,
+        topn,
+        not_include_fields: Optional[Set[str]] = None,
+        *filters):
+
         query_type = typeof(query) 
         
         show_results = []
@@ -657,13 +736,15 @@ class Client:
         
         vec_query.min_score = -1 
         vec_query.max_score = 999999
-            
+
+        default_retrieval_type = "{\"metric_type\":\"InnerProduct\"}"
         req = awa.Request()
         req.SetReqNum(1)
         req.AddVectorQuery(vec_query)
         req.SetTopN(topn)
         req.SetBruteForceSearch(1)
-        req.SetL2Sqrt(True)
+        req.SetRetrievalParams(default_retrieval_type)
+
 
         response = awa.Response()
         fvec_names = awa.StrVec()
@@ -688,7 +769,10 @@ class Client:
                 item_detail = {}
                 while i < l :
                     name = item.names[i]
-             
+                    if not_include_fields is not None and name in not_include_fields:
+                        i = i + 1
+                        continue
+
                     f_type = self.tables_fields_type[self.using_table_name][self.tables_fields_names[self.using_table_name][name]]
                     if f_type == FieldDataType.INT:
                         int_value = struct.unpack("<i", bytearray(item.values[i], encoding="utf-8"))[0] 
@@ -704,9 +788,10 @@ class Client:
                         vec_result = [] 
                         for each_vec_data in vec_data:
                             vec_result.append(each_vec_data)
-                        #item_detail[name] = vec_result
+                        item_detail[name] = vec_result
                     i = i + 1
-                item_detail['score'] = item.score
+                if not_include_fields is not None and 'score' not in not_include_fields:
+                    item_detail['score'] = item.score
                 result_items_list.append(item_detail)
 
             result_per_request['ResultItems'] = result_items_list

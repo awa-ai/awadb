@@ -55,6 +55,8 @@ class GammaEngine {
    */
   int Delete(std::string &key);
 
+  bool DeleteDocs(std::vector<std::string> &keys);
+
   /**
    * Delete doc by query
    * @param request delete request
@@ -65,6 +67,8 @@ class GammaEngine {
   int DelDocByFilter(Request &request, char **del_ids, int *str_len);
 
   int GetDoc(const std::string &key, Doc &doc);
+
+  int GetDocs(const std::vector<std::string> &keys, std::map<std::string, Doc> &docs);
 
   int GetDoc(int docid, Doc &doc);
 
