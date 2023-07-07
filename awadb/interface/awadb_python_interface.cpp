@@ -18,11 +18,11 @@ PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 PYBIND11_MAKE_OPAQUE(std::vector<float>);
 
 
-
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::Doc>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::ResultItem>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::Field>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::SearchResult>);
+PYBIND11_MAKE_OPAQUE(std::map<std::string, awadb::Doc>);
 
 bool Create(void *engine, awadb::TableInfo &table_info)  {
 
@@ -59,17 +59,24 @@ bool AddTexts(
   return ret == 0 ? true : false;
 }
 
-bool Delete(void *engine, std::string &key)  {
+bool Delete(void *engine, std::vector<std::string> &keys)  {
+  return static_cast<awadb::GammaEngine *>(engine)->DeleteDocs(keys);
+}
 
-  int ret = static_cast<awadb::GammaEngine *>(engine)->Delete(key);
-  
+
+bool GetDocs(
+  void *engine,
+  const std::vector<std::string> &keys,
+  std::map<std::string, awadb::Doc> &docs)  {
+
+  int ret = static_cast<awadb::GammaEngine *>(engine)->GetDocs(keys, docs);
+
   return ret == 0 ? true : false;
 }
 
-bool GetDoc(void *engine, const std::string &key, awadb::Doc &doc)  {
 
-  int ret = static_cast<awadb::GammaEngine *>(engine)->GetDoc(key, doc);
-
+bool Update(void *engine, awadb::Doc &doc)  {
+  int ret = static_cast<awadb::GammaEngine *>(engine)->AddOrUpdate(doc);
   return ret == 0 ? true : false;
 }
 
@@ -221,6 +228,9 @@ PYBIND11_MODULE(awa, m) {
     py::bind_vector<std::vector<awadb::ResultItem>>(m, "ResultItemsVec");
     py::bind_vector<std::vector<awadb::SearchResult>>(m, "SearchResultVec");
 
+    py::bind_map<std::map<std::string, awadb::Doc>>(m, "DocsMap");
+
+
     m.def("Init", &Init, "Init engine");   
     m.def("Close", &Close, "Close engine");   
     m.def("Create", &Create, "Create Table");   
@@ -228,7 +238,8 @@ PYBIND11_MODULE(awa, m) {
     m.def("AddDoc", &AddDoc, "Add Or UpdateDoc");   
     m.def("AddTexts", &AddTexts, "Add Or Update Texts and Embeddings");
     m.def("Delete", &Delete, "Delete Document");
-    m.def("GetDoc", &GetDoc, "GetDoc");   
+    m.def("GetDocs", &GetDocs, "GetDocs");
+    m.def("Update", &Update, "Update");
     m.def("DoSearch", &DoSearch, "DoSearch");
 
 }

@@ -515,11 +515,13 @@ int GammaIVFPQIndex::Search(RetrievalContext *retrieval_context, int n,
   GammaSearchCondition *condition =
       dynamic_cast<GammaSearchCondition *>(retrieval_context);
   if (condition->brute_force_search == true || is_trained == false) {
+  
+    DistanceComputeType dis_type = retrieval_params->GetDistanceComputeType();
     // reset retrieval_params
     delete retrieval_context->RetrievalParams();
     LOG(INFO)<<"-----------Start searching by flat index--------------"; 
     retrieval_context->retrieval_params_ = new FlatRetrievalParameters(
-        retrieval_params->ParallelOnQueries(), retrieval_params->GetDistanceComputeType());
+        retrieval_params->ParallelOnQueries(), dis_type);
     int ret =
         GammaFLATIndex::Search(retrieval_context, n, x, k, distances, labels);
     LOG(INFO)<<"n is "<<n<<", k is "<<k;
