@@ -94,6 +94,8 @@ class Table {
 
   const uint8_t *GetDocBuffer(int docid);
 
+  void NumericValueToStr(Field &field);
+
   int GetDocInfo(const std::string &key, Doc &doc,
                  const std::vector<std::string> &fields);
   int GetDocInfo(const int docid, Doc &doc,

@@ -32,15 +32,6 @@ void ResultItem::GetVecData(const std::string &fid_name, std::vector<float> &res
   }
   return;
 }
- 
-/*
-std::vector<std::string> &ResultItem::GetVecSource(const std::string &fid_name)  {
-
-
-
-
-}
-*/
 
 Response::Response() { 
   response_ = nullptr;
@@ -238,7 +229,6 @@ void Response::SetEngineInfo(void *table, void *vector_mgr,
                           GammaResult *gamma_results, int req_num) {
   gamma_results_ = gamma_results;
   req_num_ = req_num;
-  LOG(INFO)<<"req_num is "<<req_num_<<"***********"; 
   table_ = table;
   vector_mgr_ = vector_mgr;
 }
@@ -246,7 +236,6 @@ void Response::SetEngineInfo(void *table, void *vector_mgr,
 int Response::PackResultItem(const VectorDoc *vec_doc, 
                              std::vector<std::string> &fields_name,
                              struct ResultItem &result_item) {
-      LOG(INFO)<<"===========PackResultItem enter==========";
   result_item.score = vec_doc->score;
 
   Doc doc;
@@ -262,7 +251,6 @@ int Response::PackResultItem(const VectorDoc *vec_doc,
 
     for (size_t i = 0; i < fields_size; ++i) {
       std::string &name =  fields_name[i];
-      LOG(INFO)<<"===========pack field name is "<<name;
       if (!vector_mgr->Contains(name)) {
         table_fields.push_back(name);
       } else {
@@ -273,18 +261,13 @@ int Response::PackResultItem(const VectorDoc *vec_doc,
     std::vector<string> vec;
     int ret = vector_mgr->GetVector(vec_fields_ids, vec, true);
 
-    LOG(INFO)<<"before table fields size is "<<table_fields.size();
     table->GetDocInfo(docid, doc, table_fields);
-    LOG(INFO)<<"after table fields size is "<<table_fields.size();
-    LOG(INFO)<<"$$$$docid is "<<docid<<"$$$$, ret is "<<ret;
-    LOG(INFO)<<"vec size is "<<vec.size()<<", vec_fields_ids size is "<<vec_fields_ids.size();
 
     if (ret == 0 && vec.size() == vec_fields_ids.size()) {
       for (size_t i = 0; i < vec_fields_ids.size(); ++i) {
         const string &field_name = vec_fields_ids[i].first;
         result_item.names.emplace_back(std::move(field_name));
         result_item.values.emplace_back(vec[i]);
-	LOG(INFO)<<"%%%%docid is "<<docid<<", field_name is "<<field_name<<", field_value is "<<vec[i]<<", value len is "<<vec[i].length()<<"%%%%";
       }
     } else {
       // get vector error
@@ -300,7 +283,6 @@ int Response::PackResultItem(const VectorDoc *vec_doc,
   std::vector<struct Field> &fields = doc.TableFields();
 
   for (struct Field &field : fields) {
-    LOG(INFO)<<"field name is "<<field.name<<", field value is "<<field.value;
     result_item.names.emplace_back(std::move(field.name));
     result_item.values.emplace_back(std::move(field.value));
   }
@@ -332,14 +314,11 @@ int Response::PackResultItem(const VectorDoc *vec_doc,
 }
 
 int Response::PackResults(std::vector<std::string> &fields_name) {
-  LOG(INFO)<<"PackResults enter...req_num is "<<req_num_<<", fields size is "<<fields_name.size(); 
   for (int i = 0; i < req_num_; ++i) {
     struct SearchResult result;
     result.total = gamma_results_[i].total;
     result.result_items.resize(gamma_results_[i].results_count);
-    LOG(INFO)<<"---------------------------"; 
     for (int j = 0; j < gamma_results_[i].results_count; ++j) {
-      LOG(INFO)<<"=============================="; 
       VectorDoc *vec_doc = gamma_results_[i].docs[j];
       struct ResultItem result_item;
       PackResultItem(vec_doc, fields_name, result_item);

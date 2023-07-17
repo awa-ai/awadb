@@ -181,6 +181,7 @@ GammaEngine::GammaEngine(const string &index_root_path)
   b_field_running_ = false;
   is_dirty_ = false;
   field_range_index_ = nullptr;
+  awadb_retrieval_ = nullptr;
   created_table_ = false;
   b_loading_ = false;
   docids_bitmap_ = nullptr;
@@ -218,6 +219,11 @@ GammaEngine::~GammaEngine() {
   if (field_range_index_) {
     delete field_range_index_;
     field_range_index_ = nullptr;
+  }
+
+  if (awadb_retrieval_)  {
+    delete awadb_retrieval_;
+    awadb_retrieval_ = nullptr;
   }
 
   if (docids_bitmap_) {
@@ -363,7 +369,13 @@ int GammaEngine::Search(Request &request, Response &response_results) {
 
   std::vector<struct TermFilter> &term_filters = request.TermFilters();
   size_t term_filters_num = term_filters.size();
-  if (range_filters_num > 0 || term_filters_num > 0) {
+  
+  std::vector<std::string> &page_content_filters = request.PageTexts();
+  size_t page_filters_num = page_content_filters.size();
+
+  if (range_filters_num > 0 ||
+    term_filters_num > 0 ||
+    page_filters_num > 0) {
     int num = MultiRangeQuery(request, gamma_query.condition, response_results,
                               &range_query_result);
     if (num == 0) {
@@ -402,7 +414,6 @@ int GammaEngine::Search(Request &request, Response &response_results) {
 #ifdef PERFORMANCE_TESTING
     gamma_query.condition->GetPerfTool().Perf("search total");
 #endif
-    LOG(INFO)<<"SetEngineInfo req_num is "<<req_num;
     response_results.SetEngineInfo(table_, vec_manager_, gamma_results, req_num);
   } else {
     GammaResult *gamma_result = new GammaResult[1];
@@ -448,7 +459,7 @@ int GammaEngine::Search(Request &request, Response &response_results) {
       gamma_result->init(topn, nullptr, 0);
       for (int docid = 0; docid < max_docid_; ++docid) {
         if (range_query_result.Has(docid) && !docids_bitmap_->Test(docid)) {
-          ++(gamma_result->total);
+	  ++(gamma_result->total);
           if (gamma_result->results_count < topn) {
             gamma_result->docs[(gamma_result->results_count)++]->docid = docid;
           }
@@ -484,6 +495,18 @@ int GammaEngine::Search(Request &request, Response &response_results) {
   return ret;
 }
 
+int GammaEngine::PageTextFilter(Request &request,
+		                GammaSearchCondition *condition,
+				MultiRangeQueryResults *range_query_result) {
+    std::vector<std::string> &page_texts = request.PageTexts();
+    if (page_texts.size() > 0)  {
+      awadb_retrieval_->Retrieve(page_texts, range_query_result->GetTextFilterIds());
+    }
+
+    condition->range_query_result = range_query_result;
+    return range_query_result->GetTextFilterIds().size();
+}
+
 int GammaEngine::MultiRangeQuery(Request &request,
                                  GammaSearchCondition *condition,
                                  Response &response_results,
@@ -494,8 +517,13 @@ int GammaEngine::MultiRangeQuery(Request &request,
 
   int range_filters_size = range_filters.size();
   int term_filters_size = term_filters.size();
+  int filters_size = range_filters_size + term_filters_size;
 
-  filters.resize(range_filters_size + term_filters_size);
+  if (filters_size == 0)  {
+    return PageTextFilter(request, condition, range_query_result);
+  }
+
+  filters.resize(filters_size);
   int idx = 0;
 
   for (int i = 0; i < range_filters_size; ++i) {
@@ -532,7 +560,7 @@ int GammaEngine::MultiRangeQuery(Request &request,
   } else if (retval < 0) {
     condition->range_query_result = nullptr;
   } else {
-    condition->range_query_result = range_query_result;
+    PageTextFilter(request, condition, range_query_result);
   }
   return retval;
 }
@@ -631,6 +659,12 @@ int GammaEngine::CreateTable(const std::string &table_str) {
   if ((nullptr == field_range_index_) || (AddNumIndexFields() < 0)) {
     LOG(ERROR) << "add numeric index fields error!";
     return -3;
+  }
+
+  awadb_retrieval_ = new AwadbRetrieval(index_root_path_);
+  if (nullptr == awadb_retrieval_)  {
+    LOG(ERROR) << "add awadb index error!";
+    return -4; 
   }
 
   auto func_build_field_index = std::bind(&GammaEngine::BuildFieldIndex, this);
@@ -733,6 +767,12 @@ int GammaEngine::CreateTable(TableInfo &table) {
   if ((nullptr == field_range_index_) || (AddNumIndexFields() < 0)) {
     LOG(ERROR) << "add numeric index fields error!";
     return -3;
+  }
+
+  awadb_retrieval_ = new AwadbRetrieval(index_root_path_);
+  if (nullptr == awadb_retrieval_)  {
+    LOG(ERROR) << "add awadb index error!";
+    return -4; 
   }
 
   auto func_build_field_index = std::bind(&GammaEngine::BuildFieldIndex, this);
@@ -912,6 +952,113 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
   is_dirty_ = true;
   return 0;
 }
+
+int GammaEngine::AddOrUpdateDocs(
+  Docs &docs,
+  BatchResult &result,
+  std::vector<WordsInDoc> &words_in_docs) {
+#ifdef PERFORMANCE_TESTING
+  double start = utils::getmillisecs();
+#endif
+  std::vector<Doc> &doc_vec = docs.GetDocs();
+  std::set<std::string> remove_dupliacte;
+  int batch_size = 0, start_id = 0;
+
+  auto batchAdd = [&](int start_id, int batch_size, std::vector<WordsInDoc> &words_in_docs) {
+    if (batch_size <= 0) return;
+
+    int ret =
+        table_->BatchAdd(start_id, batch_size, max_docid_, doc_vec, result);
+    if (ret != 0) {
+      LOG(ERROR) << "BatchAdd to table error";
+      return;
+    }
+
+    for (int i = start_id; i < start_id + batch_size; ++i) {
+      Doc &doc = doc_vec[i];
+      std::vector<struct Field> &fields_table = doc.TableFields();
+      for (size_t j = 0; j < fields_table.size(); ++j) {
+        struct Field &field = fields_table[j];
+        int idx = table_->GetAttrIdx(field.name);
+        field_range_index_->Add(max_docid_ + i - start_id, idx);
+      }
+      // add vectors by VectorManager
+      std::vector<struct Field> &fields_vec = doc.VectorFields();
+      ret = vec_manager_->AddToStore(max_docid_ + i - start_id, fields_vec);
+      if (ret != 0) {
+        std::string msg = "Add to vector manager error";
+        result.SetResult(i, -1, msg);
+        LOG(ERROR) << msg;
+        continue;
+      }
+      
+      if (!awadb_retrieval_->AddDoc((uint32_t)(max_docid_ + i - start_id), words_in_docs[max_docid_ + i - start_id]))  {
+        LOG(ERROR) << "add awadb index error, docid=" <<(max_docid_ + i - start_id);
+      }
+
+      if (migrate_data_) { migrate_data_->AddDocid(max_docid_ + i - start_id); }
+    }
+
+    max_docid_ += batch_size;
+    docids_bitmap_->SetMaxID(max_docid_);
+  };
+
+  for (size_t i = 0; i < doc_vec.size(); ++i) {
+    Doc &doc = doc_vec[i];
+    std::string &key = doc.Key();
+    auto ite = remove_dupliacte.find(key);
+    if (ite == remove_dupliacte.end()) remove_dupliacte.insert(key);
+    // add fields into table
+    int docid = -1;
+    table_->GetDocIDByKey(key, docid);
+    if (docid == -1 && ite == remove_dupliacte.end()) {
+      ++batch_size;
+
+      
+      continue;
+    } else {
+      batchAdd(start_id, batch_size, words_in_docs);
+      batch_size = 0;
+      start_id = i + 1;
+      std::vector<struct Field> &fields_table = doc.TableFields();
+      std::vector<struct Field> &fields_vec = doc.VectorFields();
+      if (ite != remove_dupliacte.end()) table_->GetDocIDByKey(key, docid);
+      if (Update(docid, fields_table, fields_vec)) {
+        LOG(ERROR) << "update error, key=" << key << ", docid=" << docid;
+        continue;
+      }
+    }
+  }
+
+  batchAdd(start_id, batch_size, words_in_docs);
+  
+  if (not b_running_ and index_status_ == UNINDEXED) {
+    if (max_docid_ >= indexing_size_) {
+      LOG(INFO) << "Begin indexing.";
+      this->BuildIndex();
+    }
+  }
+#ifdef PERFORMANCE_TESTING
+  double end = utils::getmillisecs();
+  if (max_docid_ % 10000 == 0) {
+    LOG(INFO) << "Doc_num[" << max_docid_ << "], BatchAdd[" << batch_size
+              << "] total cost [" << end - start << "]ms";
+  }
+#endif
+  is_dirty_ = true;
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 int GammaEngine::Update(int doc_id, std::vector<struct Field> &fields_table,
                         std::vector<struct Field> &fields_vec) {
@@ -1157,7 +1304,6 @@ int GammaEngine::GetDoc(int docid, Doc &doc) {
       field.datatype = DataType::VECTOR;
       field.value = vec[i];
       doc.AddField(field);
-      LOG(INFO)<<"vec field name is "<<field.name<<", value is "<<field.value;
     }
   }
   return ret;

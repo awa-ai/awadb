@@ -536,6 +536,39 @@ int Table::GetDocInfo(const std::string &key, Doc &doc,
   return GetDocInfo(doc_id, doc, fields);
 }
 
+void Table::NumericValueToStr(Field &field)  {
+  switch (field.datatype)  {
+    case DataType::INT:  {
+      int value = 0;
+      memcpy((void *)&value, (void *)field.value.c_str(), field.value.size());
+      field.value = std::to_string(value);
+      break;
+    }
+    case DataType::FLOAT:  {
+      float value = 0;
+      memcpy((void *)&value, (void *)field.value.c_str(), field.value.size());
+      field.value = std::to_string(value);
+      break;
+    }
+    case DataType::LONG:  {
+      long value = 0;
+      memcpy((void *)&value, (void *)field.value.c_str(), field.value.size());
+      field.value = std::to_string(value);
+      break;
+    }
+    case DataType::DOUBLE:  {
+      double value = 0;
+      memcpy((void *)&value, (void *)field.value.c_str(), field.value.size());
+      field.value = std::to_string(value);
+      break;
+    }
+    default:  break;
+  }
+
+  return; 
+}
+
+
 int Table::GetDocInfo(const int docid, Doc &doc,
                       const std::vector<std::string> &fields) {
   if (docid > last_docid_) {
@@ -544,7 +577,6 @@ int Table::GetDocInfo(const int docid, Doc &doc,
   }
   const uint8_t *doc_value = nullptr;
   int ret = storage_mgr_->Get(docid, doc_value);
-  LOG(INFO)<<"TABLE GETDOCINFO docid is "<<docid; 
   if (ret != 0) {
     return ret;
   }
@@ -565,7 +597,7 @@ int Table::GetDocInfo(const int docid, Doc &doc,
     for (const auto &it : attr_idx_map_) {
       assign_field(table_fields[i], it.first);
       GetFieldRawValue(docid, it.second, table_fields[i].value, doc_value);
-      LOG(INFO)<<"###docid "<<docid<<" fieldid "<<it.second<<" fieldvalue "<<table_fields[i].value;
+      NumericValueToStr(table_fields[i]);
       ++i;
     }
   } else {
@@ -579,7 +611,7 @@ int Table::GetDocInfo(const int docid, Doc &doc,
       int field_idx = iter->second;
       assign_field(table_fields[i], f);
       GetFieldRawValue(docid, field_idx, table_fields[i].value, doc_value);
-      LOG(INFO)<<"###docid "<<docid<<" fieldid "<<field_idx<<" fieldvalue "<<table_fields[i].value;
+      NumericValueToStr(table_fields[i]);
       ++i;
     }
   }

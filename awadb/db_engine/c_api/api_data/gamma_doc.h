@@ -121,4 +121,30 @@ class Doc : public RawData {
   GammaEngine *engine_;
 };
 
+struct WordCount {
+  WordCount() {
+    word = "";
+    count = 0;
+  }
+
+  std::string word;
+  size_t count;
+};
+
+class WordsInDoc  {
+ public:
+  WordsInDoc() {}
+  
+  ~WordsInDoc() {
+    words_count.clear(); 
+  } 
+
+  void AddWordCount(const struct WordCount &word);
+  
+  std::vector<struct WordCount> &WordCounts();
+
+ private:
+  std::vector<WordCount> words_count;
+};
+
 }  // namespace tig_gamma

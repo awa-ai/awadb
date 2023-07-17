@@ -23,6 +23,8 @@ PYBIND11_MAKE_OPAQUE(std::vector<awadb::ResultItem>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::Field>);
 PYBIND11_MAKE_OPAQUE(std::vector<awadb::SearchResult>);
 PYBIND11_MAKE_OPAQUE(std::map<std::string, awadb::Doc>);
+PYBIND11_MAKE_OPAQUE(std::vector<awadb::WordsInDoc>);
+
 
 bool Create(void *engine, awadb::TableInfo &table_info)  {
 
@@ -44,17 +46,18 @@ bool AddDoc(void *engine, const std::string &name, awadb::Doc &doc)  {
   return ret == 0 ? true : false;
 }
 
-
 bool AddTexts(
   void *engine,
-  std::vector<awadb::Doc> &docs)  {
+  std::vector<awadb::Doc> &docs,
+  std::vector<awadb::WordsInDoc> &words_count_in_docs)  {
   awadb::Docs batch_docs;
   for (auto &doc: docs)  {
     batch_docs.AddDoc(doc);
   }
 
   awadb::BatchResult batch_results;
-  int ret = static_cast<awadb::GammaEngine *>(engine)->AddOrUpdateDocs(batch_docs, batch_results);
+  int ret = static_cast<awadb::GammaEngine *>(engine)
+    ->AddOrUpdateDocs(batch_docs, batch_results, words_count_in_docs);
 
   return ret == 0 ? true : false;
 }
@@ -150,6 +153,13 @@ PYBIND11_MODULE(awa, m) {
         .def("TableFields", &awadb::Doc::TableFields)
         .def("VectorFields", &awadb::Doc::VectorFields);
 
+    py::class_<awadb::WordCount>(m, "WordCount").def(py::init<>())
+	.def_readwrite("word", &awadb::WordCount::word)
+        .def_readwrite("count", &awadb::WordCount::count);
+
+    py::class_<awadb::WordsInDoc>(m, "WordsInDoc").def(py::init<>())
+	.def("AddWordCount", (void(awadb::WordsInDoc::*)(const awadb::WordCount &)) &awadb::WordsInDoc::AddWordCount)
+        .def("WordCounts", &awadb::WordsInDoc::WordCounts);
     
     py::class_<awadb::TermFilter>(m, "TermFilter").def(py::init<>())
         .def_readwrite("field", &awadb::TermFilter::field)
@@ -182,10 +192,12 @@ PYBIND11_MODULE(awa, m) {
 	.def("BruteForceSearch", &awadb::Request::BruteForceSearch)
 	.def("SetBruteForceSearch", (void(awadb::Request::*)(int)) &awadb::Request::SetBruteForceSearch)
 	.def("AddVectorQuery", (void(awadb::Request::*)(awadb::VectorQuery &)) &awadb::Request::AddVectorQuery)
+	.def("AddPageText", (void(awadb::Request::*)(const std::string &)) &awadb::Request::AddPageText)
 	.def("AddField", (void(awadb::Request::*)(const std::string &)) &awadb::Request::AddField)
 	.def("AddRangeFilter", (void(awadb::Request::*)(awadb::RangeFilter &)) &awadb::Request::AddRangeFilter)
 	.def("AddTermFilter", (void(awadb::Request::*)(awadb::TermFilter &)) &awadb::Request::AddTermFilter)
 	.def("VecFields", &awadb::Request::VecFields)
+	.def("PageTexts", &awadb::Request::PageTexts)
 	.def("Fields", &awadb::Request::Fields)
 	.def("RangeFilters", &awadb::Request::RangeFilters)
 	.def("TermFilters", &awadb::Request::TermFilters)
@@ -229,7 +241,7 @@ PYBIND11_MODULE(awa, m) {
     py::bind_vector<std::vector<awadb::SearchResult>>(m, "SearchResultVec");
 
     py::bind_map<std::map<std::string, awadb::Doc>>(m, "DocsMap");
-
+    py::bind_vector<std::vector<awadb::WordsInDoc>>(m, "WordsCount");
 
     m.def("Init", &Init, "Init engine");   
     m.def("Close", &Close, "Close engine");   

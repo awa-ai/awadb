@@ -168,11 +168,17 @@ class MultiRangeQueryResults {
   // Take full advantage of multi-core while recalling
   bool Has(int doc) const {
     if (all_results_.size() == 0) {
+      if (text_filter_ids_.size() > 0)  {
+        return TextHasDoc(doc);
+      }
       return false;
     }
     bool ret = true;
     for (auto &result : all_results_) {
       ret = ret && result.Has(doc);
+      if (text_filter_ids_.size() > 0)  {
+	ret = ret && TextHasDoc(doc);
+      }
       if (not ret) break;
     }
     return ret;
@@ -182,6 +188,33 @@ class MultiRangeQueryResults {
     min_ = 0;
     max_ = std::numeric_limits<int>::max();
     all_results_.clear();
+    text_filter_ids_.clear();
+  }
+
+  std::vector<int> &GetTextFilterIds()  {
+    return text_filter_ids_;
+  } 
+
+  bool TextHasDoc(const int &docid) const  {
+    int doc_size = text_filter_ids_.size();
+    if (doc_size == 0)  return false;
+    int start = 0, end = doc_size - 1;
+    while (start <= end)  {
+      int start_value = text_filter_ids_[start];
+      if (start == end)  return docid == start_value ? true : false;
+      
+      int end_value = text_filter_ids_[end];
+      int mid = (end + start) >> 1;
+      int mid_value = text_filter_ids_[mid];
+      if (docid < start_value || docid > end_value)  return false;
+      else if (docid == start_value || docid == end_value)  return true;
+      else  {
+	if (docid == mid_value)  return true;
+	else if (docid > mid_value)  start = mid + 1;
+	else end = mid - 1; 
+      }
+    }
+    return false; 
   }
 
  public:
@@ -213,6 +246,7 @@ class MultiRangeQueryResults {
   int max_;
 
   std::vector<RangeQueryResult> all_results_;
+  std::vector<int> text_filter_ids_;
 };
 
 }  // namespace tig_gamma

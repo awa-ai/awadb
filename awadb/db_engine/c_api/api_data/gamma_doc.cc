@@ -121,4 +121,12 @@ void Doc::AddField(struct Field &&field) {
   }
 }
 
+void WordsInDoc::AddWordCount(const struct WordCount &word) {
+  words_count.push_back(word);
+}
+
+std::vector<struct WordCount> & WordsInDoc::WordCounts() {
+  return words_count;
+}
+
 }  // namespace tig_gamma
