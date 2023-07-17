@@ -179,6 +179,10 @@ void Request::AddVectorQuery(struct VectorQuery &vec_fields) {
   vec_fields_.emplace_back(vec_fields);
 }
 
+void Request::AddPageText(const std::string &page_text) {
+  page_texts_.push_back(page_text);
+}
+  
 void Request::AddField(const std::string &field) { fields_.emplace_back(field); }
 
 void Request::AddRangeFilter(struct RangeFilter &range_filter) {
@@ -190,6 +194,10 @@ void Request::AddTermFilter(struct TermFilter &term_filter) {
 }
 
 std::vector<struct VectorQuery> &Request::VecFields() { return vec_fields_; }
+
+std::vector<std::string> &Request::PageTexts()  {
+  return page_texts_;
+}
 
 std::vector<std::string> &Request::Fields() { return fields_; }
 

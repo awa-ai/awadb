@@ -524,7 +524,6 @@ int GammaIVFPQIndex::Search(RetrievalContext *retrieval_context, int n,
         retrieval_params->ParallelOnQueries(), dis_type);
     int ret =
         GammaFLATIndex::Search(retrieval_context, n, x, k, distances, labels);
-    LOG(INFO)<<"n is "<<n<<", k is "<<k;
     return ret;
   }
 

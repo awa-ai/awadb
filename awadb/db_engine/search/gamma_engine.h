@@ -22,6 +22,7 @@
 #include "vector/vector_manager.h"
 #include "util/bitmap_manager.h"
 #include "storage/migrate_data.h"
+#include "awadb_retrieval.h"
 
 namespace tig_gamma {
 
@@ -44,6 +45,7 @@ class GammaEngine {
   int AddOrUpdate(Doc &doc);
 
   int AddOrUpdateDocs(Docs &docs, BatchResult &result);
+  int AddOrUpdateDocs(Docs &docs, BatchResult &result, std::vector<WordsInDoc> &words_in_docs);
 
   int Update(int doc_id, std::vector<struct Field> &fields_table,
              std::vector<struct Field> &fields_vec);
@@ -142,11 +144,17 @@ class GammaEngine {
                       Response &response_results,
                       MultiRangeQueryResults *range_query_result);
 
+  int PageTextFilter(Request &request,
+		     GammaSearchCondition *condition,
+		     MultiRangeQueryResults *range_query_result);
+ 
+
  private:
   std::string index_root_path_;
   std::string dump_path_;
 
   MultiFieldsRangeIndex *field_range_index_;
+  AwadbRetrieval *awadb_retrieval_;  
 
   bitmap::BitmapManager *docids_bitmap_;
   Table *table_;

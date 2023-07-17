@@ -16,7 +16,7 @@
 #include "range_query_result.h"
 #include "table.h"
 
-#define    STR_MAX_INDEX_LEN    255
+#define    STR_MAX_INDEX_LEN    2048
 
 namespace tig_gamma {
 

@@ -402,7 +402,6 @@ int parse_index_search_result(int n, int k, VectorResult &result,
 
       if (docid2count.find(real_docid) == docid2count.end()) {
         int real_pos = i * k + pos;
-        LOG(INFO)<<"real_pos i "<<real_pos<<", real_docid is "<<real_docid; 
     	result.docids[real_pos] = real_docid;
         int ret = raw_vec->GetSource(vector_id, result.sources[real_pos],
                                      result.source_lens[real_pos]);
@@ -450,7 +449,6 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
     if (retrieval_types_.size() > 1 && vec_query.retrieval_type != "") {
       retrieval_type = vec_query.retrieval_type;
     }
-    LOG(INFO)<<"name is "<<name<<", retrieval_type is "<<retrieval_type;
     index_name = IndexName(name, retrieval_type);
     std::map<std::string, RetrievalModel *>::iterator iter =
         vector_indexes_.find(index_name);
@@ -466,7 +464,7 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
     if (raw_vec->MetaInfo()->DataType() == VectorValueType::BINARY) {
       n = vec_query.value.size() / d;
     } else {
-      LOG(INFO)<<"vec_query value size is "<<vec_query.value.size()<<", datasize is "<<raw_vec->MetaInfo()->DataSize()<<", d is "<<d;
+      //LOG(INFO)<<"vec_query value size is "<<vec_query.value.size()<<", datasize is "<<raw_vec->MetaInfo()->DataSize()<<", d is "<<d;
       n = vec_query.value.size() / (raw_vec->MetaInfo()->DataSize() * d);
     }
 
@@ -594,7 +592,6 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
         if (all_vector_results[0].docids[real_pos] == -1) continue;
         results[i].docs[pos]->docid = all_vector_results[0].docids[real_pos];
 
-	LOG(INFO)<<"@@@docid is "<<results[i].docs[pos]->docid;
         results[i].docs[pos]->fields[0].source =
             all_vector_results[0].sources[real_pos];
         results[i].docs[pos]->fields[0].source_len =
