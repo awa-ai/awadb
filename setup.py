@@ -136,7 +136,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="awadb",
-    version="0.3.6",
+    version="0.3.7",
     author="Vincent",
     author_email="awadb.jie@gmail.com",
     description="AI Native database for embedding vectors",

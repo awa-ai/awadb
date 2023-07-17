@@ -66,6 +66,8 @@ class Request : public RawData {
 
   void AddVectorQuery(struct VectorQuery &vec_fields);
 
+  void AddPageText(const std::string &page_text);
+
   void AddField(const std::string &field);
 
   void AddRangeFilter(struct RangeFilter &range_filter);
@@ -73,6 +75,8 @@ class Request : public RawData {
   void AddTermFilter(struct TermFilter &term_filter);
 
   std::vector<struct VectorQuery> &VecFields();
+
+  std::vector<std::string> &PageTexts();
 
   std::vector<std::string> &Fields();
 
@@ -108,6 +112,7 @@ class Request : public RawData {
   int brute_force_search_;  // 1 : brute force search; 0 : normal search
 
   std::vector<struct VectorQuery> vec_fields_;
+  std::vector<std::string> page_texts_;
 
   std::vector<std::string> fields_;
 
