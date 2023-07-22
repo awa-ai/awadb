@@ -17,7 +17,7 @@ from awadb.punctuation_marks_en import punctuation_marks
 from awadb.stop_words_en import stop_words
 from awadb.words_stem_en import PorterStemmer
 
-__version__ = "0.3.7"
+__version__ = "0.3.8"
 
 
 class FieldDataType(Enum):
@@ -393,6 +393,8 @@ class Client:
         elif field_type == FieldDataType.STRING:
             awadb_field.value = field_value
             awadb_field.datatype = awa.DataType.STRING
+            if field_name == "embedding_text":
+                is_index = False
             self.AddField(field_name, awadb_field.datatype, is_index)
 
         elif field_type == FieldDataType.VECTOR:
@@ -527,10 +529,17 @@ class Client:
             response.PackResults(fvec_names)
 
             search_result_vec = response.Results()
-            for search_result in search_result_vec:
+            search_result_index = 0
+            # the usage of iterator pybind11 struct may cause crash in MacOSX x86 environment
+            while search_result_index < search_result_vec.__len__():
+                search_result = search_result_vec[search_result_index]
+                # for search_result in search_result_vec:
                 items = search_result.result_items
-                for item in items:
+                item_index = 0
+                # for item in items:
+                while item_index < items.__len__():
                     i = 0
+                    item = items[item_index]
                     l = item.names.__len__()
                     item_detail = {}
                     while i < l:
@@ -556,11 +565,17 @@ class Client:
                             vec_data = awa.FloatVec()
                             item.GetVecData(name, vec_data)
                             vec_result = []
-                            for each_vec_data in vec_data:
+                            vec_index = 0
+                            while vec_index < vec_data.__len__():
+                                each_vec_data = vec_data[vec_index]
+                                # for each_vec_data in vec_data:
                                 vec_result.append(each_vec_data)
+                                vec_index = vec_index + 1
                             item_detail[name] = vec_result
                         i = i + 1
                     docs_detail.append(item_detail)
+                    item_index = item_index + 1
+                search_result_index = search_result_index + 1
             return docs_detail
 
         doc_results = awa.DocsMap()
@@ -576,8 +591,12 @@ class Client:
                 continue
 
             doc_detail = {}
-            for field in doc_results[key_id].TableFields():
+            field_index = 0
+            while field_index < doc_results[key_id].TableFields().__len__():
+                field = doc_results[key_id].TableFields()[field_index]
+                # for field in doc_results[key_id].TableFields():
                 if not_include_fields is not None and field.name in not_include_fields:
+                    field_index = field_index + 1
                     continue
                 if field.datatype == awa.DataType.INT:
                     int_value = int(field.value)
@@ -587,9 +606,14 @@ class Client:
                     doc_detail[field.name] = float_value
                 elif field.datatype == awa.DataType.STRING:
                     doc_detail[field.name] = field.value
+                field_index = field_index + 1
 
-            for field in doc_results[key_id].VectorFields():
+            field_index = 0
+            while field_index < doc_results[key_id].VectorFields().__len__():
+                field = doc_results[key_id].VectorFields()[field_index]
+                # for field in doc_results[key_id].VectorFields():
                 if not_include_fields is not None and field.name in not_include_fields:
+                    field_index = field_index + 1
                     continue
                 if field.datatype == awa.DataType.VECTOR:
                     vec_data = awa.FloatVec()
@@ -599,12 +623,36 @@ class Client:
                         break
 
                     vec_result = []
-                    for each_vec_data in vec_data:
+                    vec_index = 0
+                    while vec_index < vec_data.__len__():
+                        each_vec_data = vec_data[vec_index]
+                        # for each_vec_data in vec_data:
                         vec_result.append(each_vec_data)
+                        vec_index = vec_index + 1
                     doc_detail[field.name] = vec_result
+                field_index = field_index + 1
 
             docs_detail.append(doc_detail)
         return docs_detail
+
+    def EmbedQuery(
+        self,
+        text: str,
+        **kwargs: Any,
+    ):
+        # print('enter EmbedQuery....')
+        # texts = []
+        # texts.append(text)
+        if self.llm is None:
+            from awadb import llm_embedding
+
+            self.llm = llm_embedding.LLMEmbedding()
+        # print(text)
+        return self.llm.Embedding(text)
+
+        # embeddings = self.llm.EmbeddingQuery(text)
+        # print(embeddings)
+        # return embeddings
 
     def __TextPreprocess(
         self,
@@ -1036,13 +1084,18 @@ class Client:
         response.PackResults(fvec_names)
 
         search_result_vec = response.Results()
-        for search_result in search_result_vec:
+        search_result_index = 0
+        while search_result_index < search_result_vec.__len__():
+            search_result = search_result_vec[search_result_index]
             result_per_request = {}
             result_per_request["ResultSize"] = search_result.result_items.__len__()
 
             result_items_list = []
             items = search_result.result_items
-            for item in items:
+            item_index = 0
+            # for item in items:
+            while item_index < items.__len__():
+                item = items[item_index]
                 i = 0
                 l = item.names.__len__()
                 item_detail = {}
@@ -1067,14 +1120,19 @@ class Client:
                         vec_data = awa.FloatVec()
                         item.GetVecData(name, vec_data)
                         vec_result = []
-                        for each_vec_data in vec_data:
+                        j = 0
+                        while j < vec_data.__len__():
+                            each_vec_data = vec_data[j]
                             vec_result.append(each_vec_data)
+                            j = j + 1
                         item_detail[name] = vec_result
                     i = i + 1
                 if not_include_fields is not None and "score" not in not_include_fields:
                     item_detail["score"] = item.score
                 result_items_list.append(item_detail)
+                item_index = item_index + 1
 
             result_per_request["ResultItems"] = result_items_list
             show_results.append(result_per_request)
+            search_result_index = search_result_index + 1
         return show_results
