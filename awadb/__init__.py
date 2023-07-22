@@ -635,25 +635,6 @@ class Client:
             docs_detail.append(doc_detail)
         return docs_detail
 
-    def EmbedQuery(
-        self,
-        text: str,
-        **kwargs: Any,
-    ):
-        # print('enter EmbedQuery....')
-        # texts = []
-        # texts.append(text)
-        if self.llm is None:
-            from awadb import llm_embedding
-
-            self.llm = llm_embedding.LLMEmbedding()
-        # print(text)
-        return self.llm.Embedding(text)
-
-        # embeddings = self.llm.EmbeddingQuery(text)
-        # print(embeddings)
-        # return embeddings
-
     def __TextPreprocess(
         self,
         text: str,
