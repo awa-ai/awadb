@@ -1,12 +1,14 @@
-from awadb.llm_embedding.base import Embeddings
+from awadb.llm_embedding import LLMEmbedding
+from typing import Iterable, Any, List
 
 # Use all-mpnet-base-v2 as the default model
 DEFAULT_MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"
 
-class HuggingFaceEmbeddings(Embeddings):
+class HuggingFaceEmbeddings(LLMEmbedding):
     def __init__(self):
+        self.tokenizer = None
         try:
-            import sentence_transformers
+            from sentence_transformers import SentenceTransformer
         except ImportError as exc:
             raise ImportError(
                 "Could not import sentence_transformers python package. "

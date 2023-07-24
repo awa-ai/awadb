@@ -1,9 +1,13 @@
-from awadb.llm_embedding.base import Embeddings
+from awadb.llm_embedding import LLMEmbedding
+from typing import Iterable, Any, List
+import os
+import numpy as np
 
 DEFAULT_MODEL_NAME = "text-embedding-ada-002"
 
-class OpenAIEmbeddings(Embeddings):
+class OpenAIEmbeddings(LLMEmbedding):
     def __init__(self):
+        self.tokenizer = None        
         try:
             import openai
         except ImportError as exc:
@@ -21,7 +25,8 @@ class OpenAIEmbeddings(Embeddings):
             tokens = self.tokenizer.tokenize(sentence)
         else:
             tokens.append(sentence)
-        return self.model.create(input = tokens[0], model = DEFAULT_MODEL_NAME)["data"][0]["embedding"]
+        ans = self.model.create(input = tokens[0], model = DEFAULT_MODEL_NAME)["data"][0]["embedding"]
+        return np.array(ans)
 
     def EmbeddingBatch(
         self,

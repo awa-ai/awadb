@@ -97,6 +97,7 @@ class Client:
 
         self.llm = None
         self.is_duplicate_texts = True
+        self.model_name = "HuggingFace"
 
     def Write(self):
         tables_meta = {}
@@ -250,7 +251,7 @@ class Client:
                 table_info.SetRetrievalParam('{"ncentroids" : 256, "nsubvector" : 16}')
                 self.tables_attr[table_name] = table_info
 
-    def Create(self, table_name, model_name = "HuggingFace"):
+    def Create(self, table_name, model_name="HuggingFace"):
         if model_name not in __all__:
             raise NameError("Could not find this model: ", model_name)
 
@@ -270,6 +271,8 @@ class Client:
         self.tables_primary_key_fid_no[table_name] = None
         self.tables_doc_count[table_name] = 0
         self.model_name = model_name
+        from awadb import llm_embedding
+        self.llm = llm_embedding.LLMEmbedding(self.model_name)
         return True
 
     def Close(self, table_name: Optional[str] = None):
@@ -681,8 +684,7 @@ class Client:
                 for key in field:
                     if key == "embedding_text":
                         from awadb import llm_embedding
-
-                        self.llm = llm_embedding.LLMEmbedding()
+                        self.llm = llm_embedding.LLMEmbedding(self.model_name)
 
                         doc.append(self.llm.Embedding(field[key]))
                         self.tables_embedding_text_fid_no[
@@ -731,7 +733,7 @@ class Client:
             if self.llm is None:
                 from awadb import llm_embedding
                 # Set llm
-                self.llm = llm_embedding.LLMEmbedding()
+                self.llm = llm_embedding.LLMEmbedding(self.model_name)
             embeddings = self.llm.EmbeddingBatch(texts)
 
         awa_docs = awa.DocsVec()

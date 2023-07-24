@@ -1,6 +1,15 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/python3
 
+import sys
+import os
+
+# Get the current directory path
+current_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+print(current_directory)
+# Add the current directory to sys.path
+sys.path.insert(0, current_directory)
+
 import awadb
 from langchain.vectorstores import AwaDB
 from langchain.document_loaders import TextLoader
@@ -10,7 +19,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 def Test_EmbeddingText(awadb_client):
-    awadb_client.Create("test_llm2") 
+    awadb_client.Create("test_llm2", "OpenAI")
 
     sentences_set = ["The man is happy", "The man is very happy", "The cat is happy", "The man is eating"]
 
@@ -180,10 +189,10 @@ def Test_LangChain_MetaFilter():
 
 if __name__ == "__main__":
     awadb_client = awadb.Client()
-    #Test_EmbeddingText(awadb_client)
-    #Test_Vector1(awadb_client)
-    #Test_Vector2(awadb_client)
+    Test_EmbeddingText(awadb_client)
+    Test_Vector1(awadb_client)
+    Test_Vector2(awadb_client)
     #Test_Load(awadb_client)
     #Test_LangChain_Interface(awadb_client)
-    Test_LangChain_MMR_Search()
+    #Test_LangChain_MMR_Search()
     #Test_LangChain_MetaFilter()
