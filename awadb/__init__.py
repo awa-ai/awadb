@@ -27,6 +27,11 @@ class FieldDataType(Enum):
     VECTOR = 4
     ERROR = 5
 
+__all__ = [
+    "OpenAI",
+    "HuggingFace",
+]
+
 
 def typeof(variate):
     v_type = FieldDataType.ERROR
@@ -245,7 +250,10 @@ class Client:
                 table_info.SetRetrievalParam('{"ncentroids" : 256, "nsubvector" : 16}')
                 self.tables_attr[table_name] = table_info
 
-    def Create(self, table_name):
+    def Create(self, table_name, model_name = "HuggingFace"):
+        if model_name not in __all__:
+            raise NameError("Could not find this model: ", model_name)
+
         if table_name in self.tables:
             print("Table %s exist! Please directly Use(%s)" % (table_name, table_name))
             return False
@@ -261,6 +269,7 @@ class Client:
         self.tables_have_obvious_primary_key[table_name] = False
         self.tables_primary_key_fid_no[table_name] = None
         self.tables_doc_count[table_name] = 0
+        self.model_name = model_name
         return True
 
     def Close(self, table_name: Optional[str] = None):
@@ -692,7 +701,7 @@ class Client:
         if embeddings is None:
             if self.llm is None:
                 from awadb import llm_embedding
-
+                # Set llm
                 self.llm = llm_embedding.LLMEmbedding()
             embeddings = self.llm.EmbeddingBatch(texts)
 
