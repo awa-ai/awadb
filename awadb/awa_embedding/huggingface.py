@@ -1,10 +1,10 @@
-from awadb.llm_embedding import LLMEmbedding
+from awadb.awa_embedding import AwaEmbedding
 from typing import Iterable, Any, List
 
 # Use all-mpnet-base-v2 as the default model
 DEFAULT_MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"
 
-class HuggingFaceEmbeddings(LLMEmbedding):
+class HuggingFaceEmbeddings(AwaEmbedding):
     def __init__(self):
         self.tokenizer = None
         try:

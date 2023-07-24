@@ -271,8 +271,8 @@ class Client:
         self.tables_primary_key_fid_no[table_name] = None
         self.tables_doc_count[table_name] = 0
         self.model_name = model_name
-        from awadb import llm_embedding
-        self.llm = llm_embedding.LLMEmbedding(self.model_name)
+        from awadb import awa_embedding
+        self.llm = awa_embedding.AwaEmbedding(self.model_name)
         return True
 
     def Close(self, table_name: Optional[str] = None):
@@ -683,8 +683,8 @@ class Client:
             ).__name__ == "dict":
                 for key in field:
                     if key == "embedding_text":
-                        from awadb import llm_embedding
-                        self.llm = llm_embedding.LLMEmbedding(self.model_name)
+                        from awadb import awa_embedding
+                        self.llm = awa_embedding.AwaEmbedding(self.model_name)
 
                         doc.append(self.llm.Embedding(field[key]))
                         self.tables_embedding_text_fid_no[
@@ -731,9 +731,9 @@ class Client:
 
         if embeddings is None:
             if self.llm is None:
-                from awadb import llm_embedding
+                from awadb import awa_embedding
                 # Set llm
-                self.llm = llm_embedding.LLMEmbedding(self.model_name)
+                self.llm = awa_embedding.AwaEmbedding(self.model_name)
             embeddings = self.llm.EmbeddingBatch(texts)
 
         awa_docs = awa.DocsVec()

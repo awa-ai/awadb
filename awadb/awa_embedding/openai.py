@@ -1,11 +1,11 @@
-from awadb.llm_embedding import LLMEmbedding
+from awadb.awa_embedding import AwaEmbedding
 from typing import Iterable, Any, List
 import os
 import numpy as np
 
 DEFAULT_MODEL_NAME = "text-embedding-ada-002"
 
-class OpenAIEmbeddings(LLMEmbedding):
+class OpenAIEmbeddings(AwaEmbedding):
     def __init__(self):
         self.tokenizer = None        
         try:

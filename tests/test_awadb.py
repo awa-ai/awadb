@@ -19,7 +19,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 def Test_EmbeddingText(awadb_client):
-    awadb_client.Create("test_llm2", "OpenAI")
+    awadb_client.Create("test_llm2", "HuggingFace")
 
     sentences_set = ["The man is happy", "The man is very happy", "The cat is happy", "The man is eating"]
 
