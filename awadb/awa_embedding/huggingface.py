@@ -1,16 +1,20 @@
-# -*- coding:utf-8 -*-
-#!/usr/bin/python3
-
-from sentence_transformers import SentenceTransformer
-from transformers import AutoModel
-from transformers import AutoTokenizer
+from awadb import AwaEmbedding
 from typing import Iterable, Any, List
 
-class LLMEmbedding:
-    def __init__(self):
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.tokenizer = None 
+# Use all-mpnet-base-v2 as the default model
+DEFAULT_MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"
 
+class HuggingFaceEmbeddings(AwaEmbedding):
+    def __init__(self):
+        self.tokenizer = None
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as exc:
+            raise ImportError(
+                "Could not import sentence_transformers python package. "
+                "Please install it with `pip install sentence_transformers`."
+            ) from exc
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
 
     def Embedding(self, sentence):
         tokens = []
@@ -29,14 +33,3 @@ class LLMEmbedding:
         for text in texts:
             results.append(self.model.encode(text))
         return results
-
-    #set your own llm
-    def SetModel(self, model_name):
-        self.model = AutoModel.from_pretrained(model_name)
-
-    #set your own tokenizer
-    def SetTokenizer(self, tokenizer_name):
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-
-
-
