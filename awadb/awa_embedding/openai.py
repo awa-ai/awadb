@@ -1,4 +1,4 @@
-from awadb.awa_embedding import AwaEmbedding
+from awadb import AwaEmbedding
 from typing import Iterable, Any, List
 import os
 import numpy as np

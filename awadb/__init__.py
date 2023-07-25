@@ -63,6 +63,34 @@ def md5str(str):
     m = hashlib.md5(str.encode(encoding="utf-8"))
     return m.hexdigest()
 
+class AwaEmbedding:
+    """Embedding models."""
+    def __init__(self, model_name):
+        self.model_name = model_name
+        if self.model_name == "OpenAI":
+            from awadb.awa_embedding.openai import OpenAIEmbeddings
+            self.llm = OpenAIEmbeddings()
+        else:
+            from awadb.awa_embedding.huggingface import HuggingFaceEmbeddings
+            self.llm = HuggingFaceEmbeddings()
+
+    #set your own llm
+    def SetModel(self, model_name):
+        self.model = AutoModel.from_pretrained(model_name)
+
+    #set your own tokenizer
+    def SetTokenizer(self, tokenizer_name):
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+
+    def Embedding(self, sentence):
+        return self.llm.Embedding(sentence)
+    
+    def EmbeddingBatch(
+        self,
+        texts: Iterable[str],
+        **kwargs: Any,
+    ) -> List[List[float]]:
+        return self.llm.EmbeddingBatch(texts, **kwargs)
 
 class Client:
     def __init__(self, root_dir="."):
@@ -271,8 +299,7 @@ class Client:
         self.tables_primary_key_fid_no[table_name] = None
         self.tables_doc_count[table_name] = 0
         self.model_name = model_name
-        from awadb import awa_embedding
-        self.llm = awa_embedding.AwaEmbedding(self.model_name)
+        self.llm = AwaEmbedding(self.model_name)
         return True
 
     def Close(self, table_name: Optional[str] = None):
@@ -683,8 +710,7 @@ class Client:
             ).__name__ == "dict":
                 for key in field:
                     if key == "embedding_text":
-                        from awadb import awa_embedding
-                        self.llm = awa_embedding.AwaEmbedding(self.model_name)
+                        self.llm = AwaEmbedding(self.model_name)
 
                         doc.append(self.llm.Embedding(field[key]))
                         self.tables_embedding_text_fid_no[
@@ -730,10 +756,9 @@ class Client:
             self.is_duplicate_texts = is_duplicate_texts
 
         if embeddings is None:
-            if self.llm is None:
-                from awadb import awa_embedding
+            if self.llm is None:                
                 # Set llm
-                self.llm = awa_embedding.AwaEmbedding(self.model_name)
+                self.llm = AwaEmbedding(self.model_name)
             embeddings = self.llm.EmbeddingBatch(texts)
 
         awa_docs = awa.DocsVec()

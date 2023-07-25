@@ -34,6 +34,11 @@ def Test_EmbeddingText(awadb_client):
     results = awadb_client.Search(query, 3)
     print(results)
 
+    from awadb import AwaEmbedding
+    test_embedding = AwaEmbedding("HuggingFace")
+    print("Test the Embedding model ##########\n\n")
+    print(test_embedding.Embedding("Test the embedding"))
+
     #doc = awadb_client.Get('2')
     #print(doc)
 

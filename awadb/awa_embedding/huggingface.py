@@ -1,4 +1,4 @@
-from awadb.awa_embedding import AwaEmbedding
+from awadb import AwaEmbedding
 from typing import Iterable, Any, List
 
 # Use all-mpnet-base-v2 as the default model
