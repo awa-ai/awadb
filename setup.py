@@ -144,7 +144,7 @@ setup(
     license="Apache 2.0",
     ext_modules=[CMakeExtension("awa")],
     cmdclass={"build_ext": CMakeBuild},
-    packages=["awadb", "awadb.llm_embedding"],
+    packages=["awadb", "awadb.llm_embedding", "awadb.awa_embedding"],
     
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},

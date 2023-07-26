@@ -14,7 +14,7 @@ class HuggingFaceEmbeddings(AwaEmbedding):
                 "Could not import sentence_transformers python package. "
                 "Please install it with `pip install sentence_transformers`."
             ) from exc
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.model = SentenceTransformer(DEFAULT_MODEL_NAME)
 
     def Embedding(self, sentence):
         tokens = []

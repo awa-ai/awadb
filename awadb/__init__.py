@@ -65,8 +65,14 @@ def md5str(str):
 
 class AwaEmbedding:
     """Embedding models."""
-    def __init__(self, model_name):
-        self.model_name = model_name
+    def __init__(
+        self, 
+        model_name: Optional[str] = None):
+        if model_name is None:
+            self.model_name = "HuggingFace"
+        else:
+            self.model_name = model_name
+
         if self.model_name == "OpenAI":
             from awadb.awa_embedding.openai import OpenAIEmbeddings
             self.llm = OpenAIEmbeddings()
