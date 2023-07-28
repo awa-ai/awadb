@@ -88,3 +88,6 @@ Examples of combining ChatGLM to do local knowledge database please see [here](.
 ## License
 
 [Apache 2.0](./LICENSE)
+
+## Docs
+[docs](./docs/build/html/index.html)
