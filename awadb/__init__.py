@@ -30,6 +30,7 @@ class FieldDataType(Enum):
 __all__ = [
     "OpenAI",
     "HuggingFace",
+    "ViT-B/32",
 ]
 
 
@@ -76,6 +77,9 @@ class AwaEmbedding:
         if self.model_name == "OpenAI":
             from awadb.awa_embedding.openai import OpenAIEmbeddings
             self.llm = OpenAIEmbeddings()
+        elif self.model_name == "ViT-B/32":
+            from awadb.awa_embedding.clipembedding import ClipEmbeddings
+            self.llm = ClipEmbeddings()
         else:
             from awadb.awa_embedding.huggingface import HuggingFaceEmbeddings
             self.llm = HuggingFaceEmbeddings()
