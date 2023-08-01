@@ -91,10 +91,8 @@ Examples of combining ChatGLM to do local knowledge database please see [here](.
 
 ## Community
 
-Join the AwaDB community on [Slack](https://awadbhq.slack.com) to share any problem, suggestion, or discussion with us.
+Join the AwaDB community to share any problem, suggestion, or discussion with us:
 
-Our [Discord](https://discord.gg/GP7QxRrDjB)
-
-Follow AwaDB on social media:
-
+- [Discord](https://discord.gg/GP7QxRrDjB)
+- [Slack](https://awadbhq.slack.com)
 - [Reddit](https://www.reddit.com/r/Awadb/)
