@@ -7,7 +7,6 @@ DEFAULT_MODEL_NAME = "text-embedding-ada-002"
 
 class OpenAIEmbeddings(AwaEmbedding):
     def __init__(self):
-        self.tokenizer = None        
         try:
             import openai
         except ImportError as exc:
