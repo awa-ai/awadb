@@ -88,3 +88,11 @@ Examples of combining ChatGLM to do local knowledge database please see [here](.
 ## License
 
 [Apache 2.0](./LICENSE)
+
+## Community
+
+Join the Aweadb community on [Slack](https://awadbhq.slack.com) to share your suggestions, advice, and questions with our engineering team.
+
+Follow Aweadb on social media:
+
+- [Reddit](https://www.reddit.com/r/Awadb/)
