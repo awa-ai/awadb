@@ -29,7 +29,7 @@ class FieldDataType(Enum):
 
 __all__ = [
     "OpenAI",
-    "HuggingFace",
+    "mpnet-v2",
     "ViT-B/32",
 ]
 
@@ -70,7 +70,7 @@ class AwaEmbedding:
         self, 
         model_name: Optional[str] = None):
         if model_name is None:
-            self.model_name = "HuggingFace"
+            self.model_name = "mpnet-v2"
         else:
             self.model_name = model_name
 
@@ -135,7 +135,7 @@ class Client:
 
         self.llm = None
         self.is_duplicate_texts = True
-        self.model_name = "HuggingFace"
+        self.model_name = "mpnet-v2"
 
     def Write(self):
         tables_meta = {}
@@ -289,7 +289,7 @@ class Client:
                 table_info.SetRetrievalParam('{"ncentroids" : 256, "nsubvector" : 16}')
                 self.tables_attr[table_name] = table_info
 
-    def Create(self, table_name, model_name="HuggingFace"):
+    def Create(self, table_name, model_name = "mpnet-v2"):
         if model_name not in __all__:
             raise NameError("Could not find this model: ", model_name)
 
