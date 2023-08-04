@@ -7,8 +7,8 @@
 # Install awadb
 pip3 install awadb -r requirements.txt 
 ```
-If not available, please try `pip3 install --index-url https://pypi.org/simple/ --no-deps awadb`  
-Now support Linux(python>=3.6), MacOSX(x86-64 architecture python==3.11, m1 or m2 arm64 architecture python>=3.8)
+  
+Now support Linux(python>=3.6), MacOSX(x86-64 architecture, m1 or m2 arm64 architecture python>=3.8)
   
 
 
@@ -88,6 +88,10 @@ Examples of combining ChatGLM to do local knowledge database please see [here](.
 ## License
 
 [Apache 2.0](./LICENSE)
+
+
+## Docs
+[docs](./docs/build/html/index.html)
 
 ## Community
 
