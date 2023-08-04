@@ -19,7 +19,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 def Test_EmbeddingText(awadb_client):
-    awadb_client.Create("test_llm2", "HuggingFace")
+    awadb_client.Create("test_llm2", "mpnet-v2")
 
     sentences_set = ["The man is happy", "The man is very happy", "The cat is happy", "The man is eating"]
 
@@ -35,7 +35,7 @@ def Test_EmbeddingText(awadb_client):
     print(results)
 
     from awadb import AwaEmbedding
-    test_embedding = AwaEmbedding("HuggingFace")
+    test_embedding = AwaEmbedding("mpnet-v2")
     print("Test the Embedding model ##########\n\n")
     print(test_embedding.Embedding("Test the embedding"))
 
