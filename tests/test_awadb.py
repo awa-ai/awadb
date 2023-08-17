@@ -15,11 +15,12 @@ from langchain.vectorstores import AwaDB
 from langchain.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from langchain.schema import Document
 
 
 
 def Test_EmbeddingText(awadb_client):
-    awadb_client.Create("test_llm2", "mpnet-v2")
+    awadb_client.Create("test_llm2", "HuggingFace")
 
     sentences_set = ["The man is happy", "The man is very happy", "The cat is happy", "The man is eating"]
 
@@ -35,7 +36,7 @@ def Test_EmbeddingText(awadb_client):
     print(results)
 
     from awadb import AwaEmbedding
-    test_embedding = AwaEmbedding("mpnet-v2")
+    test_embedding = AwaEmbedding("HuggingFace")
     print("Test the Embedding model ##########\n\n")
     print(test_embedding.Embedding("Test the embedding"))
 
@@ -45,10 +46,10 @@ def Test_EmbeddingText(awadb_client):
 
 def Test_Vector1(awadb_client):
     awadb_client.Create("testdb3")
-    awadb_client.Add([{'primary':'123'}, {'name':'lj'}, {'gender':'male'}, {'age':39}, 'hello', 'world', [1, 3.5, 3]])
-    awadb_client.Add([{'primary':'235'}, {'name':'hu'}, {'gender':'male'}, {'age':28}, 'what', 'doing', [1, 3.4, 2]])
-    awadb_client.Add([{'primary':'398'}, {'name':'er'}, {'gender':'female'}, {'age':45}, 'yu', 'hi', [1, 2.4, 4]])
-    awadb_client.Add([{'primary':'345'}, {'name':'hehe'}, {'gender':'female'}, {'age':25}, 'hhuhu', 'hello', [1.3, 2.9, 8.9]])
+    awadb_client.Add([{'primary':'123'}, {'name':'lj'}, {'gender':'male'}, {'age':39}, {'word1':'hello'}, {'word2':'world'}, {'emb1':[1, 3.5, 3]}])
+    awadb_client.Add([{'primary':'235'}, {'name':'hu'}, {'gender':'male'}, {'age':28}, {'word1':'what'}, {'word2':'doing'}, {'emb1':[1, 3.4, 2]}])
+    awadb_client.Add([{'primary':'398'}, {'name':'er'}, {'gender':'female'}, {'age':45}, {'word1':'yu'}, {'word2':'hi'}, {'emb1':[1, 2.4, 4]}])
+    awadb_client.Add([{'primary':'345'}, {'name':'hehe'}, {'gender':'female'}, {'age':25}, {'word1':'hhuhu'}, {'word2':'hello'}, {'emb1':[1.3, 2.9, 8.9]}])
 
     doc1 = awadb_client.Get('1')
     print(doc1) 
@@ -121,12 +122,16 @@ def Test_LangChain_MMR_Search():
     print(results[1])
     print(results[2])
 
+    print('------------------')
     s_results = docsearch.similarity_search("What is the purpose of the NATO Alliance?", text_in_page_content="NATO")
     for s_result in s_results:
         print(s_result)
+    print('------------------')
+     
     s_results = docsearch.similarity_search("What is the purpose of the NATO Alliance?", text_in_page_content="Alliance")
     for s_result in s_results:
         print(s_result)
+    print('------------------')
     s_results = docsearch.similarity_search("What is the purpose of the NATO Alliance?")
     for s_result in s_results:
         print(s_result)
@@ -190,6 +195,64 @@ def Test_LangChain_MetaFilter():
     for result in results:
         print(result)
 
+def Test_Not_Complete_Fields():
+    docs = [
+    Document(page_content="A bunch of scientists bring back dinosaurs and mayhem breaks loose", metadata={"year": 1993, "rating": 7.7, "genre": "science fiction"}),
+    Document(page_content="Leo DiCaprio gets lost in a dream within a dream within a dream within a ...", metadata={"year": 2010, "director": "Christopher Nolan", "rating": 8.2}),
+    Document(page_content="A psychologist / detective gets lost in a series of dreams within dreams within dreams and Inception reused the idea", metadata={"year": 2006, "director": "Satoshi Kon", "rating": 8.6}),
+    Document(page_content="A bunch of normal-sized women are supremely wholesome and some men pine after them", metadata={"year": 2019, "director": "Greta Gerwig", "rating": 8.3}),
+    Document(page_content="Toys come alive and have a blast doing so", metadata={"year": 1995, "genre": "animated"}),
+    Document(page_content="Three men walk into the Zone, three men walk out of the Zone", metadata={"year": 1979, "rating": 9.9, "director": "Andrei Tarkovsky", "genre": "thriller", "rating": 9.9})
+]
+    docsearch = AwaDB.from_documents(docs, table_name="langchain-self-retriever-demo")
+
+    results = docsearch.similarity_search("What are some movies about dinosaurs")
+ 
+    for result in results:
+        print(result)
+
+def Test_Multi_String_Fields():
+    docs = [
+    Document(
+        page_content="A bunch of scientists bring back dinosaurs and mayhem breaks loose",
+        metadata={"year": 1993, "rating": 7.7, "genre": ["action", "science fiction"]},
+    ),
+    Document(
+        page_content="Leo DiCaprio gets lost in a dream within a dream within a dream within a ...",
+        metadata={"year": 2010, "director": "Christopher Nolan", "rating": 8.2},
+    ),
+    Document(
+        page_content="A psychologist / detective gets lost in a series of dreams within dreams within dreams and Inception reused the idea",
+        metadata={"year": 2006, "director": "Satoshi Kon", "rating": 8.6},
+    ),
+    Document(
+        page_content="A bunch of normal-sized women are supremely wholesome and some men pine after them",
+        metadata={"year": 2019, "director": "Greta Gerwig", "rating": 8.3},
+    ),
+    Document(
+        page_content="Toys come alive and have a blast doing so",
+        metadata={"year": 1995, "genre": "animated"},
+    ),
+    Document(
+        page_content="Three men walk into the Zone, three men walk out of the Zone",
+        metadata={
+            "year": 1979,
+            "rating": 9.9,
+            "director": "Andrei Tarkovsky",
+            "genre": ["science fiction", "thriller"],
+            "rating": 9.9,
+        },
+    ),
+    ]
+
+    docsearch = AwaDB.from_documents(docs, table_name="langchain-multi-string-demo")
+
+    results = docsearch.similarity_search("What are some movies about dinosaurs")
+ 
+    for result in results:
+        print(result)
+
+
 
 
 if __name__ == "__main__":
@@ -201,3 +264,5 @@ if __name__ == "__main__":
     Test_LangChain_Interface(awadb_client)
     Test_LangChain_MMR_Search()
     Test_LangChain_MetaFilter()
+    Test_Not_Complete_Fields()
+    Test_Multi_String_Fields()

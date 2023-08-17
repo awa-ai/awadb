@@ -958,6 +958,7 @@ void MultiFieldsRangeIndex::FieldOperateWorker() {
 }
 
 int MultiFieldsRangeIndex::Add(int docid, int field) {
+  if (field < 0)  return -1;
   FieldRangeIndex *index = fields_[field];
   if (index == nullptr) {
     return 0;
@@ -993,7 +994,17 @@ int MultiFieldsRangeIndex::AddDoc(int docid, int field) {
   }
 
   std::string key;
-  table_->GetFieldRawValue(docid, field, key);
+  int ret = table_->GetFieldRawValue(docid, field, key);
+  if (ret != 0)  {
+    std::vector<std::string> keys;
+
+    if (table_->GetColFieldRawValue(docid, (uint8_t)field, keys))
+      return -1;
+    for (size_t i = 0; i < keys.size(); i++)  {
+      index->Add(keys[i], docid);
+    }
+    return 0; 
+  } 
   index->Add(key, docid);
 
   return 0;
@@ -1213,6 +1224,31 @@ int MultiFieldsRangeIndex::AddField(int field, enum DataType field_type) {
   fields_[field] = index;
   return 0;
 }
+
+int MultiFieldsRangeIndex::AddNewField(
+  const int &fid, 
+  const FieldInfo &field_info) {
+  BTreeParameters bt_param;
+  bt_param.mainleafxtra = 0;
+  bt_param.maxleaves = 1000000;
+  bt_param.poolsize = 500;
+  bt_param.leafxtra = 0;
+  bt_param.mainpool = 500;
+  bt_param.mainbits = 16;
+  bt_param.bits = 16;
+  bt_param.kDelim = "\001";
+
+  if (fid < fields_.size())  return -1;
+  for (size_t i = fields_.size(); i <= fid; i++)  {
+    fields_.push_back(nullptr);
+  } 
+  FieldRangeIndex *index =
+      new FieldRangeIndex(path_, fid, field_info.data_type, bt_param);
+
+  fields_[fid] = index;
+  return 0;
+}
+
 
 long MultiFieldsRangeIndex::MemorySize(long &dense, long &sparse) {
   long total = 0;

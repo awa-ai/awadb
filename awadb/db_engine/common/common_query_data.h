@@ -6,6 +6,8 @@
 
 namespace tig_gamma {
 
+const std::string MULTI_STRING_SPLIT = "\001";
+
 struct TermFilter {
   std::string field;
   std::string value;
