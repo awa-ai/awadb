@@ -15,7 +15,6 @@
 namespace tig_gamma {
 
 
-
 void ResultItem::GetVecData(const std::string &fid_name, std::vector<float> &result_vec)  {
   int i = 0;
   for (auto & iter_name : this->names)  {
@@ -32,6 +31,27 @@ void ResultItem::GetVecData(const std::string &fid_name, std::vector<float> &res
   }
   return;
 }
+
+void ResultItem::GetMulStr(const std::string &mul_str_seq, std::vector<std::string> &vec_str)  {
+  StrSplit(mul_str_seq, MULTI_STRING_SPLIT, vec_str);  
+  return;
+}
+
+void ResultItem::StrSplit(const std::string& str, const std::string &split, std::vector<std::string>& res)
+{
+    if (str == "")  return;
+    size_t pos = str.find(split);
+    size_t start = 0; 
+    while (pos != std::string::npos)
+    {
+        res.push_back(str.substr(start, pos - start));
+	start = pos + 1;
+        pos = str.find(split, start);
+    }
+    res.push_back(str.substr(start, str.length() - start));
+}
+
+
 
 Response::Response() { 
   response_ = nullptr;
@@ -284,7 +304,16 @@ int Response::PackResultItem(const VectorDoc *vec_doc,
 
   for (struct Field &field : fields) {
     result_item.names.emplace_back(std::move(field.name));
-    result_item.values.emplace_back(std::move(field.value));
+    if (field.datatype == DataType::MULTI_STRING)  {
+      std::string mul_str_seq = ""; 
+      for (size_t i = 0; i < field.mul_str_value.size(); i++)  {
+	if (i != 0)  mul_str_seq += MULTI_STRING_SPLIT;
+	mul_str_seq += field.mul_str_value[i];
+      }
+      result_item.values.emplace_back(std::move(mul_str_seq));
+    }  else  {
+      result_item.values.emplace_back(std::move(field.value));
+    }
   }
 
   cJSON *extra_json = cJSON_CreateObject();

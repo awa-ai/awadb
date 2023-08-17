@@ -23,7 +23,8 @@ enum class DataType : std::uint16_t {
   FLOAT,
   DOUBLE,
   STRING,
-  VECTOR
+  VECTOR,
+  MULTI_STRING
 };
 
 struct VectorInfo {

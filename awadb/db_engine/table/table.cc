@@ -34,6 +34,7 @@ Table::Table(const string &root_path, bool b_compress) {
 
   table_created_ = false;
   last_docid_ = -1;
+  docid_fields_mgr_ = nullptr; 
   bitmap_mgr_ = nullptr;
   table_params_ = nullptr;
   storage_mgr_ = nullptr;
@@ -48,6 +49,11 @@ Table::~Table() {
     delete storage_mgr_;
     storage_mgr_ = nullptr;
   }
+  if (docid_fields_mgr_)  {
+    delete docid_fields_mgr_;
+    docid_fields_mgr_ = nullptr;
+  }
+
   LOG(INFO) << "Table deleted.";
 }
 
@@ -137,7 +143,15 @@ int Table::CreateTable(TableInfo &table, TableParams &table_params,
             << " success! item length=" << item_length_
             << ", field num=" << (int)field_num_;
   if (0 == item_length_)  return 0;
-  
+
+  docid_fields_mgr_ = new DocidFieldsMgr();
+  size_t block_docs_num = 10000;
+  size_t slot_str_size = 104857600; //100M
+  size_t str_max_size = 8192; // max length for each string
+  if (!docid_fields_mgr_->Init(block_docs_num, slot_str_size, str_max_size))  {
+    LOG(ERROR)<<"docid_fields_mgr init failed!";
+  }
+
   return InitStorageMgr(); 
   
   /* 
@@ -160,8 +174,8 @@ int Table::CreateTable(TableInfo &table, TableParams &table_params,
   }
 
   LOG(INFO) << "init storageManager success! vector byte size="
-            << options.fixed_value_bytes << ", path=" << root_path_; */
-  return 0;
+            << options.fixed_value_bytes << ", path=" << root_path_; // 
+  return 0; */
 }
 
 int Table::InitStorageMgr()  {
@@ -218,6 +232,7 @@ int Table::AddField(const string &name, DataType ftype, bool is_index) {
     str_field_id_.insert(std::make_pair(field_num_, string_field_num_));
     ++string_field_num_;
   }
+
   idx_attr_offset_.push_back(item_length_);
   attr_offset_map_.insert(std::pair<string, int>(name, item_length_));
   item_length_ += FTypeSize(ftype);
@@ -230,6 +245,18 @@ int Table::AddField(const string &name, DataType ftype, bool is_index) {
 
   return 0;
 }
+
+int Table::AddNewField(const FieldInfo &field_info)  {
+  if (attr_idx_map_.find(field_info.name) != attr_idx_map_.end())  {
+    LOG(ERROR)<<"field "<<field_info.name<<" is not a new field";
+    return -1;
+  } 
+
+  attrs_.push_back(field_info.data_type);
+  return docid_fields_mgr_->AddField(field_info, field_num_++);
+}
+
+
 
 int Table::ParseStrPosition(const uint8_t *buf, uint32_t &block_id,
                             in_block_pos_t &in_block_pos, str_len_t &len) {
@@ -397,7 +424,7 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
     std::vector<Field> &fields = doc.TableFields();
     uint8_t doc_value[item_length_];
 
-    if(fields.size() == 0) {
+    if (fields.size() == 0) {
         Field field;
         field.name = "_id";
         field.value = doc.Key();
@@ -405,10 +432,20 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
         fields.push_back(field);
     }
 
+    std::vector<Field> new_column_fields;
+
     for (size_t j = 0; j < fields.size(); ++j) {
       const auto &field_value = fields[j];
       const string &name = field_value.name;
-      
+      if (attr_offset_map_.find(name) == attr_offset_map_.end())  {
+		if (docid_fields_mgr_->ContainField(name))  {
+		  new_column_fields.push_back(fields[j]);
+		}  else  {
+		  LOG(ERROR)<<"field name "<<name<<" invalid";
+		}
+		continue;	
+      } 
+
       size_t offset = attr_offset_map_[name];
 
       DataType attr = attr_type_map_[name];
@@ -424,9 +461,11 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
         in_block_pos_t in_block_pos;
         storage_mgr_->AddString(field_value.value.c_str(), len, block_id,
                                 in_block_pos);
-        SetStrPosition(doc_value + offset, block_id, in_block_pos, len);
+		SetStrPosition(doc_value + offset, block_id, in_block_pos, len);
       }
     }
+
+    docid_fields_mgr_->Put((uint32_t)id, new_column_fields); 
 
     storage_mgr_->Add((const uint8_t *)doc_value, item_length_);
     if (id % 10000 == 0) {
@@ -590,40 +629,89 @@ int Table::GetDocInfo(const int docid, Doc &doc,
     field.datatype = type;
   };
 
-  int i = 0;
   if (fields.size() == 0) {
-    table_fields.resize(attr_type_map_.size());
-
+    docid_fields_mgr_->GetAllFields(docid, table_fields);
     for (const auto &it : attr_idx_map_) {
-      assign_field(table_fields[i], it.first);
-      GetFieldRawValue(docid, it.second, table_fields[i].value, doc_value);
-      NumericValueToStr(table_fields[i]);
-      ++i;
+      Field table_field;
+      assign_field(table_field, it.first);
+      GetFieldRawValue(docid, it.second, table_field.value, doc_value);
+
+      if (table_field.datatype == DataType::STRING && table_field.value.empty())  {
+        continue; 
+      }  
+      NumericValueToStr(table_field);
+      table_fields.push_back(table_field);
     }
   } else {
-    table_fields.resize(fields.size());
     for (const std::string &f : fields) {
       const auto &iter = attr_idx_map_.find(f);
       if (iter == attr_idx_map_.end()) {
-        LOG(ERROR) << "Cannot find field [" << f << "]";
-        continue;
+	if (docid_fields_mgr_->ContainField(f))  {
+	  Field table_field; 
+	  table_field.name = f;
+          if (docid_fields_mgr_->Get(docid, table_field) == 0)  {
+	    NumericValueToStr(table_field);
+	    table_fields.push_back(table_field);
+	  }
+	}	
+	continue;
       }
       int field_idx = iter->second;
-      assign_field(table_fields[i], f);
-      GetFieldRawValue(docid, field_idx, table_fields[i].value, doc_value);
-      NumericValueToStr(table_fields[i]);
-      ++i;
+
+      Field table_field;
+      assign_field(table_field, f);
+      GetFieldRawValue(docid, field_idx, table_field.value, doc_value);
+      if (table_field.datatype == DataType::STRING && table_field.value.empty())  {
+        continue; 
+      }  
+      NumericValueToStr(table_field);
+      table_fields.push_back(table_field);
     }
   }
   delete[] doc_value;
   return 0;
 }
 
+int Table::GetColFieldRawValue(
+  const int &docid,
+  const std::string &field_name,
+  std::vector<std::string> &field_values)  {
+  Field f;
+  f.name = field_name;
+  if (docid_fields_mgr_->Get(docid, f) < 0) return -1;
+ 
+  if (f.datatype == DataType::MULTI_STRING)  {
+    field_values.swap(f.mul_str_value);
+  }  else  {
+    field_values.push_back(f.value);
+  }
+  return 0;
+}
+
+int Table::GetColFieldRawValue(
+  const int &docid,
+  const uint8_t &field_id,
+  std::vector<std::string> &field_values)  {
+
+  Field f;
+  int ret = docid_fields_mgr_->GetFieldName(field_id, f.name);
+  if (ret != 0)  return ret;
+  
+  if (docid_fields_mgr_->Get(docid, f) < 0)  return -2;
+
+  if (f.datatype == DataType::MULTI_STRING)  {
+    field_values.swap(f.mul_str_value); 
+  }  else  {
+    field_values.push_back(f.value); 
+  }
+  return 0; 
+}
+
 int Table::GetFieldRawValue(int docid, const std::string &field_name,
                             std::string &value, const uint8_t *doc_v) {
   const auto iter = attr_idx_map_.find(field_name);
   if (iter == attr_idx_map_.end()) {
-    LOG(ERROR) << "Cannot find field [" << field_name << "]";
+    LOG(ERROR) << "Cannot find field [" << field_name << "] in main table";
     return -1;
   }
   GetFieldRawValue(docid, iter->second, value, doc_v);
@@ -642,14 +730,15 @@ int Table::GetFieldRawValue(int docid, int field_id, std::string &value,
   }
 
   DataType data_type = attrs_[field_id];
-  size_t offset = idx_attr_offset_[field_id];
+  if (field_id >= (int)attr_offset_map_.size())  return -2;  
+  uint32_t offset = idx_attr_offset_[field_id];
 
   if (data_type == DataType::STRING) {
     uint32_t block_id = 0;
     in_block_pos_t in_block_pos = 0;
     str_len_t len = 0;
     ParseStrPosition(doc_value + offset, block_id, in_block_pos, len);
-    storage_mgr_->GetString(docid, value, block_id, in_block_pos, len);
+	storage_mgr_->GetString(docid, value, block_id, in_block_pos, len);
   } else {
     int value_len = FTypeSize(data_type);
     value = std::string((const char *)(doc_value + offset), value_len);
@@ -724,7 +813,8 @@ int Table::GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map) {
 
 int Table::GetAttrIdx(const std::string &field) const {
   const auto &iter = attr_idx_map_.find(field.c_str());
-  return (iter != attr_idx_map_.end()) ? iter->second : -1;
+  return (iter != attr_idx_map_.end()) ? iter->second : 
+    docid_fields_mgr_->GetFieldId(field);
 }
 
 bool Table::AlterCacheSize(int cache_size, int str_cache_size) {

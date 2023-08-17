@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "util/log.h"
 #include "c_api/api_data/gamma_batch_result.h"
 #include "c_api/api_data/gamma_doc.h"
 #include "c_api/api_data/gamma_table.h"
@@ -19,8 +20,7 @@
 #include "io/io_common.h"
 #include "storage/storage_manager.h"
 #include "table_define.h"
-#include "util/log.h"
-
+#include "docid_fields_mgr.h"
 
 
 namespace tig_gamma {
@@ -101,6 +101,15 @@ class Table {
   int GetDocInfo(const int docid, Doc &doc,
                  const std::vector<std::string> &fields);
 
+  int GetColFieldRawValue(const int &docid,
+    const std::string &field_name,
+    std::vector<std::string> &field_values);
+
+  int GetColFieldRawValue(const int &docid,
+    const uint8_t &field_id,
+    std::vector<std::string> &field_values);
+
+
   int GetFieldRawValue(int docid, const std::string &field_name,
                        std::string &value, const uint8_t *doc_v = nullptr);
 
@@ -148,7 +157,10 @@ class Table {
 
   int InitStorageMgr();
   int AddField(const std::string &name, DataType ftype, bool is_index);
-  
+
+  int AddNewField(const FieldInfo &field_info); 
+
+
   std::string root_path_;
   int last_docid_;
 
@@ -189,6 +201,7 @@ class Table {
 
   bool table_created_;
 
+  DocidFieldsMgr * docid_fields_mgr_;
   bitmap::BitmapManager *bitmap_mgr_;
   TableParams *table_params_;
   StorageManager *storage_mgr_;

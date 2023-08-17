@@ -410,7 +410,6 @@ int GammaEngine::Search(Request &request, Response &response_results) {
       delete[] gamma_results;
       return -3;
     }
-
 #ifdef PERFORMANCE_TESTING
     gamma_query.condition->GetPerfTool().Perf("search total");
 #endif
@@ -595,8 +594,8 @@ int GammaEngine::CreateTable(const std::string &table_str) {
       buf[len] = '\0';
       if ((size_t)len != fio.Read(buf, 1, (size_t)len)) {
         LOG(ERROR) << "read file error, path=" << dump_meta_path;
-	delete[] buf;
-	buf = nullptr;
+	    delete[] buf;
+	    buf = nullptr;
         return IO_ERR;
       }
       meta_jp = new utils::JsonParser();
@@ -789,6 +788,14 @@ int GammaEngine::CreateTable(TableInfo &table) {
   LOG(INFO) << "create table [" << table_name << "] success!";
   created_table_ = true;
   return 0;
+}
+
+int GammaEngine::AddNewField(const FieldInfo &field_info)  {
+  int new_fid = table_->AddNewField(field_info);
+  if (field_info.is_index)  {
+    new_fid = field_range_index_->AddNewField(new_fid, field_info); 
+  }
+  return new_fid;
 }
 
 int GammaEngine::AddOrUpdate(Doc &doc) {
@@ -1048,17 +1055,6 @@ int GammaEngine::AddOrUpdateDocs(
   is_dirty_ = true;
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 int GammaEngine::Update(int doc_id, std::vector<struct Field> &fields_table,
                         std::vector<struct Field> &fields_vec) {

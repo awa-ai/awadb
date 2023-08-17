@@ -42,6 +42,8 @@ class GammaEngine {
   
   int CreateTable(const std::string &table_str);
 
+  int AddNewField(const FieldInfo &field_info);
+
   int AddOrUpdate(Doc &doc);
 
   int AddOrUpdateDocs(Docs &docs, BatchResult &result);

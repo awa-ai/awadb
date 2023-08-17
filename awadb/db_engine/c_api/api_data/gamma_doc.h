@@ -22,6 +22,7 @@ struct Field {
   std::string value;
   std::string source;
   DataType datatype;
+  std::vector<std::string> mul_str_value;
 
   Field() {}
 
@@ -32,6 +33,7 @@ struct Field {
     value = other.value;
     source = other.source;
     datatype = other.datatype;
+    mul_str_value = other.mul_str_value;
     return *this;
   }
 
@@ -42,10 +44,19 @@ struct Field {
     value = std::move(other.value);
     source = std::move(other.source);
     datatype = other.datatype;
+    mul_str_value = other.mul_str_value;
     return *this;
   }
   
   int GetVecData(std::vector<float> &vec_data);
+
+  std::vector<std::string> &GetMulStr()  {
+    return mul_str_value;
+  }
+
+  void AddMulStr(std::string &str)  {
+    mul_str_value.push_back(str);
+  }
 
 };
 

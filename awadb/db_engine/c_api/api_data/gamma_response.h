@@ -52,7 +52,9 @@ struct ResultItem {
     return *this;
   }
 
+  void StrSplit(const std::string& str, const std::string &split, std::vector<std::string>& res);
   void GetVecData(const std::string &fid_name, std::vector<float> &vec_data);
+  void GetMulStr(const std::string &mul_str_seq, std::vector<std::string> &vec_str);
 
   //std::vector<std::string> &GetVecSource(const std::string &fid_name);
 

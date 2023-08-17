@@ -33,6 +33,11 @@ bool Create(void *engine, awadb::TableInfo &table_info)  {
   return false;
 }	
 
+bool AddNewField(void *engine, awadb::FieldInfo &field_info)  {
+  int ret = static_cast<awadb::GammaEngine *>(engine)->AddNewField(field_info);
+  return ret >= 0 ? true : false; 
+}
+
 bool LoadFromLocal(void *engine)  {
   int ret = static_cast<awadb::GammaEngine *>(engine)->Load();
   return ret == 0 ? true : false; 
@@ -103,6 +108,7 @@ PYBIND11_MODULE(awa, m) {
 	.value("DOUBLE", awadb::DataType::DOUBLE)
 	.value("STRING", awadb::DataType::STRING)
 	.value("VECTOR", awadb::DataType::VECTOR)
+	.value("MULTI_STRING", awadb::DataType::MULTI_STRING)
 	.export_values();
     
     py::class_<awadb::VectorInfo>(m, "VectorInfo").def(py::init<>())
@@ -144,7 +150,10 @@ PYBIND11_MODULE(awa, m) {
 	.def_readwrite("value", &awadb::Field::value)
 	.def_readwrite("source", &awadb::Field::source)
 	.def_readwrite("datatype", &awadb::Field::datatype)
-        .def("GetVecData", (void(awadb::Field::*)(std::vector<float> &)) &awadb::Field::GetVecData);
+        .def("GetVecData", (void(awadb::Field::*)(std::vector<float> &)) &awadb::Field::GetVecData)
+        .def("GetMulStr", &awadb::Field::GetMulStr)
+        .def("AddMulStr", (void(awadb::Field::*)(std::string &)) &awadb::Field::AddMulStr);
+
 
     py::class_<awadb::Doc>(m, "Doc").def(py::init<>())
 	.def("AddField", (void(awadb::Doc::*)(const awadb::Field &)) &awadb::Doc::AddField)
@@ -220,7 +229,8 @@ PYBIND11_MODULE(awa, m) {
 	.def_readwrite("names", &awadb::ResultItem::names)
 	.def_readwrite("values", &awadb::ResultItem::values)
 	.def_readwrite("extra", &awadb::ResultItem::extra)
-        .def("GetVecData", (void(awadb::ResultItem::*)(const std::string &, std::vector<float> &)) &awadb::ResultItem::GetVecData);
+        .def("GetVecData", (void(awadb::ResultItem::*)(const std::string &, std::vector<float> &)) &awadb::ResultItem::GetVecData)
+        .def("GetMulStr", (void(awadb::ResultItem::*)(const std::string &, std::vector<std::string> &)) &awadb::ResultItem::GetMulStr);
      
 
     py::class_<awadb::SearchResult>(m, "SearchResult").def(py::init<>())
@@ -248,6 +258,7 @@ PYBIND11_MODULE(awa, m) {
     m.def("Create", &Create, "Create Table");   
     m.def("LoadFromLocal", &LoadFromLocal, "Load Table");
     m.def("AddDoc", &AddDoc, "Add Or UpdateDoc");   
+    m.def("AddNewField", &AddNewField, "Add New Field");
     m.def("AddTexts", &AddTexts, "Add Or Update Texts and Embeddings");
     m.def("Delete", &Delete, "Delete Document");
     m.def("GetDocs", &GetDocs, "GetDocs");

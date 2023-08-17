@@ -55,6 +55,8 @@ class MultiFieldsRangeIndex {
 
   int AddField(int field, enum DataType field_type);
 
+  int AddNewField(const int &fid, const FieldInfo &field_info);
+
   int Search(const std::vector<FilterInfo> &origin_filters,
              MultiRangeQueryResults *out);
 
