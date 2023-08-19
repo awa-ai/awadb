@@ -23,10 +23,10 @@ awadb_client = awadb.Client()
 awadb_client.Create("testdb")
 
 # 3. Add docs to the table. Can also update and delete the doc!
-awadb_client.Add([{'name':'jim'}, {'age':39}, 'hello', [1, 3.5, 3]])
-awadb_client.Add([{'name':'vincent'}, {'age':28}, 'world', [1, 3.4, 2]])
-awadb_client.Add([{'name':'david'}, {'age':45}, 'hi',  [1, 2.4, 4]])
-awadb_client.Add([{'name':'tom'}, {'age':25}, 'dolly', [1.3, 2.9, 8.9]])
+awadb_client.Add([{'name':'jim'}, {'age':39}, {'desc':'hello'}, {'vec':[1, 3.5, 3]}])
+awadb_client.Add([{'name':'vincent'}, {'age':28}, {'desc':'world'}, {'vec':[1, 3.4, 2]}])
+awadb_client.Add([{'name':'david'}, {'age':45}, {'desc':'hi'},  {'vec':[1, 2.4, 4]}])
+awadb_client.Add([{'name':'tom'}, {'age':25}, {'desc':'dolly'}, {'vec':[1.3, 2.9, 8.9]}])
 
 # 4. Search by specified vector query and the most TopK similar results
 results = awadb_client.Search([3.0, 3.1, 4.2], 3)
@@ -51,7 +51,7 @@ awadb_client.Create("test_llm1")
 awadb_client.Add([{'embedding_text':'The man is happy'}, {'source' : 'pic1'}])
 awadb_client.Add([{'embedding_text':'The man is very happy'}, {'source' : 'pic2'}])
 awadb_client.Add([{'embedding_text':'The cat is happy'}, {'source' : 'pic3'}])
-awadb_client.Add(['The man is eating', 'pic4'])
+awadb_client.Add([{'embedding_text':'The man is eating'}, {'source':'pic4'}])
 
 # 4. Search the most Top3 sentences by the specified query
 query = "The man is happy"
