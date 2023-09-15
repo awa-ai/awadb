@@ -27,7 +27,8 @@ class DocidFieldsMgr  {
     const uint32_t &str_max_size);
 
   int AddField(const FieldInfo &field_info, const uint8_t &fid);
-  int Put(const uint32_t &docid, const std::vector<Field> &fields); 
+  //int Put(const uint32_t &docid, const std::vector<Field> &fields); 
+  int Put(const uint32_t &docid, std::vector<Field> &fields); 
   int Get(const uint32_t &docid, std::vector<Field> &fields);
   int Get(const uint32_t &docid, Field &field);
   size_t FieldsSize()  { return size_; }
@@ -48,6 +49,15 @@ class DocidFieldsMgr  {
     return 0; 
   }
 
+  bool GetFieldType(const std::string &field_name,
+    DataType &type)  {
+    if (!ContainField(field_name))  return false;
+    type = fid_name2type_[field_name];
+    return true;
+  } 
+
+  std::map<std::string, uint8_t> fid_name2id_;
+
  private:
   int Get(const uint32_t &docid, const uint8_t field_id);
   int Put(const uint32_t &docid, const std::vector<uint8_t> &field_ids, const std::vector<uint32_t> &field_posids); 
@@ -66,7 +76,6 @@ class DocidFieldsMgr  {
   uint32_t slot_str_size_;
   uint32_t str_max_size_;
 
-  std::map<std::string, uint8_t> fid_name2id_;
   std::map<uint8_t, std::string> fid_id2name_;
   std::map<std::string, DataType> fid_name2type_;
   std::map<std::string, bool> fid2index_;

@@ -58,7 +58,8 @@ bool FixedFieldColumnData::Init(
   return true;
 }
 
-int FixedFieldColumnData::Put(const Field &field)  {
+//int FixedFieldColumnData::Put(const Field &field)  {
+int FixedFieldColumnData::Put(Field &field)  {
   uint32_t slot_id = max_id_ / slot_element_count_;
   if (slot_id > data_.size())  {
     LOG(ERROR)<<"Docid "<<max_id_<<" is too large!";
@@ -70,13 +71,18 @@ int FixedFieldColumnData::Put(const Field &field)  {
   }
 
   uint32_t pos_id = max_id_ % slot_element_count_;
-  memcpy((void *)(data_[slot_id] + pos_id * element_size_), (void *)&field.value, element_size_);
+  if (field.datatype == DataType::INT)  {
+    int v = 0;
+    memcpy((void *)&v, (void *)field.value.c_str(), element_size_);
+  } 
+  memcpy((void *)(data_[slot_id] + pos_id * element_size_), (void *)field.value.c_str(), element_size_);
   max_id_++;
   return 0;
 }
 
 //todo: multi-threads to speedup
-int FixedFieldColumnData::Put(const std::vector<Field> &fields_array)  {
+//int FixedFieldColumnData::Put(const std::vector<Field> &fields_array)  {
+int FixedFieldColumnData::Put(std::vector<Field> &fields_array)  {
  
   int ret = 0;	
   for (uint32_t i = 0; i < fields_array.size(); i++)  {
@@ -108,7 +114,36 @@ int FixedFieldColumnData::Get(const uint32_t &id, Field &field_value)  {
   }
 
   uint32_t pos_id = id % slot_element_count_;
-  field_value.value = std::string(data_[slot_id] + pos_id * element_size_, element_size_);
+
+  char *data_ptr = data_[slot_id] + pos_id * element_size_;
+  switch (field_value.datatype)  {
+    case DataType::INT:  {
+      int value = 0;
+      memcpy((void *)&value, (void *)data_ptr, element_size_);
+      field_value.value = std::to_string(value);
+      break;
+    }
+    case DataType::FLOAT:  {
+      float value = 0;
+      memcpy((void *)&value, (void *)data_ptr, element_size_);
+      field_value.value = std::to_string(value);
+      break;
+    }
+    case DataType::LONG:  {
+      long value = 0;
+      memcpy((void *)&value, (void *)data_ptr, element_size_);
+      field_value.value = std::to_string(value);
+      break;
+    }
+    case DataType::DOUBLE:  {
+      double value = 0;
+      memcpy((void *)&value, (void *)data_ptr, element_size_);
+      field_value.value = std::to_string(value);
+      break;
+    }
+    default:  break;
+  }
+
   //memcpy((void *)&field_value.value, (void *)(data_[slot_id] + pos_id * element_size_), element_size_);
   return 0;
 }

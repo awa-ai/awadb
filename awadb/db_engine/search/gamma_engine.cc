@@ -791,6 +791,9 @@ int GammaEngine::CreateTable(TableInfo &table) {
 }
 
 int GammaEngine::AddNewField(const FieldInfo &field_info)  {
+  if (!table_)  {
+    LOG(ERROR)<<"table_ is null"; 
+  } 
   int new_fid = table_->AddNewField(field_info);
   if (field_info.is_index)  {
     new_fid = field_range_index_->AddNewField(new_fid, field_info); 
@@ -860,7 +863,6 @@ int GammaEngine::AddOrUpdate(Doc &doc) {
 
   if (not b_running_ and index_status_ == UNINDEXED) {
     if (max_docid_ >= indexing_size_) {
-      LOG(INFO) << "Begin indexing.";
       this->BuildIndex();
     }
   }
@@ -899,7 +901,7 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
       for (size_t j = 0; j < fields_table.size(); ++j) {
         struct Field &field = fields_table[j];
         int idx = table_->GetAttrIdx(field.name);
-        field_range_index_->Add(max_docid_ + i - start_id, idx);
+	field_range_index_->Add(max_docid_ + i - start_id, idx);
       }
       // add vectors by VectorManager
       std::vector<struct Field> &fields_vec = doc.VectorFields();
@@ -945,7 +947,6 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
   batchAdd(start_id, batch_size);
   if (not b_running_ and index_status_ == UNINDEXED) {
     if (max_docid_ >= indexing_size_) {
-      LOG(INFO) << "Begin indexing.";
       this->BuildIndex();
     }
   }
@@ -1041,7 +1042,6 @@ int GammaEngine::AddOrUpdateDocs(
   
   if (not b_running_ and index_status_ == UNINDEXED) {
     if (max_docid_ >= indexing_size_) {
-      LOG(INFO) << "Begin indexing.";
       this->BuildIndex();
     }
   }
@@ -1108,6 +1108,7 @@ int GammaEngine::Delete(std::string &key) {
   vec_manager_->Delete(docid);
   if (migrate_data_) { migrate_data_->DeleteDocid(docid); }
   is_dirty_ = true;
+  if (docid == max_docid_) max_docid_++;
 
   return ret;
 }
@@ -1265,7 +1266,6 @@ int GammaEngine::GetDocs(
   for (auto &key : keys) {
     if (0 != GetDoc(key, docs[key]))  {
       docs[key].SetKey("-1");
-      LOG(INFO)<<"key is "<<key;
     }
   }
   return 0;
@@ -1328,7 +1328,6 @@ int GammaEngine::Indexing() {
     return -1;
   }
 
-  LOG(INFO) << "vector manager indexing success!";
   int ret = 0;
   bool has_error = false;
   while (b_running_) {
@@ -1339,6 +1338,7 @@ int GammaEngine::Indexing() {
     index_status_ = IndexStatus::INDEXED;
     bool index_is_dirty = false;
     int add_ret = vec_manager_->AddRTVecsToIndex(index_is_dirty);
+    
     if (add_ret < 0) {
       has_error = true;
       LOG(ERROR) << "Add real time vectors to index error!";
@@ -1350,7 +1350,6 @@ int GammaEngine::Indexing() {
     usleep(1000 * 1000);  // sleep 5000ms
   }
   running_cv_.notify_one();
-  LOG(INFO) << "Build index exited!";
   return ret;
 }
 
@@ -1374,7 +1373,6 @@ int GammaEngine::BuildFieldIndex() {
     usleep(5000 * 1000);  // sleep 5000ms
   }
   running_field_cv_.notify_one();
-  LOG(INFO) << "Build field index exited!";
   return 0;
 }
 
@@ -1466,7 +1464,6 @@ int GammaEngine::CreateTableFromLocal(std::string &table_name) {
       assert(begin != std::string::npos);
       begin += 1;
       table_name = file_path.substr(begin, pos - begin);
-      LOG(INFO) << "local table name=" << table_name;
       TableSchemaIO tio(file_path);
       TableInfo table;
       if (tio.Read(table_name, table)) {
@@ -1735,6 +1732,13 @@ int GammaEngine::TerminateMigrate() {
     migrate_data_ = nullptr;
   }
   return 0;
+}
+
+void GammaEngine::GetFieldsType(const std::vector<std::string> &fields, 
+  std::map<std::string, DataType> &types)  {
+  if (!table_)  return;
+  table_->GetAllAttrType(fields, types);
+  return;
 }
 
 }  // namespace tig_gamma

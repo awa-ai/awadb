@@ -18,8 +18,10 @@ class FixedFieldColumnData  {
 
   bool Init(const uint32_t &slot_element_count, const DataType &element_type);
 
-  int Put(const Field &field);
-  int Put(const std::vector<Field> &fields_array);
+  //int Put(const Field &field);
+  int Put(Field &field);
+  //int Put(const std::vector<Field> &fields_array);
+  int Put(std::vector<Field> &fields_array);
 
   int Get(const uint32_t &id, Field &field_value); 
 

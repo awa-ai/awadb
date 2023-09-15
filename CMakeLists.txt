@@ -11,7 +11,7 @@ option(BUILD_WITH_GPU "Build awadb with gpu index support" off)
 option(BUILD_TOOLS "Build tools" off)
 option(BUILD_FAISSLIKE_INDEX "Build faisslike index" off)
 option(ENABLE_COVERAGE "Use gcov" off)
-
+option(BUILD_SERVICE "Build awadb service" on)
 
 exec_program(
     "sh"
@@ -23,13 +23,15 @@ set(THIRDPARTY ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party)
 set(BTREE ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/btree)
 set(GAMMA_C_API ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/c_api)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(APPLE)
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Wformat -Wno-inconsistent-missing-override -Wconstant-conversion -Werror=narrowing -Wno-deprecated")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++14 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-4 -undefined dynamic_lookup")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++14 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -lomp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Wformat -Wno-inconsistent-missing-override -Wconstant-conversion -Werror=narrowing -Wno-deprecated")
 else(APPLE)
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-error=deprecated-declarations -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++14 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++14 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-error=deprecated-declarations -Wno-deprecated-declarations")
 endif(APPLE)
 
 
@@ -224,6 +226,83 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/awadb/db_engine/vector DESTINATION inclu
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/awadb/db_engine/c_api DESTINATION include/gamma FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/awadb/db_engine/idl/fbs-gen/c DESTINATION include/gamma/idl/fbs-gen FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/awadb/db_engine/third_party DESTINATION include/gamma FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
+
+if(BUILD_SERVICE)
+    get_filename_component(awadb_proto "${CMAKE_CURRENT_SOURCE_DIR}/service/protos/awadb.proto" ABSOLUTE)
+    get_filename_component(awadb_proto_path "${awadb_proto}" PATH)
+
+    exec_program(
+        "sh"
+        ${CMAKE_CURRENT_SOURCE_DIR}/service
+        ARGS "init_env.sh")
+
+    # Generated sources
+    set(awadb_proto_srcs "${CMAKE_CURRENT_SOURCE_DIR}/service/idl/awadb.pb.cc")
+    set(awadb_proto_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/service/idl/awadb.pb.h")
+    set(awadb_grpc_srcs "${CMAKE_CURRENT_SOURCE_DIR}/service/idl/awadb.grpc.pb.cc")
+    set(awadb_grpc_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/service/idl/awadb.grpc.pb.h")
+    set(_PROTOBUF_PROTOC ${CMAKE_CURRENT_SOURCE_DIR}/service/grpc/bin/protoc)
+    set(_GRPC_CPP_PLUGIN_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/service/grpc/bin/grpc_cpp_plugin)
+    add_custom_command(
+        OUTPUT "${awadb_proto_srcs}" "${awadb_proto_hdrs}" "${awadb_grpc_srcs}" "${awadb_grpc_hdrs}"
+        COMMAND ${_PROTOBUF_PROTOC}
+        ARGS --grpc_out "${CMAKE_CURRENT_SOURCE_DIR}/service/idl"
+          --cpp_out "${CMAKE_CURRENT_SOURCE_DIR}/service/idl"
+          -I "${awadb_proto_path}"
+          --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+          "${awadb_proto}"
+        DEPENDS "${awadb_proto}")
+
+    # Include generated *.pb.h files
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/service/idl")
+
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/service/grpc/include")
+
+    find_package(Threads REQUIRED)
+
+    option(protobuf_MODULE_COMPATIBLE TRUE)
+    find_package(Protobuf CONFIG REQUIRED)
+    message(STATUS "Using protobuf ${Protobuf_VERSION}")
+
+    set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
+    set(_REFLECTION gRPC::grpc++_reflection)
+  
+    # Find gRPC installation
+    # Looks for gRPCConfig.cmake file installed by gRPC's cmake installation.
+    find_package(gRPC CONFIG REQUIRED)
+    message(STATUS "Using gRPC ${gRPC_VERSION}")
+
+    set(_GRPC_GRPCPP gRPC::grpc++)
+
+    # awadb_grpc_proto
+    add_library(awadb_grpc_proto
+      ${awadb_grpc_srcs}
+      ${awadb_grpc_hdrs}
+      ${awadb_proto_srcs}
+      ${awadb_proto_hdrs})
+
+    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/service/grpc/lib)
+
+    target_link_libraries(awadb_grpc_proto
+      ${_REFLECTION}
+      ${_GRPC_GRPCPP}
+      ${_PROTOBUF_LIBPROTOBUF})
+
+    aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/service/servers/local AWADB_SERVER_SRCS)
+
+    # Targets awadb_(client|server)
+    add_executable(awadb_server
+        ${AWADB_SERVER_SRCS}
+	${LIB_SRCS})
+
+    target_link_libraries(awadb_server
+	${LIBRARIES}
+        awadb_grpc_proto
+        ${_REFLECTION}
+        ${_GRPC_GRPCPP}
+        ${_PROTOBUF_LIBPROTOBUF})
+
+endif(BUILD_SERVICE)
 
 if(BUILD_TEST)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/tests)

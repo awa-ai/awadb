@@ -87,7 +87,9 @@ Segment::Segment(const std::string &file_path, uint32_t seg_id, int max_size,
                      sizeof(str_blocks_size) + sizeof(str_compressed_size) +
                      sizeof(b_compressed);
 
-  per_block_size_ = ((64 * 1024) / item_length_) * item_length_;  // block~=64k
+  uint32_t item_len = item_length_;
+  if (0 == item_len)  item_len = 1;
+  per_block_size_ = ((64 * 1024) / item_len) * item_len;  // block~=64k
   buffered_size_ = 0;
   str_blocks_ = nullptr;
   blocks_ = nullptr;
@@ -345,6 +347,7 @@ str_offset_t Segment::UpdateString(const char *str, str_len_t len, uint32_t bloc
 int Segment::GetValues(uint8_t *value, int id, int n) {
   uint32_t start = (uint32_t)id * item_length_;
   uint32_t n_bytes = (uint32_t)n * item_length_;
+ 
   // TODO read from buffer queue
   int count = 0;
   while (id + n > (int)cur_size_) {
