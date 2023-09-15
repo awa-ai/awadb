@@ -64,6 +64,7 @@ int VectorBlock::WriteContent(const uint8_t *value, uint32_t n_bytes,
     uint32_t raw_len = compressor_->GetRawLen();
     Compress(value, n_bytes, output);
 
+    LOG(ERROR)<<"size is "<<raw_len;
     start = (start / raw_len) * vec_item_len_;
     value = (const uint8_t *)output.data();
   }

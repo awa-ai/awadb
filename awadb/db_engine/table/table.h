@@ -119,9 +119,9 @@ class Table {
   int GetFieldRawValue(int docid, int field_id, std::vector<uint8_t> &value,
                        const uint8_t *doc_v = nullptr);
 
-  int GetFieldType(const std::string &field, DataType &type);
-
   int GetAttrType(std::map<std::string, DataType> &attr_type_map);
+
+  void GetAllAttrType(const std::vector<std::string> &fields, std::map<std::string, DataType> &types);
 
   int GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map);
 

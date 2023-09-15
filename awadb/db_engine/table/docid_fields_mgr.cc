@@ -105,7 +105,8 @@ int DocidFieldsMgr::AddField(
 
 int DocidFieldsMgr::Put(
   const uint32_t &docid,
-  const std::vector<Field> &fields)  {
+  //const std::vector<Field> &fields)  {
+  std::vector<Field> &fields)  {
   
   std::vector<uint8_t> field_ids;
   std::vector<uint32_t> field_posids;

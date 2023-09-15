@@ -142,8 +142,9 @@ int Table::CreateTable(TableInfo &table, TableParams &table_params,
   LOG(INFO) << "Create table " << name_
             << " success! item length=" << item_length_
             << ", field num=" << (int)field_num_;
-  if (0 == item_length_)  return 0;
+  //if (0 == item_length_)  return 0;
 
+  if (0 == item_length_)  item_length_ = sizeof(long); 
   docid_fields_mgr_ = new DocidFieldsMgr();
   size_t block_docs_num = 10000;
   size_t slot_str_size = 104857600; //100M
@@ -438,12 +439,16 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
       const auto &field_value = fields[j];
       const string &name = field_value.name;
       if (attr_offset_map_.find(name) == attr_offset_map_.end())  {
-		if (docid_fields_mgr_->ContainField(name))  {
-		  new_column_fields.push_back(fields[j]);
-		}  else  {
-		  LOG(ERROR)<<"field name "<<name<<" invalid";
-		}
-		continue;	
+	if (docid_fields_mgr_->ContainField(name))  {
+	  if (field_value.datatype == DataType::INT)  {
+	    int int_value = 0;
+	    memcpy((void *)&int_value, (void *)field_value.value.c_str(), sizeof(int));
+	  } 
+	  new_column_fields.push_back(fields[j]);
+	}  else  {
+	  LOG(ERROR)<<"field name "<<name<<" invalid";
+	}
+	continue;	
       } 
 
       size_t offset = attr_offset_map_[name];
@@ -461,7 +466,7 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
         in_block_pos_t in_block_pos;
         storage_mgr_->AddString(field_value.value.c_str(), len, block_id,
                                 in_block_pos);
-		SetStrPosition(doc_value + offset, block_id, in_block_pos, len);
+	SetStrPosition(doc_value + offset, block_id, in_block_pos, len);
       }
     }
 
@@ -620,7 +625,6 @@ int Table::GetDocInfo(const int docid, Doc &doc,
     return ret;
   }
   std::vector<struct Field> &table_fields = doc.TableFields();
-
   auto assign_field = [&](struct Field &field, const std::string &field_name) {
     DataType type = attr_type_map_[field_name];
     std::string source;
@@ -650,7 +654,6 @@ int Table::GetDocInfo(const int docid, Doc &doc,
 	  Field table_field; 
 	  table_field.name = f;
           if (docid_fields_mgr_->Get(docid, table_field) == 0)  {
-	    NumericValueToStr(table_field);
 	    table_fields.push_back(table_field);
 	  }
 	}	
@@ -787,22 +790,31 @@ int Table::GetFieldRawValue(int docid, int field_id, std::vector<uint8_t> &value
   return 0;
 }
 
-int Table::GetFieldType(const std::string &field_name, DataType &type) {
-  const auto &it = attr_type_map_.find(field_name);
-  if (it == attr_type_map_.end()) {
-    LOG(ERROR) << "Cannot find field [" << field_name << "]";
-    return -1;
-  }
-  type = it->second;
-  return 0;
-}
-
 int Table::GetAttrType(std::map<std::string, DataType> &attr_type_map) {
   for (const auto &attr_type : attr_type_map_) {
     attr_type_map.insert(attr_type);
   }
   return 0;
 }
+
+void Table::GetAllAttrType(
+  const std::vector<std::string> &fields, 
+  std::map<std::string, DataType> &types)  {
+
+  for (auto &iter: fields)  {
+    if (attr_type_map_.find(iter) != attr_type_map_.end())  {
+      types[iter] = attr_type_map_[iter];
+    
+    }  else  {
+      DataType type;
+      if (docid_fields_mgr_->GetFieldType(iter, type))  {
+        types[iter] = type;
+      }
+    }
+  }
+  return;
+}
+
 
 int Table::GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map) {
   for (const auto &attr_is_index : attr_is_index_map_) {

@@ -953,7 +953,6 @@ void MultiFieldsRangeIndex::FieldOperateWorker() {
 
     delete field_op;
   }
-  LOG(INFO) << "FieldOperateWorker exited!";
   b_operate_running_ = false;
 }
 

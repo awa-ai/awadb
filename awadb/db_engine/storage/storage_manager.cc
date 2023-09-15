@@ -156,9 +156,11 @@ int StorageManager::Init(std::string name, int cache_size, int str_cache_size) {
     LOG(ERROR) << "fixed_value_bytes[" << options_.fixed_value_bytes
                << "] > 64K. it exceeds the length of the block.";
   }
-  
-  uint32_t per_block_size = ((64 * 1024) / options_.fixed_value_bytes) *
-                            options_.fixed_value_bytes;  // block~=64k
+ 
+  uint32_t default_record_len = options_.fixed_value_bytes;
+  if (0 == default_record_len)  default_record_len = 1; 
+  uint32_t per_block_size = ((64 * 1024) / default_record_len) *
+                            default_record_len;  // block~=64k
   
   if (cache_size > 0) {
     cache_ = new LRUCache<uint32_t, ReadFunParameter *>(name, cache_size,
@@ -376,6 +378,7 @@ int StorageManager::Get(int id, const uint8_t *&value) {
   int seg_id = id / options_.segment_size;
   Segment *segment = nullptr;
   segments_.GetData(seg_id, segment);
+  
   if (segment == nullptr) {
     LOG(ERROR) << "Storage[" << name_ << "], segments_size[" << segments_.Size()
                << "], seg_id[" << seg_id << "] cannot be used. Get(" << id

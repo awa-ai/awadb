@@ -133,6 +133,9 @@ class GammaEngine {
 
   int TerminateMigrate();
 
+  void GetFieldsType(const std::vector<std::string> &fields, 
+		     std::map<std::string, DataType> &types); 
+
  private:
   GammaEngine(const std::string &index_root_path);
 

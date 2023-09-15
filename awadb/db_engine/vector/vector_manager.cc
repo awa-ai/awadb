@@ -116,7 +116,6 @@ int VectorManager::CreateVectorTable(TableInfo &table,
       return PARAM_ERR;
     }
 
-    LOG(INFO) << "store params=" << store_params.ToJsonStr();
     if (vectors_jp.Contains(meta_info->AbsoluteName())) {
       utils::JsonParser vec_jp;
       vectors_jp.GetObject(meta_info->AbsoluteName(), vec_jp);
@@ -160,7 +159,6 @@ int VectorManager::CreateVectorTable(TableInfo &table,
 
     for (size_t i = 0; i < retrieval_types_.size(); ++i) {
       string &retrieval_type_str = retrieval_types_[i];
-      LOG(INFO) << "Create index model [" << retrieval_type_str << "]";
       RetrievalModel *retrieval_model = dynamic_cast<RetrievalModel *>(
           reflector().GetNewModel(retrieval_type_str));
       if (retrieval_model == nullptr) {
@@ -269,6 +267,7 @@ int VectorManager::Delete(int docid) {
 int VectorManager::Indexing() {
   int ret = 0;
   for (const auto &iter : vector_indexes_) {
+
     if (0 != iter.second->Indexing()) {
       ret = -1;
       LOG(ERROR) << "vector table " << iter.first << " indexing failed!";
