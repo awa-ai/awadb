@@ -654,7 +654,6 @@ int Table::GetDocInfo(const int docid, Doc &doc,
 	  Field table_field; 
 	  table_field.name = f;
           if (docid_fields_mgr_->Get(docid, table_field) == 0)  {
-	    //NumericValueToStr(table_field);
 	    table_fields.push_back(table_field);
 	  }
 	}	
