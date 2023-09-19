@@ -795,6 +795,7 @@ int GammaEngine::AddNewField(const FieldInfo &field_info)  {
     LOG(ERROR)<<"table_ is null"; 
   } 
   int new_fid = table_->AddNewField(field_info);
+  if (new_fid < 0)  return new_fid;
   if (field_info.is_index)  {
     new_fid = field_range_index_->AddNewField(new_fid, field_info); 
   }
@@ -940,6 +941,10 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
       if (Update(docid, fields_table, fields_vec)) {
         LOG(ERROR) << "update error, key=" << key << ", docid=" << docid;
         continue;
+      }
+      if (docids_bitmap_->Test(docid)) {
+	docids_bitmap_->Unset(docid);
+        docids_bitmap_->Dump(docid, 1);
       }
     }
   }
@@ -1091,10 +1096,10 @@ int GammaEngine::Update(int doc_id, std::vector<struct Field> &fields_table,
 int GammaEngine::Delete(std::string &key) {
   int docid = -1, ret = 0;
   ret = table_->GetDocIDByKey(key, docid);
-  if (ret != 0 || docid < 0) return -1;
+  if (ret != 0 || docid < 0) return 1;
 
   if (docids_bitmap_->Test(docid)) {
-    return ret;
+    return 2;
   }
   ++delete_num_;
   docids_bitmap_->Set(docid);
@@ -1108,15 +1113,14 @@ int GammaEngine::Delete(std::string &key) {
   vec_manager_->Delete(docid);
   if (migrate_data_) { migrate_data_->DeleteDocid(docid); }
   is_dirty_ = true;
-  if (docid == max_docid_) max_docid_++;
 
-  return ret;
+  return 0;
 }
 
 bool GammaEngine::DeleteDocs(std::vector<std::string> &keys)  {
   bool ret = true;
   for (auto &key : keys)  {
-    if (Delete(key) != 0)  {
+    if (Delete(key) < 0)  {
       ret = false;
     }
   }

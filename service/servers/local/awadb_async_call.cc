@@ -26,6 +26,7 @@ bool CreateCall::ProcessCreateRequest()  {
   if (!request_.has_db_name() || request_.db_name().empty())  return false; 
   bool status = true;
   std::string db_table_name = request_.db_name() + "/";
+  if (request_.tables_meta_size() == 0)  return false;
   for (size_t i = 0; i < request_.tables_meta_size(); i++)  {
     awadb_grpc::TableMeta *table_meta_ptr = request_.mutable_tables_meta((int)i);
     // create table 
@@ -250,7 +251,7 @@ bool AddFieldsCall::ProcessAddFieldsRequest() {
         if (is_vector_data)  continue;
 
 	field_info.is_index = field_meta_ptr->is_index();
-	status = AddNewField(engine, field_info); 
+	status = AddNewField(engine, field_info);
       }
     }
   }
@@ -315,6 +316,9 @@ bool AddOrUpdateCall::ProcessAddOrUpdateRequest()  {
     for (size_t i = 0; i < request_.docs_size(); i++)  {
       awadb::Doc doc;
       awadb_grpc::Document *doc_ptr = request_.mutable_docs((int)i);
+      if (!doc_ptr->has_id())  {
+        continue;
+      }
       doc.SetKey(doc_ptr->id());
       for (size_t j = 0; j < doc_ptr->fields_size(); j++)  {
         awadb::Field field;
