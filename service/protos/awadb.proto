@@ -88,7 +88,7 @@ message Field {
 }
 
 message Document {
-  optional string id = 1;
+  optional bytes id = 1;
   repeated Field fields = 2;
 }
 
@@ -141,6 +141,8 @@ enum SearchResultCode {
   SUCCESS = 0;
   INDEX_NOT_TRAINED = 1;
   SEARCH_ERROR = 2; 
+  DB_NOT_FOUND = 3;
+  TABLE_NOT_FOUND = 4;
 }
 
 message ResultItem {
@@ -150,9 +152,8 @@ message ResultItem {
 
 message SearchResult {
   optional int32 total = 1;
-  optional SearchResultCode result_code = 2;
-  optional string msg = 3;
-  repeated ResultItem result_items = 4;
+  optional string msg = 2;
+  repeated ResultItem result_items = 3;
 }
 
 message SearchResponse {
@@ -160,6 +161,7 @@ message SearchResponse {
   optional string table_name = 2;
   repeated SearchResult results = 3;
   optional string online_log_message = 4;
+  optional SearchResultCode result_code = 5;
 }
 
 enum ResponseCode {
@@ -167,6 +169,7 @@ enum ResponseCode {
   OK = 200;
   TIME_OUT = 201;
   INTERNAL_ERROR = 202;
+  NETWORK_ERROR = 203;
 }
 
 message ResponseStatus {

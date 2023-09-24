@@ -121,11 +121,15 @@ class Table {
 
   int GetAttrType(std::map<std::string, DataType> &attr_type_map);
 
+  bool GetAttrType(const std::string &field, DataType &field_type);
+
   void GetAllAttrType(const std::vector<std::string> &fields, std::map<std::string, DataType> &types);
 
   int GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map);
 
   int GetAttrIdx(const std::string &field) const;
+
+  bool CheckDocFields(Doc &doc);
 
   const std::string &GetName() { return name_; }
 

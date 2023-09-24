@@ -52,6 +52,8 @@ class VectorManager {
   int Dump(const std::string &path, int dump_docid, int max_docid);
   int Load(const std::vector<std::string> &path, int &doc_num);
 
+  bool CheckDocVecFields(Doc &doc);
+
   bool Contains(std::string &field_name);
 
   void VectorNames(std::vector<std::string> &names) {

@@ -19,11 +19,13 @@ void ResultItem::GetVecData(const std::string &fid_name, std::vector<float> &res
   int i = 0;
   for (auto & iter_name : this->names)  {
     if (fid_name == iter_name)  {
-      int v = 0;
-      memcpy((void *)&v, this->values[i].c_str(), sizeof(int)); 
-      for (size_t j = 0; j < v / sizeof(float); j++)  {
+      //int v = 0;
+      //memcpy((void *)&v, this->values[i].c_str(), sizeof(int)); 
+      //for (size_t j = 0; j < v / sizeof(float); j++)  {
+      for (size_t j = 0; j < this->values[i].size() / sizeof(float); j++)  {
         float f_value;
-	memcpy((void *)&f_value, (void *)(this->values[i].c_str() + sizeof(int) + j * sizeof(float)), sizeof(float));
+	//memcpy((void *)&f_value, (void *)(this->values[i].c_str() + sizeof(int) + j * sizeof(float)), sizeof(float));
+	memcpy((void *)&f_value, (void *)(this->values[i].c_str() + j * sizeof(float)), sizeof(float));
 	result_vec.push_back(f_value);
       } 
     } 

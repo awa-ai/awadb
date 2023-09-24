@@ -429,7 +429,11 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
         Field field;
         field.name = "_id";
         field.value = doc.Key();
-        field.datatype = DataType::STRING;
+        if (id_type_ == 0)  {
+	    field.datatype = DataType::STRING;
+	}  else  {
+	    field.datatype = DataType::LONG;
+	}
         fields.push_back(field);
     }
 
@@ -797,6 +801,19 @@ int Table::GetAttrType(std::map<std::string, DataType> &attr_type_map) {
   return 0;
 }
 
+bool Table::GetAttrType(
+  const std::string &field,
+  DataType &field_type)  {
+  bool ret = true;
+  const auto &iter = attr_type_map_.find(field);
+  if (iter != attr_type_map_.end())  {
+    field_type = iter->second;
+  }  else  {
+    ret = docid_fields_mgr_->GetFieldType(field, field_type);
+  }
+  return ret;
+}
+
 void Table::GetAllAttrType(
   const std::vector<std::string> &fields, 
   std::map<std::string, DataType> &types)  {
@@ -824,10 +841,41 @@ int Table::GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map) {
 }
 
 int Table::GetAttrIdx(const std::string &field) const {
-  const auto &iter = attr_idx_map_.find(field.c_str());
+  const auto &iter = attr_idx_map_.find(field);
   return (iter != attr_idx_map_.end()) ? iter->second : 
     docid_fields_mgr_->GetFieldId(field);
 }
+
+bool Table::CheckDocFields(Doc &doc)  {
+  std::vector<FieldInfo> new_fields;
+  std::vector<Field> &fields = doc.TableFields();
+  for (size_t i = 0; i < fields.size(); i++)  {
+    Field &field = fields[i];
+    DataType type = DataType::MULTI_STRING;
+    bool ret = GetAttrType(field.name, type);
+    if (!ret)  { // new field
+      FieldInfo new_field_info;
+      new_field_info.name = field.name;
+      new_field_info.data_type = field.datatype;
+      new_field_info.is_index = true; // default index
+      new_fields.push_back(new_field_info);
+    }  else  {
+      if (field.datatype != type)  {
+        return  false;
+      }
+    }
+  }
+  for (auto &iter: new_fields)  {
+    if (AddNewField(iter) < 0)  {
+      LOG(ERROR)<<"Add new field "<<iter.name<<" failed!";
+    }  else  {
+      LOG(ERROR)<<"Add a new field "<<iter.name<<" success!";
+    }
+  }
+  return true;
+}
+
+
 
 bool Table::AlterCacheSize(int cache_size, int str_cache_size) {
   return storage_mgr_->AlterCacheSize(cache_size, str_cache_size);
