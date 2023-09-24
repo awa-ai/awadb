@@ -332,6 +332,7 @@ int GammaEngine::Search(Request &request, Response &response_results) {
 
   int topn = request.TopN();
   bool brute_force_search = request.BruteForceSearch();
+  if (index_status_ != IndexStatus::INDEXED)  brute_force_search = true;
 
   if ((not brute_force_search) && (index_status_ != IndexStatus::INDEXED)) {
     string msg = "index not trained!";
@@ -572,7 +573,6 @@ int GammaEngine::CreateTable(const std::string &table_str) {
   //key_field.data_type = DataType::INT; 
   //key_field.is_index = true; 
   //table.AddField(key_field);
-  
 
   if (!vec_manager_ || !table_) {
     LOG(ERROR) << "vector and table should not be null!";
@@ -929,8 +929,15 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
     int docid = -1;
     table_->GetDocIDByKey(key, docid);
     if (docid == -1 && ite == remove_dupliacte.end()) {
-      ++batch_size;
-      continue;
+      if (!table_->CheckDocFields(doc) || !vec_manager_->CheckDocVecFields(doc))  {
+	// check each field is valid
+        batchAdd(start_id, batch_size);
+        batch_size = 0;
+        start_id = i + 1;
+      }  else  {
+        ++batch_size;
+        continue;
+      }
     } else {
       batchAdd(start_id, batch_size);
       batch_size = 0;

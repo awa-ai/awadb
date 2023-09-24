@@ -47,7 +47,12 @@ struct Field {
     mul_str_value = other.mul_str_value;
     return *this;
   }
-  
+
+  int GetVecDimension()  {
+    if (datatype != DataType::VECTOR)  return -1;
+    return value.size() / sizeof(float);
+  }
+   
   int GetVecData(std::vector<float> &vec_data);
 
   std::vector<std::string> &GetMulStr()  {

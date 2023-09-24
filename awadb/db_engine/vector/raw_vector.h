@@ -149,7 +149,9 @@ class RawVector : public VectorReader {
 
   long GetTotalMemBytes() { return total_mem_bytes_ + GetStoreMemUsage(); };
 
-  int GetVectorNum() const { return meta_info_->Size(); };
+  int GetVectorNum() const { return (int)(meta_info_->Size()); };
+
+  int GetVectorDimension() const { return meta_info_->Dimension(); }
 
   /** add vector to the specific implementation of RawVector(memory or disk)
    *it is called by next common function Add()

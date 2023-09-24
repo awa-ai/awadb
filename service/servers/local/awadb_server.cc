@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 
+#include "util/utils.h"
+#include "c_api/gamma_api.h"
 #include "awadb_async_call.h"
 #include "awadb_server.h"
 
@@ -22,8 +24,12 @@ LocalAsyncServer::~LocalAsyncServer() {
   cq_->Shutdown();
 }
 
-
 void LocalAsyncServer::Run(const uint16_t &port)  {
+  // if root_data_dir_ exists, load first
+  if (utils::isFolderExist(root_data_dir_.c_str()))  {
+    InitTableEngines();
+  }
+
   std::string server_address = absl::StrFormat("0.0.0.0:%d", port);
 
   ServerBuilder builder;
@@ -38,7 +44,6 @@ void LocalAsyncServer::Run(const uint16_t &port)  {
   // Finally assemble the server.
   server_ = builder.BuildAndStart();
   std::cout << "Server listening on " << server_address << std::endl;
-
   // Proceed to the server's main loop.
   HandleRpcs();
 }
@@ -66,6 +71,33 @@ void LocalAsyncServer::HandleRpcs()  {
     static_cast<Call*>(tag)->Proceed();
   }
 }
+
+bool LocalAsyncServer::InitTableEngines()  {
+  std::vector<std::string> dbs = utils::ls_folder(root_data_dir_, false);
+  for (auto &db: dbs)  {
+    std::string db_path = root_data_dir_ + "/";
+    db_path += db;
+    std::vector<std::string> tables = utils::ls_folder(db_path, false);
+    for (auto &table: tables)  {
+      std::string table_data_path = db_path + "/" + table;
+      std::string table_log_path = root_log_dir_ + "/" + db + "/" + table;
+      void *table_engine = Init(table_log_path.c_str(), table_data_path.c_str());
+      if (!table_engine)  {
+	std::cout<<"Table "<<table<<" in db "<<db<<" initialize failed!"<<std::endl;
+	continue;
+      }
+      if (0 == Load(table_engine))  {
+	std::string key = db + "/" + table;
+        table2engine_.insert(key, table_engine);
+      }  else  {
+	std::cout<<"Table "<<table<<" in db "<<db<<" load failed!"<<std::endl;
+      }
+    }
+  }
+  return true;
+}
+
+
 
 int main(int argc, char** argv) {
   if (argc < 2 || argc > 3)  {

@@ -807,6 +807,22 @@ bool VectorManager::Contains(std::string &field_name) {
   return raw_vectors_.find(field_name) != raw_vectors_.end();
 }
 
+bool VectorManager::CheckDocVecFields(Doc &doc) {
+  std::vector<Field> &fields = doc.VectorFields();
+  for (size_t i = 0; i < fields.size(); i++)  {
+    Field &field = fields[i];
+    const auto &iter = raw_vectors_.find(field.name);
+    if (iter == raw_vectors_.end())  { // todo: add new vector field
+      return false;
+    }
+    if ((iter->second)->GetVectorDimension() != field.GetVecDimension())  {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void VectorManager::Close() {
   for (const auto &iter : raw_vectors_) {
     if (iter.second != nullptr) {

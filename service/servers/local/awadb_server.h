@@ -58,6 +58,7 @@ class LocalAsyncServer final {
   // This can be run in multiple threads if needed.
   void HandleRpcs();
 
+  bool InitTableEngines();
   std::unique_ptr<ServerCompletionQueue> cq_;
   awadb_grpc::AwaDBServer::AsyncService service_;
   std::unique_ptr<Server> server_;

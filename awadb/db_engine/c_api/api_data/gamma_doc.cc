@@ -15,11 +15,11 @@ namespace tig_gamma {
 int Field::GetVecData(std::vector<float> &vec_data)  {
   if (this->datatype != DataType::VECTOR)  return -1; 
   
-  int v = 0;
-  memcpy((void *)&v, this->value.c_str(), sizeof(int)); 
-  for (size_t j = 0; j < v / sizeof(float); j++)  {
+  //int v = 0;
+  //memcpy((void *)&v, this->value.c_str(), sizeof(int)); 
+  for (size_t j = 0; j < this->value.size() / sizeof(float); j++)  {
     float f_value;
-    memcpy((void *)&f_value, (void *)(this->value.c_str() + sizeof(int) + j * sizeof(float)), sizeof(float));
+    memcpy((void *)&f_value, (void *)(this->value.c_str() + j * sizeof(float)), sizeof(float));
     vec_data.push_back(f_value);
   }
   return 0;

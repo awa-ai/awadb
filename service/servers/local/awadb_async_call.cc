@@ -321,8 +321,9 @@ bool AddOrUpdateCall::ProcessAddOrUpdateRequest()  {
       }
       doc.SetKey(doc_ptr->id());
       for (size_t j = 0; j < doc_ptr->fields_size(); j++)  {
-        awadb::Field field;
 	awadb_grpc::Field *field_ptr = doc_ptr->mutable_fields(j);
+	if (!field_ptr->has_name() || field_ptr->name().empty())  continue;
+        awadb::Field field;
 	field.name = field_ptr->name();	
 	field.value = field_ptr->value();
 	switch (field_ptr->type())  {
@@ -610,6 +611,7 @@ void SearchCall::ProcessSearchRequest()  {
       LOG(WARNING)<<"Search has problem! return value "<<ret;
     }
 
+
     std::vector<std::string> pack_fields;
     for (int i = 0; i < request_.pack_fields_size(); i++)  {
       pack_fields.push_back(request_.pack_fields(i));
@@ -620,6 +622,11 @@ void SearchCall::ProcessSearchRequest()  {
     ret = search_res.PackResults(pack_fields);
     reply_.set_db_name(request_.db_name());
     reply_.set_table_name(request_.table_name());
+    if (ret == 0)  {
+      reply_.set_result_code(awadb_grpc::SearchResultCode::SUCCESS);
+    }  else  {
+      reply_.set_result_code(awadb_grpc::SearchResultCode::SEARCH_ERROR);
+    }
     std::vector<awadb::SearchResult> &results = search_res.Results();
     for (size_t i = 0; i < results.size(); i++)  {
       awadb_grpc::SearchResult *result_ptr = reply_.add_results();
@@ -627,28 +634,6 @@ void SearchCall::ProcessSearchRequest()  {
       if (!results[i].msg.empty())  {
 	result_ptr->set_msg(results[i].msg);
       }
-      switch(results[i].result_code)  {
-        case awadb::SearchResultCode::SUCCESS:
-	{
-	  result_ptr->set_result_code(awadb_grpc::SearchResultCode::SUCCESS);
-	  break;
-	}
-	case awadb::SearchResultCode::INDEX_NOT_TRAINED:
-        {
-	  result_ptr->set_result_code(awadb_grpc::SearchResultCode::INDEX_NOT_TRAINED);
-	  break;
-	}
-        case awadb::SearchResultCode::SEARCH_ERROR:
-        {
-	  result_ptr->set_result_code(awadb_grpc::SearchResultCode::SEARCH_ERROR);
-          break;
-	}
-        default:
-        {
-          break;
-	}	
-      }
-
       for (int j = 0; j < results[i].result_items.size(); j++)  {
         awadb_grpc::ResultItem *item_ptr = result_ptr->add_result_items();
 	item_ptr->set_score((float)results[i].result_items[j].score);

@@ -17,7 +17,7 @@ from awadb.punctuation_marks_en import punctuation_marks
 from awadb.stop_words_en import stop_words
 from awadb.words_stem_en import PorterStemmer
 
-__version__ = "0.3.10"
+__version__ = "0.3.11"
 
 
 class FieldDataType(Enum):
