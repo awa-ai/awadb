@@ -71,7 +71,7 @@ result_code: SUCCESS
 
 More detailed sdk usage you can read [here](https://github.com/awa-ai/awadb/blob/main/clients/awadb/client.py)
 
-## Example 2 : Use the 960 dimension dataset [GIST](http://corpus-texmex.irisa.fr/) in the example2 for adding and searching vectors
+## Example 2 : Use 960 dimension vector dataset [GIST](http://corpus-texmex.irisa.fr/) in the example2 for adding and searching.
 ```bash
 from awadb.client import Awa
 import h5py
