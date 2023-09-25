@@ -72,6 +72,14 @@ class Awa:
         self,
         server_addr: Optional[str] = None,
     ):
+        """Initialize the AwaDB client.
+        Args:
+            server_addr: AwaDB sever ip:port. Default to 0.0.0.0:50005.
+
+        Returns:
+            None.
+        """
+
         if server_addr is None:
             self.channel = grpc.insecure_channel(DEFAULT_SERVER_ADDR)
         else:
@@ -96,6 +104,10 @@ class Awa:
 
 
     def close(self):
+        """Close the connection of AwaDB client and server.
+        Args: None.
+        Returns: None.
+        """
         if self.channel is not None:
             slef.channel.close()
 
@@ -106,6 +118,17 @@ class Awa:
         docs,
         db_name: str = DEFAULT_DB_NAME,
     ) -> bool:
+        """Add documents into the specified table.
+        Args:
+            table_name: The specified table for search and storage.
+            docs: The adding documents which can be described as dict or list of dicts.
+                  Each key-value pair in dict is a field of document.
+            db_name: Database name, default to DEFAULT_DB_NAME.
+
+        Returns:
+            Success or failure of adding the documents into the specified table.
+        """
+
         if self.__network_error():
             return ""
         if len(table_name) == 0:
@@ -159,6 +182,27 @@ class Awa:
         metric_type: MetricType = MetricType.L2,
         **kwargs: Any,
     ):
+        """Vector search in the specified table.
+        Args:
+            table_name: The specified table for search.
+            vec_query: Querying vector.
+            db_name: Database name, default to DEFAULT_DB_NAME.
+            topn: The topn nearest neighborhood documents to return.
+            meta_filter (Optional[dict]): Filter by metadata. Defaults to None.
+            E.g. `{"color" : "red", "price": 4.20}`. Optional.
+            E.g. `{"max_price" : 15.66, "min_price": 4.20}`
+            `price` is the metadata field, means range filter(4.20<'price'<15.66).
+            E.g. `{"maxe_price" : 15.66, "mine_price": 4.20}`
+            `price` is the metadata field, means range filter(4.20<='price'<=15.66).
+            include_fields: The fields whether included in the search results.
+            brute_force_search: Brute force search or not. Default to not.
+                                If vectors not indexed, automatically to use brute force search.
+            metric_type: The distance type of computing vectors. Default to L2.
+            kwargs: Any possible extended parameters.
+
+        Returns:
+            Results of searching.
+        """
         if self.__network_error():
             return ""
         if len(table_name) == 0:
@@ -223,6 +267,16 @@ class Awa:
         ids: Optional[List[str]] = None,
         **kwargs: Any,
     ):
+        """Get documents of the primary keys in the the specified table.
+        Args:
+            table_name: The specified table for search and storage.
+            db_name: Database name, default to DEFAULT_DB_NAME.
+            ids: The primary keys of the queried documents.
+
+        Returns:
+            The detailed information of the queried documents.
+        """
+
         if self.__network_error():
             return "" 
         if table_name is None or len(table_name) == 0 or ids is None:
@@ -244,6 +298,16 @@ class Awa:
         ids: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> bool:
+        """Delete docs in the specified table.
+        Args:
+            table_name: The specified table for deleting.
+            db_name: Database name, default to DEFAULT_DB_NAME.
+            ids: The primary keys of the deleted documents.
+
+        Returns:
+            True of False of the deleting operation.
+        """
+
         if self.__network_error():
             return "" 
         if table_name is None or len(table_name) == 0 or ids is None:
