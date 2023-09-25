@@ -3,7 +3,7 @@
     Store and search embedding vectors for LLM Applications!
 </p>
 
-No OS environment limitation, Linux, MacOSX and Windows are all supported!
+Linux, MacOSX and Windows are all supported!
 
 # Installation 
 ```bash
