@@ -104,6 +104,10 @@ class Awa:
 
 
     def close(self):
+        """Close the connection of AwaDB client and server.
+        Args: None.
+        Returns: None.
+        """
         if self.channel is not None:
             slef.channel.close()
 
