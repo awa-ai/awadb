@@ -69,7 +69,7 @@ results {
   }
 }
 result_code: SUCCESS
-
+```
 
 You can also directly use awadb to do the text semantic retrieval  
 Here the text is embedded by SentenceTransformer which is supported by [Hugging Face](https://huggingface.co)
