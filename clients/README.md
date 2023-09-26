@@ -27,7 +27,7 @@ from awadb.client import Awa
 # Initialize awadb client
 client = Awa()
 
-# Add dict with vector to table 'test'
+# Add dict with vector to table 'example1'
 client.add("example1", {'name':'david', 'feature':[1.3, 2.5, 1.9]})
 client.add("example1", {'name':'jim', 'feature':[1.1, 1.4, 2.3]})
 
