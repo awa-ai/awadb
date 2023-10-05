@@ -243,4 +243,21 @@ bool Request::L2Sqrt() {
 
 void Request::SetL2Sqrt(bool l2_sqrt) { l2_sqrt_ = l2_sqrt; }
 
+void Request::SetMulVecLogicOp(const bool &logic_and_op)  {
+  multi_vec_logic_op_ = logic_and_op ? 1 : 2;
+}
+
+int Request::MulVecLogicOp()  {
+  return multi_vec_logic_op_;
+}
+
+void Request::SetMetricType(const bool &is_l2)  {
+  is_l2_ = is_l2;
+}
+
+bool Request::MetricType()  {
+  return is_l2_;
+}
+
+
 }  // namespace tig_gamma

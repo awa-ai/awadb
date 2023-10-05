@@ -351,6 +351,8 @@ int GammaEngine::Search(Request &request, Response &response_results) {
   GammaQuery gamma_query;
   gamma_query.vec_query = vec_fields;
 
+    
+
   gamma_query.condition = new GammaSearchCondition(static_cast<PerfTool *>(response_results.GetPerTool()));
   gamma_query.condition->topn = topn;
   gamma_query.condition->multi_vector_rank =
@@ -360,6 +362,17 @@ int GammaEngine::Search(Request &request, Response &response_results) {
   gamma_query.condition->retrieval_parameters = request.RetrievalParams();
   gamma_query.condition->has_rank = request.HasRank();
 
+  if (request.MetricType())  {
+    gamma_query.condition->metric_type = DistanceComputeType::L2;
+  }
+
+  if (vec_fields.size() > 1)  {
+    gamma_query.condition->sort_by_docid = true;
+    if (request.MulVecLogicOp() == 1)  { // Multi Vectors AND
+      gamma_query.condition->multi_vec_and_op = true;
+    }
+  }
+  
   gamma_query.condition->range_filters = request.RangeFilters();
   gamma_query.condition->term_filters = request.TermFilters();
   gamma_query.condition->table = table_;
@@ -414,7 +427,7 @@ int GammaEngine::Search(Request &request, Response &response_results) {
 #ifdef PERFORMANCE_TESTING
     gamma_query.condition->GetPerfTool().Perf("search total");
 #endif
-    response_results.SetEngineInfo(table_, vec_manager_, gamma_results, req_num);
+    response_results.SetEngineInfo(table_, vec_manager_, gamma_results, gamma_query.condition->batch_req_num);
   } else {
     GammaResult *gamma_result = new GammaResult[1];
 
@@ -929,15 +942,16 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
     int docid = -1;
     table_->GetDocIDByKey(key, docid);
     if (docid == -1 && ite == remove_dupliacte.end()) {
+      /* 
       if (!table_->CheckDocFields(doc) || !vec_manager_->CheckDocVecFields(doc))  {
 	// check each field is valid
         batchAdd(start_id, batch_size);
         batch_size = 0;
         start_id = i + 1;
-      }  else  {
-        ++batch_size;
-        continue;
-      }
+      }  else  {*/
+      ++batch_size;
+      continue;
+      //}
     } else {
       batchAdd(start_id, batch_size);
       batch_size = 0;
@@ -1309,7 +1323,17 @@ int GammaEngine::GetDoc(int docid, Doc &doc) {
       struct Field field;
       field.name = index_names[i];
       field.datatype = DataType::VECTOR;
-      field.value = vec[i];
+      //field.value = vec[i];
+      field.value = "[";
+      size_t dimension = vec[i].length()/ sizeof(float);
+      for (size_t j = 1; j < dimension; j++) {
+	float v_value = 0.0;
+	memcpy((void *)&v_value, (void *)(vec[i].c_str() + j * sizeof(float)), sizeof(float));
+        field.value += std::to_string(v_value);
+	if (j != dimension - 1)  field.value += ", ";
+      }
+      field.value += "]";
+
       doc.AddField(field);
     }
   }
@@ -1749,6 +1773,16 @@ void GammaEngine::GetFieldsType(const std::vector<std::string> &fields,
   std::map<std::string, DataType> &types)  {
   if (!table_)  return;
   table_->GetAllAttrType(fields, types);
+  return;
+}
+
+void GammaEngine::GetFieldsInfo(std::vector<FieldInfo> &scalar_fields,
+                                std::vector<VectorInfo> &vector_fields)  {
+  if (!table_)  return;
+  table_->GetAllFields(scalar_fields);
+
+  if (!vec_manager_)  return;
+  vec_manager_->GetAllFields(vector_fields); 
   return;
 }
 

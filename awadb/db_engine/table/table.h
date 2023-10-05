@@ -125,6 +125,8 @@ class Table {
 
   void GetAllAttrType(const std::vector<std::string> &fields, std::map<std::string, DataType> &types);
 
+  void GetAllFields(std::vector<FieldInfo> &fields);
+
   int GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map);
 
   int GetAttrIdx(const std::string &field) const;

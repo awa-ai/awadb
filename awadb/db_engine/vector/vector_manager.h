@@ -81,6 +81,8 @@ class VectorManager {
 
   bitmap::BitmapManager *Bitmap() { return docids_bitmap_; };
 
+  int GetAllFields(std::vector<VectorInfo> &fields);
+
  private:
   void Close();  // release all resource
   inline std::string IndexName(const std::string &field_name,

@@ -35,6 +35,8 @@ class DocidFieldsMgr  {
 
   int GetAllFields(const uint32_t &docid, std::vector<Field> &fields); 
 
+  int GetAllFields(std::vector<FieldInfo> &fields);
+
   bool ContainField(const std::string &field_name)  {
     return fid_name2id_.find(field_name) == fid_name2id_.end() ? false : true;
   }

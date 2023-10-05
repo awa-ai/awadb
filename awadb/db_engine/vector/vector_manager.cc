@@ -383,7 +383,7 @@ int VectorManager::AddRTVecsToIndex(bool &index_is_dirty) {
 namespace {
 
 int parse_index_search_result(int n, int k, VectorResult &result,
-                              RetrievalModel *index) {
+                              RetrievalModel *index, const bool &is_l2) {
   RawVector *raw_vec = dynamic_cast<RawVector *>(index->vector_);
   if (raw_vec == nullptr) {
     LOG(ERROR) << "Cannot get raw vector";
@@ -409,6 +409,9 @@ int parse_index_search_result(int n, int k, VectorResult &result,
           result.source_lens[real_pos] = 0;
         }
         result.dists[real_pos] = result.dists[i * k + j];
+        if (is_l2 && result.dists[real_pos] > result.limit_value[i]) {
+	  result.limit_value[i] = result.dists[real_pos];
+	}
 
         pos++;
         docid2count[real_docid] = 1;
@@ -435,7 +438,9 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
   size_t vec_num = query.vec_query.size();
   VectorResult all_vector_results[vec_num];
 
-  query.condition->sort_by_docid = vec_num > 1 ? true : false;
+  //query.condition->sort_by_docid = vec_num > 1 ? true : false;
+  bool is_l2 = query.condition->metric_type == DistanceComputeType::L2 ? true : false;
+  float max_vec_boost = 0.0;
   std::string vec_names[vec_num];
   for (size_t i = 0; i < vec_num; i++) {
     struct VectorQuery &vec_query = query.vec_query[i];
@@ -484,6 +489,8 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
     query.condition->metric_type =
         query.condition->retrieval_params_->GetDistanceComputeType();
 
+    if (vec_query.boost > max_vec_boost)  max_vec_boost = vec_query.boost;
+
     const uint8_t *x =
         reinterpret_cast<const uint8_t *>(vec_query.value.c_str());
     int ret_vec = index->Search(query.condition, n, x, query.condition->topn,
@@ -496,11 +503,12 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
       return -3;
     } else {
       parse_index_search_result(n, query.condition->topn, all_vector_results[i],
-                                index);
+                                index, is_l2);
 
+      /*
       if (query.condition->sort_by_docid) {
         all_vector_results[i].sort_by_docid();
-      }
+      }*/
     }
 #ifdef PERFORMANCE_TESTING
     std::string msg;
@@ -509,64 +517,117 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
 #endif
   }
 
+  query.condition->batch_req_num = n;
   if (query.condition->sort_by_docid) {
     for (int i = 0; i < n; i++) {
-      int start_docid = 0, common_idx = 0;
-      size_t common_docid_count = 0;
-      double score = 0;
-      bool has_common_docid = true;
-      if (!results[i].init(query.condition->topn, vec_names, vec_num)) {
+      int total_return_results = query.condition->multi_vec_and_op 
+	      ? query.condition->topn : query.condition->topn * vec_num;  
+      if (!results[i].init(total_return_results, vec_names, vec_num)) {
         LOG(ERROR) << "init gamma result(sort by docid) error, topn="
                    << query.condition->topn << ", vector number=" << vec_num;
         return -4;
       }
-      while (start_docid < INT_MAX) {
-        for (size_t j = 0; j < vec_num; j++) {
-          float vec_dist = 0;
-          char *source = nullptr;
-          int source_len = 0;
-          int cur_docid = all_vector_results[j].seek(i, start_docid, vec_dist,
-                                                     source, source_len);
-          if (cur_docid == start_docid) {
-            common_docid_count++;
-            double field_score = query.vec_query[j].has_boost == 1
-                                     ? (vec_dist * query.vec_query[j].boost)
-                                     : vec_dist;
-            score += field_score;
-            results[i].docs[common_idx]->fields[j].score = field_score;
-            results[i].docs[common_idx]->fields[j].source = source;
-            results[i].docs[common_idx]->fields[j].source_len = source_len;
-            if (common_docid_count == vec_num) {
-              results[i].docs[common_idx]->docid = start_docid;
-              results[i].docs[common_idx++]->score = score;
-              results[i].total = all_vector_results[j].total[i] > 0
-                                     ? all_vector_results[j].total[i]
-                                     : results[i].total;
 
-              start_docid++;
-              common_docid_count = 0;
-              score = 0;
-            }
-          } else if (cur_docid > start_docid) {
-            common_docid_count = 0;
-            start_docid = cur_docid;
-            score = 0;
-          } else {
-            has_common_docid = false;
-            break;
-          }
-        }
-        if (!has_common_docid) break;
+      std::unordered_map<int, float> doc2vec_scores;
+      std::unordered_map<int, int> doc2vec_count;
+      std::unordered_map<int, std::unordered_map<int, int>> doc2vec_idx;
+      doc2vec_scores.reserve(total_return_results);
+      doc2vec_count.reserve(total_return_results);
+      doc2vec_idx.reserve(total_return_results); 
+      
+      float fields_boost_array[vec_num]; 
+      float total_boost = 0.0;
+      float accu_score = 0.0; 
+      for (size_t j = 0; j < vec_num; j++) {
+        float field_boost = 1.0; 
+	if (query.vec_query[j].has_boost == 1)  {
+          if (!is_l2) {
+            field_boost = query.vec_query[j].boost;	
+	  }  else {
+	    field_boost = query.vec_query[j].boost / max_vec_boost;
+	  }
+	}
+	fields_boost_array[j] = field_boost;
+        total_boost += field_boost;
+	   
+	all_vector_results[j].logic_op(
+	        i,
+		j,
+		query.condition->multi_vec_and_op,
+		doc2vec_scores,
+		field_boost,
+		doc2vec_count,
+		is_l2,
+		accu_score,
+		doc2vec_idx);
       }
-      results[i].results_count = common_idx;
+
+      if (!is_l2)  {
+	for (auto &iter: doc2vec_scores)  {
+	  iter.second /= total_boost;
+	}	
+      }
+
+      int result_idx = 0;
+      if (query.condition->multi_vec_and_op)  {
+        for (auto iter: doc2vec_count)  {
+	  if (iter.second == vec_num)  {
+            results[i].docs[result_idx]->docid = iter.first;
+            results[i].docs[result_idx]->score = doc2vec_scores[iter.first];
+            int total_and_op = INT_MAX; 
+	    for (auto iter_field: doc2vec_idx[iter.first])  {
+	      int vec_no = iter_field.first;
+              int idx = iter_field.second;
+              char *source = all_vector_results[vec_no].sources[idx];
+	      int source_len = all_vector_results[vec_no].source_lens[idx]; 
+              float dist = all_vector_results[vec_no].dists[idx];
+	      results[i].docs[result_idx]->fields[vec_no].score = 
+		      dist * fields_boost_array[vec_no];
+	      results[i].docs[result_idx]->fields[vec_no].source = source;
+	      results[i].docs[result_idx]->fields[vec_no].source_len = source_len;
+	      if (all_vector_results[vec_no].total[i] < total_and_op)  {
+	        total_and_op = all_vector_results[vec_no].total[i];
+	      }
+	    } 
+	    
+	    results[i].total = total_and_op;
+	    result_idx++; 
+	  }
+	}	
+      }  else  {
+	for (auto iter: doc2vec_scores)  {
+          results[i].docs[result_idx]->docid = iter.first;
+          results[i].docs[result_idx]->score = doc2vec_scores[iter.first];
+          int total_or_op = -1; 
+	  for (auto iter_field: doc2vec_idx[iter.first])  {
+	    int vec_no = iter_field.first;
+            int idx = iter_field.second;
+            char *source = all_vector_results[vec_no].sources[idx];
+	    int source_len = all_vector_results[vec_no].source_lens[idx]; 
+            float dist = all_vector_results[vec_no].dists[idx];
+	    results[i].docs[result_idx]->fields[vec_no].score = 
+		      dist * fields_boost_array[vec_no];
+	    results[i].docs[result_idx]->fields[vec_no].source = source;
+	    results[i].docs[result_idx]->fields[vec_no].source_len = source_len;
+	    if (all_vector_results[vec_no].total[i] > total_or_op)  {
+	      total_or_op = all_vector_results[vec_no].total[i];
+	    }
+	  } 
+	   
+	  results[i].total = total_or_op > 0 ?  total_or_op : results[i].total;
+	  result_idx++; 
+	}
+      }  
+
+      results[i].results_count = result_idx;
       if (query.condition->multi_vector_rank) {
         switch (query.condition->metric_type) {
           case DistanceComputeType::INNER_PRODUCT:
-            std::sort(results[i].docs, results[i].docs + common_idx,
+            std::sort(results[i].docs, results[i].docs + result_idx,
                       InnerProductCmp);
             break;
           case DistanceComputeType::L2:
-            std::sort(results[i].docs, results[i].docs + common_idx, L2Cmp);
+            std::sort(results[i].docs, results[i].docs + result_idx, L2Cmp);
             break;
           default:
             LOG(ERROR) << "invalid metric_type="
@@ -886,5 +947,19 @@ int VectorManager::GetAllCacheSize(Config &conf) {
   }
   return 0;
 }
+
+int VectorManager::GetAllFields(std::vector<VectorInfo> &fields)  {
+  for (auto &iter: raw_vectors_)  {
+    VectorInfo vec_info;
+    vec_info.name = iter.first;
+    vec_info.data_type = DataType::FLOAT;
+    vec_info.is_index = true;
+    vec_info.dimension = (iter.second)->GetVectorDimension(); 
+    fields.push_back(vec_info); 
+  }
+  return 0;
+}
+
+
 
 }  // namespace tig_gamma

@@ -52,6 +52,7 @@ void LocalAsyncServer::HandleRpcs()  {
   // Spawn a new CallData instance to serve new clients.
   CallData data{&service_, cq_.get(), table2engine_, root_data_dir_, root_log_dir_};
   new CreateCall(&data);
+  new CheckTableCall(&data);
   new AddFieldsCall(&data);
   new AddOrUpdateCall(&data);
   new GetCall(&data);

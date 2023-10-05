@@ -16,6 +16,43 @@ def simple_test(client):
     # Output results
     print(results)
 
+def read_feature_test(gist, i):
+    print('title_feature is :')
+    print(gist["train"][i])
+    print('content_feature is :')
+    print(gist["train"][i + 100000])
+    print('label_feature is :')
+    print(gist["train"][i + 200000])
+
+
+def insert_one_table_test(client, gist):
+    total = 100001
+    docs = []
+    i = 0
+    while i < total:
+        if i != 0 and i % 50 == 0:
+            client.add("three_features", docs)
+            del docs[:]
+            print('add batch is %d' % (i/50))
+                
+        doc = {}
+        doc['_id'] = i
+        doc['title_feature'] = gist["train"][i]
+        doc['content_feature'] = gist["train"][i + 100000]
+        doc['label_feature'] = gist["train"][i + 200000]
+
+        docs.append(doc)
+        i = i + 1
+
+def search_one_table_test(client, gist):
+    i = 0
+    while i < 1000:
+        res = client.search("three_features", gist["test"][i], mul_vec_weight={'title_feature':4, 'content_feature':1, 'label_feature':2})
+        print(res)
+        i = i + 1
+
+
+
 def insert_data_test(client, gist):
     total = 300001
     docs = []
@@ -59,13 +96,18 @@ if __name__ == "__main__":
     # Initialize awadb client
     client = Awa()
     # default gist vector data file path, please input your gist data path
-    gist_file_path = '../data/gist-960-euclidean.hdf5'
+    gist_file_path = '../../../awadb/data/gist-960-euclidean.hdf5'
     f = h5py.File(gist_file_path, 'r')
     # simple quick start example 
-    simple_test(client) 
+    #simple_test(client) 
    
     # insert batch docs example
-    insert_data_test(client, f)
+    #insert_data_test(client, f)
 
     # search test example
-    search_data_test(client, f)
+    #search_data_test(client, f)
+    insert_one_table_test(client, f)
+    search_one_table_test(client, f)
+    #read_feature_test(f, 0) 
+
+

@@ -260,6 +260,22 @@ int DocidFieldsMgr::GetAllFields(
   return 0;
 }
 
+int DocidFieldsMgr::GetAllFields(std::vector<FieldInfo> &fields)  {
+  for (auto &iter: fid_name2type_)  {
+    FieldInfo field;
+    field.name = iter.first;
+    field.data_type = iter.second;
+    if (fid2index_.find(field.name) == fid2index_.end())  {
+      field.is_index = false;
+    }  else  {
+      field.is_index = fid2index_[field.name];
+    }
+    fields.push_back(field);
+  }
+  return 0;
+}
+
+
 
 
 int DocidFieldsMgr::Put(

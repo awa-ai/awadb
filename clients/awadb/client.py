@@ -86,23 +86,12 @@ class Awa:
             self.channel = grpc.insecure_channel(server_addr)
         self.stub = AwaDBServerStub(self.channel)
 
-        self.root_dir = "."
-        data_dir = self.root_dir + "/data"
-        if not os.path.isdir(data_dir):
-            os.makedirs(data_dir)
-
-
         self.tables_fields_check = {}
         self.tables_fields_type = {}
-        self.tables_vector_field_name = {}
+        self.tables_vector_fields_type = {}
         self.tables_attr = {}
         self.tables_extra_new_fields = {}
-
-        existed_meta_file = data_dir + "/tables.meta"
-        if os.path.isfile(existed_meta_file):
-            self.__read()
-
-
+        
     def close(self):
         """Close the connection of AwaDB client and server.
         Args: None.
@@ -110,7 +99,6 @@ class Awa:
         """
         if self.channel is not None:
             slef.channel.close()
-
 
     def add(
         self,
@@ -137,10 +125,12 @@ class Awa:
         documents = Documents()
         documents.db_name = db_name
         documents.table_name = table_name
-        db_table_name = db_name + "/" + table_name 
+        db_table_name = db_name + "/" + table_name
+        self.__check_table_from_server(table_name, db_table_name, db_name)
         if not db_table_name in self.tables_fields_check:
             self.tables_fields_check[db_table_name] = False
             self.tables_fields_type[db_table_name] = {}
+            self.tables_vector_fields_type[db_table_name] = {} 
             self.tables_extra_new_fields[db_table_name] = [] 
             db_meta = DBMeta()
             db_meta.db_name = db_name
@@ -168,7 +158,6 @@ class Awa:
             print("Add docs error code %d!" % int(status.code))
             return False
         return True
-
     
     def search(
         self,
@@ -180,6 +169,7 @@ class Awa:
         include_fields: Optional[Set[str]] = None,
         brute_force_search: bool = False,
         metric_type: MetricType = MetricType.L2,
+        mul_vec_weight: Optional[Dict[str, float]] = None,
         **kwargs: Any,
     ):
         """Vector search in the specified table.
@@ -198,6 +188,9 @@ class Awa:
             brute_force_search: Brute force search or not. Default to not.
                                 If vectors not indexed, automatically to use brute force search.
             metric_type: The distance type of computing vectors. Default to L2.
+            mul_vec_weight: Multiple vector field search weights. Default to None.
+            E.g. `{'f1': 2.0, 'f2': 1.0}`  vector field f1 weight is 2.0, vector field f2 weight is 1.0.
+            Notice that field f1 and f2 should have the same dimension compared to vec_query.
             kwargs: Any possible extended parameters.
 
         Returns:
@@ -212,59 +205,68 @@ class Awa:
         query_type = typeof(vec_query)
 
         show_results = []
-        if (
-            query_type == FieldDataType.ERROR
-            or query_type == FieldDataType.INT
-            or query_type == FieldDataType.FLOAT
-        ):
-            return "" 
+
+        if query_type != FieldDataType.VECTOR:
+            return ""
 
         db_table_name = db_name + "/" + table_name
         request = SearchRequest()
         request.db_name = db_name
         request.table_name = table_name
-        vec_request = request.vec_queries.add()
-        vec_request.field_name = self.tables_vector_field_name[db_table_name]
-        vec_request.min_score = -1 
-        vec_request.max_score = 999999 
-        request.topn = topn
-        if metric_type == MetricType.L2:
-            request.retrieval_params = "{\"metric_type\":\"L2\"}"
-        else:
+        
+        vec_value = ""
+        #notice: the added vectors should also be normalized
+        if metric_type == MetricType.INNER_PRODUCT:
+            vec_value = self.__normalize(vec_query)
             request.retrieval_params = "{\"metric_type\":\"InnerProduct\"}"
+            request.is_l2 = False
+        elif metric_type == MetricType.L2:
+            vec_value = np.array(vec_query, dtype=np.dtype("float32"))
+            request.retrieval_params = "{\"metric_type\":\"L2\"}"
+            request.is_l2 = True 
+
+        query_dimension = vec_value.__len__()
+      
+        self.__check_table_from_server(table_name, db_table_name, db_name)
+        vectors_num = 0 
+        for vec_field_name in self.tables_vector_fields_type[db_table_name]:
+            if query_dimension == self.tables_vector_fields_type[db_table_name][vec_field_name]:
+                vec_request = request.vec_queries.add()
+                vec_request.field_name = vec_field_name 
+                vec_request.min_score = -1 
+                vec_request.max_score = 999999
+                vec_request.value = vec_value.tobytes()
+                vec_request.is_boost = True
+                vec_request.boost = 1.0
+                if mul_vec_weight is not None and vec_field_name in mul_vec_weight:
+                    vec_request.boost = mul_vec_weight[vec_field_name]
+
+                vectors_num = vectors_num + 1
+        if vectors_num == 0:
+            print("Query vector dimension is not valid!")
+            return ""
+        elif vectors_num > 1:
+            request.mul_vec_logic_op = OR
+
+        request.topn = topn
         request.brute_force_search = brute_force_search
         if meta_filter is not None:
             __add_filter(db_table_name, request, meta_filter)
-
 
         if include_fields is None:
             request.is_pack_all_fields = True
         else:
             for pack_field in include_fields:
                 request.pack_fields.append(pack_field)
-
-        if query_type == FieldDataType.STRING:  # semantic text search
-            embedding = self.llm.Embedding(query)
-            vec_query.value = embedding.tobytes()
-        elif query_type == FieldDataType.VECTOR:  # vector search
-            vec_value = None
-            #notice: the added vectors should also be normalized
-            if metric_type == MetricType.INNER_PRODUCT:
-                vec_value = self.__normalize(vec_query)
-            elif metric_type == MetricType.L2:
-                vec_value = np.array(vec_query, dtype=np.dtype("float32"))
-            vec_request.value = vec_value.tobytes()
-
-            response = self.stub.Search(request)
-            return response
-
-        return "" 
+       
+        response = self.stub.Search(request)
+        return response
 
     def get(
         self,
         table_name: str,
         db_name: str = DEFAULT_DB_NAME,
-        ids: Optional[List[str]] = None,
+        ids: Optional[list] = None,
         **kwargs: Any,
     ):
         """Get documents of the primary keys in the the specified table.
@@ -286,7 +288,20 @@ class Awa:
         doc_condition.db_name = db_name
         doc_condition.table_name = table_name
       
-        doc_condition.ids.extend(ids)
+        db_table_name = db_name + "/" + table_name
+        
+        self.__check_table_from_server(table_name, db_table_name, db_name)
+        if not self.__check_ids_type(db_table_name, ids):
+            print("Input ids should be list of str or long")
+            return ""
+        
+        if self.tables_fields_type[db_table_name][DOC_PRIMARY_KEY_NAME] == FieldDataType.LONG:
+            for each_id in ids: 
+                doc_condition.ids.append(each_id.to_bytes(8, "little"))
+
+        elif self.tables_fields_type[db_table_name][DOC_PRIMARY_KEY_NAME] == FieldDataType.STRING:
+            for each_id in ids: 
+                doc_condition.ids.append(str.encode(each_id))
 
         response = self.stub.Get(doc_condition)
         return response
@@ -295,7 +310,7 @@ class Awa:
         self,
         table_name: str,
         db_name: str = DEFAULT_DB_NAME,
-        ids: Optional[List[str]] = None,
+        ids: Optional[list] = None,
         **kwargs: Any,
     ) -> bool:
         """Delete docs in the specified table.
@@ -317,7 +332,19 @@ class Awa:
         doc_condition.db_name = db_name
         doc_condition.table_name = table_name
       
-        doc_condition.ids.extend(ids)
+        db_table_name = db_name + "/" + table_name
+        self.__check_table_from_server(table_name, db_table_name, db_name)
+        if not self.__check_ids_type(db_table_name, ids):
+            print("Input ids should be list of str or long")
+            return ""
+
+        if self.tables_fields_type[db_table_name][DOC_PRIMARY_KEY_NAME] == FieldDataType.LONG:
+            for each_id in ids: 
+                doc_condition.ids.append(each_id.to_bytes(8, "little"))
+
+        elif self.tables_fields_type[db_table_name][DOC_PRIMARY_KEY_NAME] == FieldDataType.STRING:
+            for each_id in ids: 
+                doc_condition.ids.append(str.encode(each_id))
 
         response = self.stub.Delete(doc_condition)
         return response
@@ -335,6 +362,69 @@ class Awa:
             print('Channel or Stub can be None!!!')
             return  True
         return False 
+
+    def __check_ids_type(self,
+        db_table_name: str,  
+        ids: list,
+    ) -> bool:
+        if self.tables_fields_type[db_table_name][DOC_PRIMARY_KEY_NAME] == FieldDataType.LONG:
+            id_count = 0 
+            for each_id in ids:
+                if isinstance(each_id, int):
+                    id_count = id_count + 1
+            if id_count != ids.__len__():
+                return False
+        elif self.tables_fields_type[db_table_name][DOC_PRIMARY_KEY_NAME] == FieldDataType.STRING:
+            str_count = 0
+            for each_id in ids:
+                if isinstance(each_id, str):
+                    str_count = str_count + 1
+            if str_count != ids.__len__():
+                return False
+
+        return True
+
+    def __check_table_from_server(
+        self,
+        table_name,
+        db_table_name,
+        db_name: str = DEFAULT_DB_NAME
+    ):
+        if not db_table_name in self.tables_fields_check:
+            db_table_req = DBTableName()
+            db_table_req.db_name = db_name
+            db_table_req.table_name = table_name
+            table_status = self.stub.CheckTable(db_table_req)
+            if table_status.is_existed:
+                db_meta = DBMeta()
+                db_meta.db_name = db_name
+                table_meta_attr = db_meta.tables_meta.add()
+                table_meta_attr.name = table_name
+                self.tables_attr[db_table_name] = db_meta
+                for table_meta in table_status.exist_table.tables_meta:
+                    fields_type = {} 
+                    vector_fields_type = {} 
+                    for field_meta in table_meta.fields_meta:
+                        if field_meta.type == INT:
+                            fields_type[field_meta.name] = FieldDataType.INT 
+                        elif field_meta.type == LONG:
+                            fields_type[field_meta.name] = FieldDataType.LONG
+                        elif field_meta.type == FLOAT:
+                            fields_type[field_meta.name] = FieldDataType.FLOAT
+                        elif field_meta.type == DOUBLE:
+                            fields_type[field_meta.name] = FieldDataType.FLOAT
+                        elif field_meta.type == STRING:
+                            fields_type[field_meta.name] = FieldDataType.STRING
+                        elif field_meta.type == MULTI_STRING:
+                            fields_type[field_meta.name] = FieldDataType.MULTI_STRING
+                        elif field_meta.type == VECTOR:
+                            fields_type[field_meta.name] = FieldDataType.VECTOR
+                            vector_fields_type[field_meta.name] = field_meta.vec_meta.dimension
+
+                    self.tables_fields_type[db_table_name] = fields_type
+                    self.tables_vector_fields_type[db_table_name] = vector_fields_type
+
+                self.tables_fields_check[db_table_name] = True
 
     def __add_filter(
         self,
@@ -411,7 +501,9 @@ class Awa:
         field_data, 
         fields_type):
         f_type = typeof(field_data)
-        
+        if field_name == DOC_PRIMARY_KEY_NAME and f_type == FieldDataType.INT:
+            f_type = FieldDataType.LONG
+
         if f_type == FieldDataType.ERROR:
             print(
                 "Field data type error! Please input right data type : int|float|string|vector|multi_string!"
@@ -431,9 +523,20 @@ class Awa:
                 return 0
 
             if f_type != self.tables_fields_type[db_table_name][field_name]:
+                print('Input data type is conflict with the original field %s in db_table %s' % (field_name, db_table_name))
                 return -3
+            if f_type == FieldDataType.VECTOR:
+                if field_data.__len__() != self.tables_vector_fields_type[db_table_name][field_name]:
+                    print('Input vector field %s dimension is not consistent, the dimension should be %d!' \
+                            %(field_name, self.tables_vector_fields_type[db_table_name][field_name]))
+                    return -4
+
             fields_type[field_name] = f_type
         else:
+            if self.tables_fields_check[db_table_name] and f_type == FieldDataType.VECTOR:
+                print('New vector field %s can not added after table %s created!' % (field_name, db_table_name)) 
+                return -5
+
             self.tables_fields_type[db_table_name][field_name] = f_type
             fields_type[field_name] = f_type
             return 1
@@ -527,12 +630,12 @@ class Awa:
         awadb_field.name = field_name
         field_type = fields_type[field_name]
         if field_type == FieldDataType.INT:
-            if field_name == "_id":
-                awadb_field.value = field_value.to_bytes(8, "little")
-                awadb_field.type = LONG 
-            else:
-                awadb_field.value = field_value.to_bytes(4, "little")
-                awadb_field.type = INT
+            awadb_field.value = field_value.to_bytes(4, "little")
+            awadb_field.type = INT
+            self.__add_field(db_table_name, field_name, awadb_field.type, is_index, add_new_field)
+        elif field_type == FieldDataType.LONG:
+            awadb_field.value = field_value.to_bytes(8, "little")
+            awadb_field.type = LONG 
             self.__add_field(db_table_name, field_name, awadb_field.type, is_index, add_new_field)
         elif field_type == FieldDataType.FLOAT:
             awadb_field.value = struct.pack("<f", field_value)
@@ -555,6 +658,7 @@ class Awa:
             self.__add_field(db_table_name, field_name, awadb_field.type, is_index, add_new_field)
 
         elif field_type == FieldDataType.VECTOR:
+            dimension = field_value.__len__()
             if type(field_value).__name__ == "ndarray":
                 awadb_field.value = field_value.tobytes()
             else:
@@ -572,7 +676,7 @@ class Awa:
                 '{"cache_size" : 2000}',
                 False,
             )
-            self.tables_vector_field_name[db_table_name] = field_name
+            self.tables_vector_fields_type[db_table_name][field_name] = dimension 
 
         return 0
 
@@ -617,171 +721,4 @@ class Awa:
                     print("Add new extra field failed!")
                     return False
             self.tables_fields_check[db_table_name] = True
-            self.__write()
-
-    def __read(self):
-        created_table_path = self.root_dir + "/data/tables.meta"
-        with open(created_table_path, "r", encoding="unicode_escape") as f:
-            tables_meta = json.load(fp=f)
-
-            self.tables_fields_check = tables_meta["fields_check"]
-
-            for table_name in tables_meta["fields_type"]:
-                table_field_dict = {}
-                for each_field_type in tables_meta["fields_type"][table_name]:
-                    for f_id in each_field_type:
-                        if each_field_type[f_id] == "INT":
-                            table_field_dict[f_id] = FieldDataType.INT
-                        elif each_field_type[f_id] == "LONG":
-                            table_field_dict[f_id] = FieldDataType.LONG
-                        elif each_field_type[f_id] == "FLOAT":
-                            table_field_dict[f_id] = FieldDataType.FLOAT
-                        elif each_field_type[f_id] == "STRING":
-                            table_field_dict[f_id] = FieldDataType.STRING
-                        elif each_field_type[f_id] == "MULTI_STRING":
-                            table_field_dict[f_id] = FieldDataType.MULTI_STRING
-                        elif each_field_type[f_id] == "VECTOR":
-                            table_field_dict[f_id] = FieldDataType.VECTOR
-                self.tables_fields_type[table_name] = table_field_dict
-
-            self.tables_vector_field_name = tables_meta["vector_field_name"]
-
-            for table_name in tables_meta["tables_info"]:
-                table_info = DBMeta()
-                db_name = table_name.split("/")[0]
-                table_info.db_name = db_name
-                table_meta = table_info.tables_meta.add()
-                table_meta.name = table_name.split("/")[1]
-
-                vec_fields_map = {}
-                for each_field_info in tables_meta["tables_info"][table_name][
-                    "fields_info"
-                ]:
-                    field_info = table_meta.fields_meta.add()
-                    field_info.name = each_field_info["name"]
-                    if each_field_info["data_type"] == "INT":
-                        field_info.type = INT
-                    elif each_field_info["data_type"] == "LONG":
-                        field_info.type = LONG
-                    elif each_field_info["data_type"] == "FLOAT":
-                        field_info.type = FLOAT
-                    elif each_field_info["data_type"] == "STRING":
-                        field_info.type = STRING
-                    elif each_field_info["data_type"] == "MULTI_STRING":
-                        field_info.type = MULTI_STRING
-                    elif each_field_info["data_type"] == "VECTOR":
-                        field_info.type = VECTOR
-                        vec_fields_map[field_info.name] = field_info    
-
-
-                    field_info.is_index = each_field_info["is_index"]
-
-                for each_vec_info in tables_meta["tables_info"][table_name][
-                    "vec_fields"
-                ]:
-                    vec_field = table_meta.fields_meta.add()
-                    vec_field.name = each_vec_info["name"]
-                    if each_vec_info["data_type"] == "INT":
-                        vec_field.vec_meta.data_type = INT 
-                    elif each_vec_info["data_type"] == "FLOAT":
-                        vec_field.vec_meta.data_type = FLOAT
-                    elif each_vec_info["data_type"] == "STRING":
-                        vec_field.vec_meta.data_type = STRING
-                    elif each_vec_info["data_type"] == "MULTI_STRING":
-                        vec_field.vec_meta.data_type = MULTI_STRING
-                    vec_field.is_index = each_vec_info["is_index"]
-                    vec_field.vec_meta.dimension = each_vec_info["dimension"]
-                    vec_field.vec_meta.store_type = each_vec_info["store_type"]
-                    vec_field.vec_meta.store_param = each_vec_info["store_param"]
-                    vec_field.vec_meta.has_source = each_vec_info["has_source"]
-
-                self.tables_attr[table_name] = table_info
-
-    def __write(self):
-        tables_meta = {}
-        tables_meta["fields_check"] = self.tables_fields_check
-        tables_types = {}
-        for table_name in self.tables_fields_type:
-            fields_type_list = []
-            for f_id in self.tables_fields_type[table_name]:
-                field_dict = {}
-                if self.tables_fields_type[table_name][f_id] == FieldDataType.INT:
-                    field_dict[f_id] = "INT"
-                elif self.tables_fields_type[table_name][f_id] == FieldDataType.FLOAT:
-                    field_dict[f_id] = "FLOAT"
-                elif self.tables_fields_type[table_name][f_id] == FieldDataType.STRING:
-                    field_dict[f_id] = "STRING"
-                elif (
-                    self.tables_fields_type[table_name][f_id]
-                    == FieldDataType.MULTI_STRING
-                ):
-                    field_dict[f_id] = "MULTI_STRING"
-                elif self.tables_fields_type[table_name][f_id] == FieldDataType.VECTOR:
-                    field_dict[f_id] = "VECTOR"
-                fields_type_list.append(field_dict)
-
-            tables_types[table_name] = fields_type_list
-
-        tables_meta["fields_type"] = tables_types
-        tables_meta["vector_field_name"] = self.tables_vector_field_name
-
-        tables_dict = {}
-        for key in self.tables_attr:
-            table_attr_info = {}
-            table_meta = self.tables_attr[key].tables_meta[0]
-            fields_list = []
-            for field_meta in table_meta.fields_meta:
-                fields_dict = {}
-                if field_meta.type == INT:
-                    fields_dict["data_type"] = "INT"
-                elif field_meta.type == LONG:
-                    fields_dict["data_type"] = "LONG"
-                elif field_meta.type == FLOAT:
-                    fields_dict["data_type"] = "FLOAT"
-                elif field_meta.type == STRING:
-                    fields_dict["data_type"] = "STRING"
-                elif field_meta.type == MULTI_STRING:
-                    fields_dict["data_type"] = "MULTI_STRING"
-                elif field_meta.type == VECTOR:
-                    fields_dict["data_type"] = "VECTOR"
-                    continue
-
-                fields_dict["name"] = field_meta.name
-                
-                fields_dict["is_index"] = field_meta.is_index
-                fields_list.append(fields_dict)
-            table_attr_info["fields_info"] = fields_list
-
-            vec_fields_list = []
-            table_meta = self.tables_attr[key].tables_meta[0]
-            for field_meta in table_meta.fields_meta:
-                if field_meta.type != VECTOR:
-                    continue
-                vec_fields_dict = {}
-                vec_fields_dict["name"] = field_meta.name
-                if field_meta.vec_meta.data_type == INT:
-                    vec_fields_dict["data_type"] = "INT"
-                elif field_meta.vec_meta.data_type == LONG:
-                    vec_fields_dict["data_type"] = "LONG"
-                elif field_meta.vec_meta.data_type == FLOAT:
-                    vec_fields_dict["data_type"] = "FLOAT"
-                elif field_meta.vec_meta.data_type == STRING:
-                    vec_fields_dict["data_type"] = "STRING"
-                elif field_meta.vec_meta.data_type == VECTOR:
-                    vec_fields_dict["data_type"] = "VECTOR"
-
-                vec_fields_dict["is_index"] = field_meta.is_index
-                vec_fields_dict["dimension"] = field_meta.vec_meta.dimension
-                vec_fields_dict["store_type"] = field_meta.vec_meta.store_type
-                vec_fields_dict["store_param"] = field_meta.vec_meta.store_param
-                vec_fields_dict["has_source"] = field_meta.vec_meta.has_source
-                vec_fields_list.append(vec_fields_dict)
-            table_attr_info["vec_fields"] = vec_fields_list
-            tables_dict[key] = table_attr_info
-
-        tables_meta["tables_info"] = tables_dict
-
-        created_table_path = self.root_dir + "/data/tables.meta"
-        with open(created_table_path, "w", encoding="unicode_escape") as f:
-            json.dump(tables_meta, f)
 

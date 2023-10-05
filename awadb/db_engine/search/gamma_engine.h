@@ -136,6 +136,9 @@ class GammaEngine {
   void GetFieldsType(const std::vector<std::string> &fields, 
 		     std::map<std::string, DataType> &types); 
 
+  void GetFieldsInfo(std::vector<FieldInfo> &scalar_fields,
+                     std::vector<VectorInfo> &vector_fields);
+
  private:
   GammaEngine(const std::string &index_root_path);
 

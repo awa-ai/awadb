@@ -93,10 +93,12 @@ void GetFieldsType(void *engine,
   return;
 }	
 
-
-
-
-
-
+void GetFieldsInfo(
+  void *engine,
+  std::vector<awadb::FieldInfo> &scalar_fields,
+  std::vector<awadb::VectorInfo> &vector_fields)  {
+  static_cast<awadb::GammaEngine *>(engine)->GetFieldsInfo(scalar_fields, vector_fields);
+  return;
+}
 
 

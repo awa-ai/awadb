@@ -4,6 +4,8 @@
 #include <vector>
 #include <functional>
 
+#include "util/log.h"
+
 namespace tig_gamma {
 
 const std::string MULTI_STRING_SPLIT = "\001";
@@ -44,6 +46,8 @@ struct VectorResult {
     idx.resize(n);
     idx.assign(n, 0);
     total.assign(n, 0);
+    limit_value.resize(n);
+    limit_value.assign(n, 0.0); 
   }
 
   ~VectorResult() {
@@ -79,6 +83,7 @@ struct VectorResult {
     idx.resize(n, -1);
     std::fill_n(dists, n * topn, 0.0);
     std::fill_n(docids, n * topn, -1);
+    limit_value.resize(n, 0.0);
 
     return true;
   }
@@ -90,6 +95,7 @@ struct VectorResult {
     docids = labels;
     std::fill_n(dists, n * topn, 0.0);
     std::fill_n(docids, n * topn, -1);
+    limit_value.resize(n, 0.0);
 
     return true;
   }
@@ -117,6 +123,53 @@ struct VectorResult {
     return ret;
   }
 
+  void logic_op(const int &req_no,
+    const int &vec_no,
+    const bool &is_and_op,
+    std::unordered_map<int, float> &doc2vec_scores,
+    const float &field_boost,
+    std::unordered_map<int, int> &doc2vec_count,
+    const bool &is_l2,
+    float &accu_score,
+    std::unordered_map<int, std::unordered_map<int, int>> &doc2vec_idx)  {
+   
+    int base_idx = req_no * topn;
+    float max_score = 0.0;
+    if (!is_and_op && is_l2)  {
+      max_score = field_boost * limit_value[req_no];
+      for (auto &iter: doc2vec_scores)  {
+        iter.second += max_score;  
+      }
+      accu_score += max_score; 
+    }   
+    
+    for (int i = 0; i < topn; i++)  {
+      int64_t id = docids[base_idx + i];
+      if (id == -1)  continue;
+      if (doc2vec_scores.find((int)id) == doc2vec_scores.end())  {
+        doc2vec_scores[(int)id] = accu_score;
+        	
+	std::unordered_map<int, int> vec2idx;
+	vec2idx[vec_no] = base_idx + i;
+        doc2vec_idx[(int)id] = vec2idx;
+
+      }  else  {
+        doc2vec_idx[(int)id][vec_no] = base_idx + i;
+      }
+      doc2vec_scores[(int)id] -= max_score;
+      doc2vec_scores[(int)id] += dists[base_idx + i] * field_boost; 
+
+      if (is_and_op)  {
+        if (doc2vec_count.find((int)id) == doc2vec_count.end())  {
+          doc2vec_count[(int)id] = 1;
+        }  else {
+          doc2vec_count[(int)id]++;
+        }
+      }
+    }
+    return; 
+  } 
+ 
   void sort_by_docid() {
     std::function<int(int64_t *, float *, char **, int *, int, int)>
         paritition = [&](int64_t *docids, float *dists, char **sources,
@@ -178,6 +231,7 @@ struct VectorResult {
   int *source_lens;
   std::vector<int> total;
   std::vector<int> idx;
+  std::vector<float> limit_value;
 };
 
 struct VectorDocField {

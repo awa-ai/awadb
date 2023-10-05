@@ -186,6 +186,147 @@ void CreateCall::Proceed() {
   }
 }
 
+bool CheckTableCall::ProcessCheckTableRequest()  {
+  if (!request_.has_db_name() || request_.db_name().empty() ||
+      !request_.has_table_name() || request_.table_name().empty())  return false; 
+  bool status = false;
+  std::string db_table_name = request_.db_name() + "/";
+  db_table_name += request_.table_name();
+
+  void *engine = nullptr;
+  if (data_->engines_.find(db_table_name, engine)) {
+    if (!engine)  {
+      LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" is empty!";
+    }
+    status = true;
+  }
+  if (!status)  {
+    return status;
+  }
+
+  std::vector<awadb::FieldInfo> scalar_fields;
+  std::vector<awadb::VectorInfo> vector_fields;
+  GetFieldsInfo(engine, scalar_fields, vector_fields);
+
+  awadb_grpc::DBMeta *exist_table_ptr = reply_.mutable_exist_table(); 
+  //awadb_grpc::DBMeta db_meta;
+  exist_table_ptr->set_db_name(request_.db_name());
+
+  awadb_grpc::TableMeta *table_meta = exist_table_ptr->add_tables_meta();
+
+  table_meta->set_name(request_.table_name());
+
+  for (auto &iter: scalar_fields)  {
+    awadb_grpc::FieldMeta *field_meta = table_meta->add_fields_meta();
+    field_meta->set_name(iter.name);
+    switch (iter.data_type)  {
+      case awadb::DataType::INT: {
+        field_meta->set_type(awadb_grpc::INT);		
+        break;	
+      }
+      case awadb::DataType::LONG: {
+	field_meta->set_type(awadb_grpc::LONG); 
+        break; 
+      }
+      case awadb::DataType::FLOAT: {
+	field_meta->set_type(awadb_grpc::FLOAT); 
+        break; 
+      }
+      case awadb::DataType::DOUBLE: {
+	field_meta->set_type(awadb_grpc::DOUBLE); 
+        break; 
+      }
+      case awadb::DataType::STRING: {
+	field_meta->set_type(awadb_grpc::STRING); 
+        break; 
+      }
+      case awadb::DataType::MULTI_STRING: {
+	field_meta->set_type(awadb_grpc::MULTI_STRING); 
+        break; 
+      }
+      default: {
+	break;
+      }
+    }
+    field_meta->set_is_index(iter.is_index); 
+  }
+
+  for (auto &iter: vector_fields)  {
+    awadb_grpc::FieldMeta *field_meta = table_meta->add_fields_meta();
+    field_meta->set_name(iter.name);
+    field_meta->set_is_index(iter.is_index);
+    field_meta->set_type(awadb_grpc::VECTOR);
+
+    awadb_grpc::VectorMeta *vector_meta = field_meta->mutable_vec_meta();
+    vector_meta->set_dimension(iter.dimension); 
+
+    switch (iter.data_type)  {
+      case awadb::DataType::INT: {
+        vector_meta->set_data_type(awadb_grpc::INT);		
+        break;
+      }
+      case awadb::DataType::LONG: {
+	vector_meta->set_data_type(awadb_grpc::LONG); 
+        break;
+      }
+      case awadb::DataType::FLOAT: {
+	vector_meta->set_data_type(awadb_grpc::FLOAT); 
+        break;
+      }
+      case awadb::DataType::DOUBLE: {
+	vector_meta->set_data_type(awadb_grpc::DOUBLE); 
+        break;
+      }
+      default: {
+	break;
+      }
+    }
+  }
+
+  return true; 
+}
+
+
+void CheckTableCall::Proceed() {
+  if (status_ == CREATE) {
+    // Make this instance progress to the PROCESS state.
+    status_ = PROCESS;
+
+    // As part of the initial CREATE state, we *request* that the system
+    // start processing SayHello requests. In this request, "this" acts are
+    // the tag uniquely identifying the request (so that different CallData
+    // instances can serve different requests concurrently), in this case
+    // the memory address of this CallData instance.
+    data_->service_->RequestCheckTable(&ctx_, &request_, &responder_, data_->cq_, data_->cq_,
+          this);
+  } else if (status_ == PROCESS) {
+    // Spawn a new CallData instance to serve new clients while we process
+    // the one for this CallData. The instance will deallocate itself as
+    // part of its FINISH state.
+    new CheckTableCall(data_);
+
+    // The actual processing.
+    bool ret = ProcessCheckTableRequest();
+
+    if (ret)  {
+      reply_.set_is_existed(true);
+    }  else  {
+      reply_.set_is_existed(false);
+    }
+
+    // And we are done! Let the gRPC runtime know we've finished, using the
+    // memory address of this instance as the uniquely identifying tag for
+    // the event.
+    status_ = FINISH;
+    responder_.Finish(reply_, Status::OK, this);
+  } else {
+    GPR_ASSERT(status_ == FINISH);
+    // Once in the FINISH state, deallocate ourselves (CallData).
+    delete this;
+  }
+}
+
+
 bool AddFieldsCall::ProcessAddFieldsRequest() {
   if (!request_.has_db_name() || request_.db_name().empty())  return false; 
   bool status = true; 
@@ -203,6 +344,8 @@ bool AddFieldsCall::ProcessAddFieldsRequest() {
 	  status = false;
 	  continue; 
 	}  
+      }  else  {
+        return false;
       }
 
       for (size_t j = 0; j < table_meta_ptr->fields_meta_size(); j++)  {
@@ -500,11 +643,11 @@ void GetCall::ProcessGetRequest()  {
     reply_.set_table_name(request_.table_name());
     for (auto &iter: docs)  {
       awadb_grpc::Document *doc = reply_.add_docs();
-      std::vector<awadb::Field> &table_fields = iter.second.TableFields();  
-      AddFields(doc, table_fields); 
+      std::vector<awadb::Field> &table_fields = iter.second.TableFields();
+      AddFields(doc, table_fields);
       std::vector<awadb::Field> &vec_fields = iter.second.VectorFields();
       AddFields(doc, vec_fields);
-      doc->set_id(iter.first);
+      doc->set_id((iter.second).Key());
     }
   } else  {
     LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" not exist!";
@@ -561,8 +704,9 @@ void SearchCall::ProcessSearchRequest()  {
    
     awadb::Request search_req;
     awadb::Response search_res;
-    if (request_.vec_queries_size() > 0)  search_req.SetReqNum(request_.vec_queries_size()); 
-    for (int i = 0; i < request_.vec_queries_size(); i++)  {
+    int vec_num = request_.vec_queries_size(); 
+    if (vec_num > 0)  search_req.SetReqNum(vec_num); 
+    for (int i = 0; i < vec_num; i++)  {
       awadb_grpc::VectorQuery *vec_query = request_.mutable_vec_queries(i);
       awadb::VectorQuery v_query;
       v_query.name = vec_query->field_name();
@@ -574,8 +718,16 @@ void SearchCall::ProcessSearchRequest()  {
       v_query.retrieval_type = vec_query->retrieval_type(); 
       search_req.AddVectorQuery(v_query); 
     }
-    
 
+    if (vec_num > 1 && request_.has_mul_vec_logic_op())  {
+      bool mul_vec_logic_op = true;
+      if (request_.mul_vec_logic_op() == awadb_grpc::MultiVectorLogicOp::OR)  {
+        mul_vec_logic_op = false;
+      }
+      search_req.SetMulVecLogicOp(mul_vec_logic_op); 
+    }
+
+    
     for (int i = 0; i < request_.page_text_queries_size(); i++)  {
       search_req.AddPageText(request_.page_text_queries(i));  
     }
@@ -599,11 +751,16 @@ void SearchCall::ProcessSearchRequest()  {
       r_filter.include_upper = range_filter->include_upper();
       search_req.AddRangeFilter(r_filter);
     }
-   
+ 
+    search_req.SetMultiVectorRank(1);
     search_req.SetTopN(request_.topn());
     search_req.SetBruteForceSearch(request_.brute_force_search() ? 1 : 0);
     search_req.SetRetrievalParams(request_.retrieval_params());
     search_req.SetOnlineLogLevel(request_.online_log_level());
+    
+    if (request_.has_is_l2())  {
+      search_req.SetMetricType(request_.is_l2());
+    }
 
     int ret = DoSearch(engine, search_req, search_res);
 
@@ -634,7 +791,9 @@ void SearchCall::ProcessSearchRequest()  {
       if (!results[i].msg.empty())  {
 	result_ptr->set_msg(results[i].msg);
       }
-      for (int j = 0; j < results[i].result_items.size(); j++)  {
+      int return_topn = request_.topn();
+      if (return_topn > results[i].result_items.size())  return_topn = results[i].result_items.size();
+      for (int j = 0; j < return_topn; j++)  {
         awadb_grpc::ResultItem *item_ptr = result_ptr->add_result_items();
 	item_ptr->set_score((float)results[i].result_items[j].score);
 	awadb::ResultItem &item_tmp = results[i].result_items[j];
@@ -645,7 +804,7 @@ void SearchCall::ProcessSearchRequest()  {
 	  if (fields_type.find(item_tmp.names[k]) != fields_type.end())  {
 	    switch(fields_type[item_tmp.names[k]])  {
 	      case awadb::DataType::INT:  {
-	        new_field->set_type(awadb_grpc::FieldType::INT);	
+	        new_field->set_type(awadb_grpc::FieldType::INT);
 	        break; 
 	      }
 	      case awadb::DataType::LONG:  {
@@ -666,8 +825,12 @@ void SearchCall::ProcessSearchRequest()  {
               }
 	      case awadb::DataType::MULTI_STRING:  {
 	        new_field->set_type(awadb_grpc::FieldType::MULTI_STRING);
-		break;		 
+		break;
               }
+	      case awadb::DataType::VECTOR:  {
+	        new_field->set_type(awadb_grpc::FieldType::VECTOR);
+		break;		 
+	      }
               default:  {
 	        break; 
 	      }
