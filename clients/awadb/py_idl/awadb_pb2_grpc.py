@@ -19,6 +19,11 @@ class AwaDBServerStub(object):
                 request_serializer=awadb__pb2.DBMeta.SerializeToString,
                 response_deserializer=awadb__pb2.ResponseStatus.FromString,
                 )
+        self.CheckTable = channel.unary_unary(
+                '/awadb_grpc.AwaDBServer/CheckTable',
+                request_serializer=awadb__pb2.DBTableName.SerializeToString,
+                response_deserializer=awadb__pb2.TableStatus.FromString,
+                )
         self.DropDB = channel.unary_unary(
                 '/awadb_grpc.AwaDBServer/DropDB',
                 request_serializer=awadb__pb2.DBName.SerializeToString,
@@ -70,6 +75,12 @@ class AwaDBServerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Create(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CheckTable(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -136,6 +147,11 @@ def add_AwaDBServerServicer_to_server(servicer, server):
                     servicer.Create,
                     request_deserializer=awadb__pb2.DBMeta.FromString,
                     response_serializer=awadb__pb2.ResponseStatus.SerializeToString,
+            ),
+            'CheckTable': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckTable,
+                    request_deserializer=awadb__pb2.DBTableName.FromString,
+                    response_serializer=awadb__pb2.TableStatus.SerializeToString,
             ),
             'DropDB': grpc.unary_unary_rpc_method_handler(
                     servicer.DropDB,
@@ -206,6 +222,23 @@ class AwaDBServer(object):
         return grpc.experimental.unary_unary(request, target, '/awadb_grpc.AwaDBServer/Create',
             awadb__pb2.DBMeta.SerializeToString,
             awadb__pb2.ResponseStatus.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CheckTable(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/awadb_grpc.AwaDBServer/CheckTable',
+            awadb__pb2.DBTableName.SerializeToString,
+            awadb__pb2.TableStatus.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

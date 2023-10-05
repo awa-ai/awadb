@@ -13,7 +13,7 @@ from setuptools import setup, find_packages
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name = "awadb-client",
-    version = "0.0.6",
+    version = "0.0.7",
     author = "Vincent",
     author_email = "awadb.vincent@gmail.com",
     description = "Python client for AI Native database AwaDB",

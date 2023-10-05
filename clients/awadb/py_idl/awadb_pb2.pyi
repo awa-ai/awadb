@@ -16,6 +16,11 @@ class FieldType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     MULTI_STRING: _ClassVar[FieldType]
     VECTOR: _ClassVar[FieldType]
 
+class MultiVectorLogicOp(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
+    AND: _ClassVar[MultiVectorLogicOp]
+    OR: _ClassVar[MultiVectorLogicOp]
+
 class SearchResultCode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []
     SUCCESS: _ClassVar[SearchResultCode]
@@ -38,6 +43,8 @@ DOUBLE: FieldType
 STRING: FieldType
 MULTI_STRING: FieldType
 VECTOR: FieldType
+AND: MultiVectorLogicOp
+OR: MultiVectorLogicOp
 SUCCESS: SearchResultCode
 INDEX_NOT_TRAINED: SearchResultCode
 SEARCH_ERROR: SearchResultCode
@@ -61,6 +68,14 @@ class TableName(_message.Message):
     name: str
     def __init__(self, name: _Optional[str] = ...) -> None: ...
 
+class DBTableName(_message.Message):
+    __slots__ = ["db_name", "table_name"]
+    DB_NAME_FIELD_NUMBER: _ClassVar[int]
+    TABLE_NAME_FIELD_NUMBER: _ClassVar[int]
+    db_name: str
+    table_name: str
+    def __init__(self, db_name: _Optional[str] = ..., table_name: _Optional[str] = ...) -> None: ...
+
 class DBMeta(_message.Message):
     __slots__ = ["db_name", "desc", "tables_meta"]
     DB_NAME_FIELD_NUMBER: _ClassVar[int]
@@ -70,6 +85,22 @@ class DBMeta(_message.Message):
     desc: str
     tables_meta: _containers.RepeatedCompositeFieldContainer[TableMeta]
     def __init__(self, db_name: _Optional[str] = ..., desc: _Optional[str] = ..., tables_meta: _Optional[_Iterable[_Union[TableMeta, _Mapping]]] = ...) -> None: ...
+
+class FieldMeta(_message.Message):
+    __slots__ = ["name", "type", "is_index", "is_store", "reindex", "vec_meta"]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    IS_INDEX_FIELD_NUMBER: _ClassVar[int]
+    IS_STORE_FIELD_NUMBER: _ClassVar[int]
+    REINDEX_FIELD_NUMBER: _ClassVar[int]
+    VEC_META_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    type: FieldType
+    is_index: bool
+    is_store: bool
+    reindex: bool
+    vec_meta: VectorMeta
+    def __init__(self, name: _Optional[str] = ..., type: _Optional[_Union[FieldType, str]] = ..., is_index: bool = ..., is_store: bool = ..., reindex: bool = ..., vec_meta: _Optional[_Union[VectorMeta, _Mapping]] = ...) -> None: ...
 
 class TableNames(_message.Message):
     __slots__ = ["name"]
@@ -87,6 +118,14 @@ class TableMeta(_message.Message):
     fields_meta: _containers.RepeatedCompositeFieldContainer[FieldMeta]
     def __init__(self, name: _Optional[str] = ..., desc: _Optional[str] = ..., fields_meta: _Optional[_Iterable[_Union[FieldMeta, _Mapping]]] = ...) -> None: ...
 
+class TableStatus(_message.Message):
+    __slots__ = ["is_existed", "exist_table"]
+    IS_EXISTED_FIELD_NUMBER: _ClassVar[int]
+    EXIST_TABLE_FIELD_NUMBER: _ClassVar[int]
+    is_existed: bool
+    exist_table: DBMeta
+    def __init__(self, is_existed: bool = ..., exist_table: _Optional[_Union[DBMeta, _Mapping]] = ...) -> None: ...
+
 class VectorMeta(_message.Message):
     __slots__ = ["data_type", "dimension", "store_type", "store_param", "has_source"]
     DATA_TYPE_FIELD_NUMBER: _ClassVar[int]
@@ -100,22 +139,6 @@ class VectorMeta(_message.Message):
     store_param: str
     has_source: bool
     def __init__(self, data_type: _Optional[_Union[FieldType, str]] = ..., dimension: _Optional[int] = ..., store_type: _Optional[str] = ..., store_param: _Optional[str] = ..., has_source: bool = ...) -> None: ...
-
-class FieldMeta(_message.Message):
-    __slots__ = ["name", "type", "is_index", "is_store", "reindex", "vec_meta"]
-    NAME_FIELD_NUMBER: _ClassVar[int]
-    TYPE_FIELD_NUMBER: _ClassVar[int]
-    IS_INDEX_FIELD_NUMBER: _ClassVar[int]
-    IS_STORE_FIELD_NUMBER: _ClassVar[int]
-    REINDEX_FIELD_NUMBER: _ClassVar[int]
-    VEC_META_FIELD_NUMBER: _ClassVar[int]
-    name: str
-    type: FieldType
-    is_index: bool
-    is_store: bool
-    reindex: bool
-    vec_meta: VectorMeta
-    def __init__(self, name: _Optional[str] = ..., type: _Optional[_Union[FieldType, str]] = ..., is_index: bool = ..., is_store: bool = ..., reindex: bool = ..., vec_meta: _Optional[_Union[VectorMeta, _Mapping]] = ...) -> None: ...
 
 class DocCondition(_message.Message):
     __slots__ = ["db_name", "table_name", "ids", "filter_fields", "include_all_fields", "not_include_fields", "limit"]
@@ -135,12 +158,12 @@ class DocCondition(_message.Message):
     LIMIT_FIELD_NUMBER: _ClassVar[int]
     db_name: str
     table_name: str
-    ids: _containers.RepeatedScalarFieldContainer[str]
+    ids: _containers.RepeatedScalarFieldContainer[bytes]
     filter_fields: _containers.ScalarMap[str, str]
     include_all_fields: bool
     not_include_fields: _containers.RepeatedScalarFieldContainer[str]
     limit: int
-    def __init__(self, db_name: _Optional[str] = ..., table_name: _Optional[str] = ..., ids: _Optional[_Iterable[str]] = ..., filter_fields: _Optional[_Mapping[str, str]] = ..., include_all_fields: bool = ..., not_include_fields: _Optional[_Iterable[str]] = ..., limit: _Optional[int] = ...) -> None: ...
+    def __init__(self, db_name: _Optional[str] = ..., table_name: _Optional[str] = ..., ids: _Optional[_Iterable[bytes]] = ..., filter_fields: _Optional[_Mapping[str, str]] = ..., include_all_fields: bool = ..., not_include_fields: _Optional[_Iterable[str]] = ..., limit: _Optional[int] = ...) -> None: ...
 
 class Field(_message.Message):
     __slots__ = ["name", "value", "type", "source", "mul_str_value"]
@@ -217,7 +240,7 @@ class VectorQuery(_message.Message):
     def __init__(self, field_name: _Optional[str] = ..., value: _Optional[bytes] = ..., min_score: _Optional[float] = ..., max_score: _Optional[float] = ..., boost: _Optional[float] = ..., is_boost: bool = ..., retrieval_type: _Optional[str] = ...) -> None: ...
 
 class SearchRequest(_message.Message):
-    __slots__ = ["db_name", "table_name", "vec_queries", "page_text_queries", "term_filters", "range_filters", "topn", "retrieval_params", "online_log_level", "brute_force_search", "is_pack_all_fields", "pack_fields"]
+    __slots__ = ["db_name", "table_name", "vec_queries", "page_text_queries", "term_filters", "range_filters", "topn", "retrieval_params", "online_log_level", "brute_force_search", "is_pack_all_fields", "pack_fields", "mul_vec_logic_op", "is_l2"]
     DB_NAME_FIELD_NUMBER: _ClassVar[int]
     TABLE_NAME_FIELD_NUMBER: _ClassVar[int]
     VEC_QUERIES_FIELD_NUMBER: _ClassVar[int]
@@ -230,6 +253,8 @@ class SearchRequest(_message.Message):
     BRUTE_FORCE_SEARCH_FIELD_NUMBER: _ClassVar[int]
     IS_PACK_ALL_FIELDS_FIELD_NUMBER: _ClassVar[int]
     PACK_FIELDS_FIELD_NUMBER: _ClassVar[int]
+    MUL_VEC_LOGIC_OP_FIELD_NUMBER: _ClassVar[int]
+    IS_L2_FIELD_NUMBER: _ClassVar[int]
     db_name: str
     table_name: str
     vec_queries: _containers.RepeatedCompositeFieldContainer[VectorQuery]
@@ -242,7 +267,9 @@ class SearchRequest(_message.Message):
     brute_force_search: bool
     is_pack_all_fields: bool
     pack_fields: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, db_name: _Optional[str] = ..., table_name: _Optional[str] = ..., vec_queries: _Optional[_Iterable[_Union[VectorQuery, _Mapping]]] = ..., page_text_queries: _Optional[_Iterable[str]] = ..., term_filters: _Optional[_Iterable[_Union[TermFilter, _Mapping]]] = ..., range_filters: _Optional[_Iterable[_Union[RangeFilter, _Mapping]]] = ..., topn: _Optional[int] = ..., retrieval_params: _Optional[str] = ..., online_log_level: _Optional[str] = ..., brute_force_search: bool = ..., is_pack_all_fields: bool = ..., pack_fields: _Optional[_Iterable[str]] = ...) -> None: ...
+    mul_vec_logic_op: MultiVectorLogicOp
+    is_l2: bool
+    def __init__(self, db_name: _Optional[str] = ..., table_name: _Optional[str] = ..., vec_queries: _Optional[_Iterable[_Union[VectorQuery, _Mapping]]] = ..., page_text_queries: _Optional[_Iterable[str]] = ..., term_filters: _Optional[_Iterable[_Union[TermFilter, _Mapping]]] = ..., range_filters: _Optional[_Iterable[_Union[RangeFilter, _Mapping]]] = ..., topn: _Optional[int] = ..., retrieval_params: _Optional[str] = ..., online_log_level: _Optional[str] = ..., brute_force_search: bool = ..., is_pack_all_fields: bool = ..., pack_fields: _Optional[_Iterable[str]] = ..., mul_vec_logic_op: _Optional[_Union[MultiVectorLogicOp, str]] = ..., is_l2: bool = ...) -> None: ...
 
 class ResultItem(_message.Message):
     __slots__ = ["score", "fields"]

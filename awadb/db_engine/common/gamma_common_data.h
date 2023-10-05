@@ -44,6 +44,7 @@ class GammaSearchCondition : public RetrievalContext {
     multi_vector_rank = false;
     metric_type = DistanceComputeType::INNER_PRODUCT;
     sort_by_docid = false;
+    multi_vec_and_op = false;
     brute_force_search = false;
     l2_sqrt = false;
     has_rank = 1;
@@ -51,6 +52,7 @@ class GammaSearchCondition : public RetrievalContext {
     max_score = std::numeric_limits<float>::max();
     perf_tool_ = perf_tool;
     table = nullptr;
+    batch_req_num = 1;
   }
 
   GammaSearchCondition(GammaSearchCondition *condition) {
@@ -59,6 +61,7 @@ class GammaSearchCondition : public RetrievalContext {
     multi_vector_rank = condition->multi_vector_rank;
     metric_type = condition->metric_type;
     sort_by_docid = condition->sort_by_docid;
+    multi_vec_and_op = condition->multi_vec_and_op;
     brute_force_search = condition->brute_force_search;
     l2_sqrt = condition->l2_sqrt;
     has_rank = condition->has_rank;
@@ -67,6 +70,7 @@ class GammaSearchCondition : public RetrievalContext {
     range_filters = condition->range_filters;
     term_filters = condition->term_filters;
     table = condition->table;
+    batch_req_num = condition->batch_req_num;
   }
 
   ~GammaSearchCondition() {
@@ -85,12 +89,14 @@ class GammaSearchCondition : public RetrievalContext {
   bool multi_vector_rank;
   enum DistanceComputeType metric_type;
   bool sort_by_docid;
+  bool multi_vec_and_op;
   bool brute_force_search;
   bool l2_sqrt;
   bool has_rank;
   std::string retrieval_parameters;
   float min_score;
   float max_score;
+  int batch_req_num;
 
   bool IsSimilarScoreValid(float score) const override {
     return (score <= max_score) && (score >= min_score);

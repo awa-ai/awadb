@@ -649,6 +649,9 @@ int Table::GetDocInfo(const int docid, Doc &doc,
       }  
       NumericValueToStr(table_field);
       table_fields.push_back(table_field);
+      if (it.first == key_field_name_)  {
+        doc.SetKey(table_field.value); 
+      } 
     }
   } else {
     for (const std::string &f : fields) {
@@ -832,6 +835,23 @@ void Table::GetAllAttrType(
   return;
 }
 
+void Table::GetAllFields(std::vector<FieldInfo> &fields)  {
+  for (auto &iter: attr_type_map_)  {
+    FieldInfo field;
+    field.name = iter.first;
+    field.data_type = iter.second; 
+    if (attr_is_index_map_.find(field.name) == attr_is_index_map_.end())  {
+      field.is_index = false;
+    }  else  {
+      field.is_index = attr_is_index_map_[field.name];
+    }
+    fields.push_back(field);
+  }
+  docid_fields_mgr_->GetAllFields(fields); 
+  return;
+}
+
+
 
 int Table::GetAttrIsIndex(std::map<std::string, bool> &attr_is_index_map) {
   for (const auto &attr_is_index : attr_is_index_map_) {
@@ -859,6 +879,7 @@ bool Table::CheckDocFields(Doc &doc)  {
       new_field_info.data_type = field.datatype;
       new_field_info.is_index = true; // default index
       new_fields.push_back(new_field_info);
+      LOG(ERROR)<<"name is "<<field.name<<", datatype is "<<(int)(field.datatype); 
     }  else  {
       if (field.datatype != type)  {
         return  false;

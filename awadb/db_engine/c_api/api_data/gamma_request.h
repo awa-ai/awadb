@@ -44,6 +44,8 @@ class Request : public RawData {
     request_ = nullptr;
     req_num_ = 0;
     topn_ = 0;
+    multi_vec_logic_op_ = 0;
+    is_l2_ = false;
   }
 
   virtual ~Request() {}
@@ -104,6 +106,14 @@ class Request : public RawData {
 
   void SetL2Sqrt(bool l2_sqrt);
 
+  void SetMulVecLogicOp(const bool &logic_and_op);
+  
+  int MulVecLogicOp();
+
+  void SetMetricType(const bool &is_l2);
+
+  bool MetricType();
+
  private:
   gamma_api::Request *request_;
 
@@ -124,6 +134,11 @@ class Request : public RawData {
   bool has_rank_;
   int multi_vector_rank_;
   bool l2_sqrt_;
+  // 0: no multiple vectors
+  // 1: all vectors logic and
+  // 2: all vectors logic or
+  int multi_vec_logic_op_;
+  bool is_l2_; 
 };
 
 }  // namespace tig_gamma
