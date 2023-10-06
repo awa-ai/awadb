@@ -8,10 +8,10 @@ Linux, MacOSX and Windows are all supported!
 # Installation 
 ```bash
 # 1. Pull AwaDB docker image
-docker pull ljeagle/awadb:v0.07
+docker pull ljeagle/awadb:v0.08
 
 # 2. Run AwaDB Server
-docker run -itd -p 50005:50005 ljeagle/awadb:v0.07
+docker run -itd -p 50005:50005 ljeagle/awadb:v0.08
 
 # 3. Install AwaDB Client
 pip3 install awadb-client

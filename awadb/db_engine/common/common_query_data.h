@@ -235,6 +235,17 @@ struct VectorResult {
 };
 
 struct VectorDocField {
+  VectorDocField()  {
+    name = "";
+    score = 0.0;
+    source = nullptr;
+    source_len = 0;
+  }
+
+  ~VectorDocField()  {
+    source = nullptr;
+  }
+
   std::string name;
   double score;
   char *source;
