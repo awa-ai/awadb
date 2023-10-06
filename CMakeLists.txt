@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++14 -mavx2 -msse4 -mpopcnt -lom
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++14 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Wformat -Wno-inconsistent-missing-override -Wconstant-conversion -Werror=narrowing -Wno-deprecated")
 else(APPLE)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++14 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -DOPEN_CORE -O0 -w -g3 -gdwarf-2 -undefined dynamic_lookup")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++14 -fPIC -fpermissive -m64 -Wall -O3 -mavx2 -msse4 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-error=deprecated-declarations -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++14 -mavx2 -msse4 -fPIC -fpermissive -m64 -Wall -O3 -mpopcnt -fopenmp -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE -Werror=narrowing -Wno-error=deprecated-declarations -Wno-deprecated-declarations")
 endif(APPLE)
 
 
@@ -70,13 +70,11 @@ include_directories(
 	${RocksDB_INCLUDE_DIR}
 	${ZFP_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/zstd/lib     
-	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/openssl/include
 	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/TBB/include
 	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/OpenBLAS)
 
 link_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/faiss/build/faiss
-	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/openssl
 	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/TBB/build/lib
 	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/zstd/lib
 	${CMAKE_CURRENT_SOURCE_DIR}/awadb/db_engine/third_party/OpenBLAS)
@@ -100,7 +98,7 @@ else()
 	-lfaiss 
 	${RocksDB_LIB}
         ${ZFP_LIB}
-	-lcrypto
+	#-lcrypto
         -lzstd
         -lopenblas
         -ltbb
