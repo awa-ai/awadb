@@ -1,11 +1,12 @@
-<p align="center">
-    <b>AwaDB - the AI Native database for embedding vectors</b>. <br />
-    Store and search embedding vectors for LLM Applications!
-</p>
+# AwaDB - AI Native Database for embedding vectors
 
-Linux, MacOSX and Windows are all supported!
+Easily Use - No boring database schema definition. No need to pay attention to vector indexing details.  
 
-# Installation 
+Realtime Search - Lock free realtime index keeps new data fresh with millisecond level latency. No wait no manual operation.  
+
+Stability - AwaDB builds upon over 5 years experience at JD.com running production workloads at scale using a system called [Vearch](https://github.com/vearch/vearch), combined with best-of-breed ideas and practices from the community. 
+
+## Install
 ```bash
 # 1. Pull AwaDB docker image
 docker pull ljeagle/awadb:v0.08
@@ -17,9 +18,9 @@ docker run -itd -p 50005:50005 ljeagle/awadb:v0.08
 pip3 install awadb-client
 ```
 
-# Quick start as below:
+## Quick start using AwaDB:
 
-## Example 1 : A simple example for quick start
+### A simple example show usage
 ```bash
 # Import the package and module
 from awadb.client import Awa
@@ -71,6 +72,12 @@ results {
 result_code: SUCCESS
 ```
 
+More detailed sdk usage you can read [here](https://github.com/awa-ai/awadb/blob/main/clients/awadb/client.py)
+
+More detailed quick start examples you can find [here](https://github.com/awa-ai/awadb/blob/main/tests/test_awadb_client.py)
+
+
+## Semantic Search
 You can also directly use awadb to do the text semantic retrieval  
 Here the text is embedded by SentenceTransformer which is supported by [Hugging Face](https://huggingface.co)  
 Another example for 'pip3 install awadb', no AwaDB server is needed.
@@ -124,9 +131,6 @@ Examples of combining ChatGLM to do local knowledge database please see [here](.
 
 [Apache 2.0](./LICENSE)
 
-
-## Docs
-[docs](./docs/build/html/index.html)
 
 ## Community
 
