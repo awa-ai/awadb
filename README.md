@@ -132,9 +132,6 @@ Examples of combining ChatGLM to do local knowledge database please see [here](.
 [Apache 2.0](./LICENSE)
 
 
-## Docs
-[docs](./docs/build/html/index.html)
-
 ## Community
 
 Join the AwaDB community to share any problem, suggestion, or discussion with us:
