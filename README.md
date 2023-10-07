@@ -1,7 +1,9 @@
-# AwaDB - Awesome AI Native Database for embedding vectors
+# AwaDB - AI Native Database for embedding vectors
 
-Easily Use - No boring database schema definition. No need to pay attention to vector indexing details.
-Realtime Search - Lock free real-time index ensures new data fresh with millisecond level latency. No wait no manual operation.
+Easily Use - No boring database schema definition. No need to pay attention to vector indexing details.  
+
+Realtime Search - Lock free real-time index ensures new data fresh with millisecond level latency. No wait no manual operation.  
+
 Stability - AwaDB builds upon over 5 years experience at JD.com running production workloads at scale using a system called [Vearch](https://github.com/vearch/vearch), combined with best-of-breed ideas and practices from the community. 
 
 ## Quick Install
@@ -72,9 +74,10 @@ result_code: SUCCESS
 
 More detailed sdk usage you can read [here](https://github.com/awa-ai/awadb/blob/main/clients/awadb/client.py)
 
-More detailed quick start examples you can find [hear](https://github.com/awa-ai/awadb/blob/main/tests/test_awadb_client.py)
+More detailed quick start examples you can find [here](https://github.com/awa-ai/awadb/blob/main/tests/test_awadb_client.py)
 
 
+## Semantic Search
 You can also directly use awadb to do the text semantic retrieval  
 Here the text is embedded by SentenceTransformer which is supported by [Hugging Face](https://huggingface.co)  
 Another example for 'pip3 install awadb', no AwaDB server is needed.
