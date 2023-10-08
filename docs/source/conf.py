@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'AwaDB'
-copyright = '2023, vincent'
-author = 'vincent'
+copyright = '2023, Vincent'
+author = 'Vincent'
 release = '0.08'
 
 # -- General configuration ---------------------------------------------------
