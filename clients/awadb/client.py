@@ -98,7 +98,7 @@ class Awa:
         Returns: None.
         """
         if self.channel is not None:
-            slef.channel.close()
+            self.channel.close()
 
     def add(
         self,
