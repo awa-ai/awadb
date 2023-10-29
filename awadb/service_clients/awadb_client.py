@@ -97,7 +97,7 @@ class AwaDBClient:
 
     def close(self):
         if self.channel is not None:
-            slef.channel.close()
+            self.channel.close()
 
 
     def add(
