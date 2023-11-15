@@ -6,23 +6,41 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'awadb'
-copyright = '2023, vincent'
-author = 'vincent'
-release = 'v0.08'
+import os
+import sys
+
+project = 'AwaDB'
+copyright = '2023, Vincent'
+author = 'Vincent'
+release = '0.3.10'
+
+sys.path.insert(0, os.path.abspath('../../awadb'))
+sys.path.insert(0, os.path.abspath('../../clients'))
+
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    'myst_parser',
+    'sphinx.ext.duration',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.txt': 'markdown',
+    '.md': 'markdown',
+}
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'furo'
 html_static_path = ['_static']
