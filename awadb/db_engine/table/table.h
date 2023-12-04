@@ -168,6 +168,7 @@ class Table {
 
 
   std::string root_path_;
+  std::string basic_root_path_;
   int last_docid_;
 
  private:

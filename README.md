@@ -23,7 +23,7 @@ pip3 install awadb-client
 ### A simple example show usage
 ```bash
 # Import the package and module
-from awadb.client import Awa
+from awadb_client import Awa
 
 # Initialize awadb client
 client = Awa()

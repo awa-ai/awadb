@@ -235,6 +235,7 @@ GammaEngine::~GammaEngine() {
     delete migrate_data_;
     migrate_data_ = nullptr;
   }
+  printf("-----------EXIT GAMMAENGINE--------\n");
 }
 
 GammaEngine *GammaEngine::GetInstance(const string &index_root_path) {
@@ -350,8 +351,6 @@ int GammaEngine::Search(Request &request, Response &response_results) {
   std::vector<struct VectorQuery> &vec_fields = request.VecFields();
   GammaQuery gamma_query;
   gamma_query.vec_query = vec_fields;
-
-    
 
   gamma_query.condition = new GammaSearchCondition(static_cast<PerfTool *>(response_results.GetPerTool()));
   gamma_query.condition->topn = topn;
@@ -493,8 +492,6 @@ int GammaEngine::Search(Request &request, Response &response_results) {
       } 
     } 
   }*/ 
-
-
 
 #ifdef PERFORMANCE_TESTING
   std::string online_log_level = request.OnlineLogLevel();
@@ -684,6 +681,13 @@ int GammaEngine::CreateTable(const std::string &table_str) {
   t.detach();
   
   std::string table_name = table.Name();
+  // when db_name/table_name, extract real table_name
+  std::string::size_type begin = table_name.rfind('/');
+  if (begin != std::string::npos)  {
+    begin += 1;
+    table_name = table_name.substr(begin, table_name.size() - begin);
+  }
+
   std::string path = index_root_path_ + "/" + table_name + ".schema";
   TableSchemaIO tio(path);  // rewrite it if the path is already existed
   if (tio.Write(table)) {
@@ -792,6 +796,14 @@ int GammaEngine::CreateTable(TableInfo &table) {
   t.detach();
   
   std::string table_name = table.Name();
+
+  // when db_name/table_name, extract real table_name
+  std::string::size_type begin = table_name.rfind('/');
+  if (begin != std::string::npos)  {
+    begin += 1;
+    table_name = table_name.substr(begin, table_name.size() - begin);
+  }
+
   std::string path = index_root_path_ + "/" + table_name + ".schema";
   TableSchemaIO tio(path);  // rewrite it if the path is already existed
   if (tio.Write(table)) {
@@ -904,6 +916,7 @@ int GammaEngine::AddOrUpdateDocs(Docs &docs, BatchResult &result) {
 
     int ret =
         table_->BatchAdd(start_id, batch_size, max_docid_, doc_vec, result);
+    
     if (ret != 0) {
       LOG(ERROR) << "BatchAdd to table error";
       return;
@@ -1016,6 +1029,7 @@ int GammaEngine::AddOrUpdateDocs(
         int idx = table_->GetAttrIdx(field.name);
         field_range_index_->Add(max_docid_ + i - start_id, idx);
       }
+
       // add vectors by VectorManager
       std::vector<struct Field> &fields_vec = doc.VectorFields();
       ret = vec_manager_->AddToStore(max_docid_ + i - start_id, fields_vec);
@@ -1026,7 +1040,7 @@ int GammaEngine::AddOrUpdateDocs(
         continue;
       }
       
-      if (!awadb_retrieval_->AddDoc((uint32_t)(max_docid_ + i - start_id), words_in_docs[max_docid_ + i - start_id]))  {
+      if (!awadb_retrieval_->AddDoc((uint32_t)(max_docid_ + i - start_id), words_in_docs[i]))  {
         LOG(ERROR) << "add awadb index error, docid=" <<(max_docid_ + i - start_id);
       }
 
@@ -1047,8 +1061,6 @@ int GammaEngine::AddOrUpdateDocs(
     table_->GetDocIDByKey(key, docid);
     if (docid == -1 && ite == remove_dupliacte.end()) {
       ++batch_size;
-
-      
       continue;
     } else {
       batchAdd(start_id, batch_size, words_in_docs);
@@ -1058,7 +1070,6 @@ int GammaEngine::AddOrUpdateDocs(
       std::vector<struct Field> &fields_vec = doc.VectorFields();
       if (ite != remove_dupliacte.end()) table_->GetDocIDByKey(key, docid);
       if (Update(docid, fields_table, fields_vec)) {
-        LOG(ERROR) << "update error, key=" << key << ", docid=" << docid;
         continue;
       }
     }
@@ -1231,7 +1242,6 @@ int GammaEngine::DelDocByFilter(Request &request, char **del_ids,
 
   int retval = field_range_index_->Search(filters, &range_query_result);
 
-  int del_num = 0;
   cJSON *root = cJSON_CreateArray();
   if (retval > 0) {
     for (int del_docid = 0; del_docid < max_docid_; ++del_docid) {
@@ -1260,11 +1270,9 @@ int GammaEngine::DelDocByFilter(Request &request, char **del_ids,
           cJSON_AddItemToArray(root, cJSON_CreateNumber(key_long));
         }
         ++delete_num_;
-        ++del_num;
       }
     }
   }
-  LOG(INFO) << "DelDocByFilter(), Delete doc num: " << del_num;
 
   *del_ids = cJSON_PrintUnformatted(root);
   *str_len = strlen(*del_ids);
@@ -1373,7 +1381,7 @@ int GammaEngine::Indexing() {
     index_status_ = IndexStatus::INDEXED;
     bool index_is_dirty = false;
     int add_ret = vec_manager_->AddRTVecsToIndex(index_is_dirty);
-    
+   
     if (add_ret < 0) {
       has_error = true;
       LOG(ERROR) << "Add real time vectors to index error!";

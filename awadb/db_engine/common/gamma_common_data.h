@@ -43,7 +43,7 @@ class GammaSearchCondition : public RetrievalContext {
     topn = 0;
     multi_vector_rank = false;
     metric_type = DistanceComputeType::INNER_PRODUCT;
-    sort_by_docid = false;
+    sort_by_docid = true;
     multi_vec_and_op = false;
     brute_force_search = false;
     l2_sqrt = false;

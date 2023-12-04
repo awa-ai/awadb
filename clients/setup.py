@@ -13,7 +13,7 @@ from setuptools import setup, find_packages
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name = "awadb-client",
-    version = "0.0.7",
+    version = "0.0.9",
     author = "Vincent",
     author_email = "awadb.vincent@gmail.com",
     description = "Python client for AI Native database AwaDB",
@@ -21,7 +21,7 @@ setup(
     license = "Apache 2.0",
     keywords = "awadb-client python sdk vectordb",
     url = "https://github.com/awa-ai/awadb",
-    packages = ["awadb", "awadb.py_idl"],
+    packages = ["awadb_client", "awadb_client.py_idl"],
 
     python_requires=">=3.3",
 )

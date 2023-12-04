@@ -981,6 +981,7 @@ int MultiFieldsRangeIndex::Delete(int docid, int field) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
+
   field_operate_q_->push(field_op);
 
   return 0;
@@ -999,6 +1000,7 @@ int MultiFieldsRangeIndex::AddDoc(int docid, int field) {
 
     if (table_->GetColFieldRawValue(docid, (uint8_t)field, keys))
       return -1;
+   
     for (size_t i = 0; i < keys.size(); i++)  {
       index->Add(keys[i], docid);
     }
@@ -1014,6 +1016,8 @@ int MultiFieldsRangeIndex::DeleteDoc(int docid, int field, std::string &key) {
   if (index == nullptr) {
     return 0;
   }
+
+  if (key.length() == 0)  return -1;
 
   index->Delete(key, docid);
 
