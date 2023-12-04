@@ -8,6 +8,7 @@
 #pragma once
 
 #include <map>
+#include <thread>
 #include "c_api/api_data/gamma_doc.h"
 #include "c_api/api_data/gamma_table.h"
 
@@ -23,11 +24,9 @@ class DocidFieldsMgr  {
 
   bool Init(
     const uint32_t &block_docs_num,
-    const uint32_t &slot_str_size,
-    const uint32_t &str_max_size);
+    const std::string &root_path);
 
   int AddField(const FieldInfo &field_info, const uint8_t &fid);
-  //int Put(const uint32_t &docid, const std::vector<Field> &fields); 
   int Put(const uint32_t &docid, std::vector<Field> &fields); 
   int Get(const uint32_t &docid, std::vector<Field> &fields);
   int Get(const uint32_t &docid, Field &field);
@@ -66,17 +65,22 @@ class DocidFieldsMgr  {
   
   int Find(const uint8_t &fid, const char *fid_values_ptr, const uint32_t &fids_size); 
   void Destroy(char ** &ptr, const uint32_t &size, bool destroy_all);
-  
+ 
+  bool Load(const std::string &file_path);
+  bool Dump(const std::string &file_path, uint32_t &flushed_size);
+  void Flush();
+
   char **docid_fields_map_;
   uint32_t capacity_;
   uint32_t size_;
+  uint32_t last_flushed_size_;
   uint32_t field_id_bytes_;
   uint32_t field_pos_bytes_;
 
   uint8_t fields_size_;
   uint32_t block_docs_num_;
-  uint32_t slot_str_size_;
-  uint32_t str_max_size_;
+  std::string root_path_;
+  std::string persist_file_;
 
   std::map<uint8_t, std::string> fid_id2name_;
   std::map<std::string, DataType> fid_name2type_;
@@ -85,6 +89,8 @@ class DocidFieldsMgr  {
   std::map<std::string, FixedFieldColumnData *> fixed_field_map_;
   std::map<std::string, StrFieldColumnData *> str_field_map_;
   std::map<std::string, MultiStrFieldColumnData *> mul_str_field_map_;
+
+  std::thread flush_thread_;
 
 };	
 

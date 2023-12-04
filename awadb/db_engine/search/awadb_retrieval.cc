@@ -80,7 +80,7 @@ bool AwadbRetrieval::AddDoc(
       DocDetail *item = new DocDetail();
       if (0 != item->Init())  {
 	ret = false;
-        fprintf(stderr, "word %s init invert list error!\n", iter->word.c_str());
+        LOG(ERROR)<<"word "<<iter->word.c_str()<<" init invert list error!";
         break; 
       }
       inverted_list_[iter->word] = item;

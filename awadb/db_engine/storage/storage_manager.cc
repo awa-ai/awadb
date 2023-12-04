@@ -378,7 +378,7 @@ int StorageManager::Get(int id, const uint8_t *&value) {
   int seg_id = id / options_.segment_size;
   Segment *segment = nullptr;
   segments_.GetData(seg_id, segment);
-  
+
   if (segment == nullptr) {
     LOG(ERROR) << "Storage[" << name_ << "], segments_size[" << segments_.Size()
                << "], seg_id[" << seg_id << "] cannot be used. Get(" << id

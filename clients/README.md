@@ -8,10 +8,10 @@ No OS environment limitation, Linux, MacOSX and Windows are all supported!
 # Installation 
 ```bash
 # 1. Pull AwaDB docker image
-docker pull ljeagle/awadb:v0.06
+docker pull ljeagle/awadb:v0.09
 
 # 2. Run AwaDB Server
-docker run -itd -p 50005:50005 ljeagle/awadb:v0.06
+docker run -itd -p 50005:50005 ljeagle/awadb:v0.09
 
 # 3. Install AwaDB Client
 pip3 install awadb-client
@@ -22,7 +22,7 @@ pip3 install awadb-client
 ## Example 1 : A simple example for quick start
 ```bash
 # Import the package and module
-from awadb.client import Awa
+from awadb_client import Awa
 
 # Initialize awadb client
 client = Awa()
@@ -73,7 +73,7 @@ More detailed sdk usage you can read [here](https://github.com/awa-ai/awadb/blob
 
 ## Example 2 : Use the 960 dimension dataset [GIST](http://corpus-texmex.irisa.fr/) in the example2 for adding and searching vectors
 ```bash
-from awadb.client import Awa
+from awadb_client import Awa
 import h5py
 
 # Add the first 100000 vectors of the GIST‘s train group data into table example2  

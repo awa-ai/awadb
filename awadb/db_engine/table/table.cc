@@ -29,6 +29,7 @@ Table::Table(const string &root_path, bool b_compress) {
   string_field_num_ = 0;
   key_idx_ = -1;
   root_path_ = root_path + "/table";
+  basic_root_path_ = root_path + "/col_table"; 
   seg_num_ = 0;
   b_compress_ = b_compress;
 
@@ -111,7 +112,6 @@ int Table::CreateTable(TableInfo &table, TableParams &table_params,
   std::vector<struct FieldInfo> &fields = table.Fields();
    
   b_compress_ = table.IsCompress();
-  LOG(INFO) << "Table compress [" << b_compress_ << "]";
 
   size_t fields_num = fields.size();
   for (size_t i = 0; i < fields_num; ++i) {
@@ -147,14 +147,19 @@ int Table::CreateTable(TableInfo &table, TableParams &table_params,
   if (0 == item_length_)  item_length_ = sizeof(long); 
   docid_fields_mgr_ = new DocidFieldsMgr();
   size_t block_docs_num = 10000;
-  size_t slot_str_size = 104857600; //100M
-  size_t str_max_size = 8192; // max length for each string
-  if (!docid_fields_mgr_->Init(block_docs_num, slot_str_size, str_max_size))  {
+  //size_t slot_str_size = 104857600; //100M
+  //size_t str_max_size = 8192; // max length for each string
+  
+  if (!utils::isFolderExist(basic_root_path_.c_str())) {
+    mkdir(basic_root_path_.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  }
+  
+  //if (!docid_fields_mgr_->Init(block_docs_num, root_path_))  {
+  if (!docid_fields_mgr_->Init(block_docs_num, basic_root_path_))  {
     LOG(ERROR)<<"docid_fields_mgr init failed!";
   }
 
   return InitStorageMgr(); 
-  
   /* 
   StorageManagerOptions options;
   options.segment_size = 500000;
@@ -624,6 +629,7 @@ int Table::GetDocInfo(const int docid, Doc &doc,
     return -1;
   }
   const uint8_t *doc_value = nullptr;
+ 
   int ret = storage_mgr_->Get(docid, doc_value);
   if (ret != 0) {
     return ret;
@@ -879,7 +885,6 @@ bool Table::CheckDocFields(Doc &doc)  {
       new_field_info.data_type = field.datatype;
       new_field_info.is_index = true; // default index
       new_fields.push_back(new_field_info);
-      LOG(ERROR)<<"name is "<<field.name<<", datatype is "<<(int)(field.datatype); 
     }  else  {
       if (field.datatype != type)  {
         return  false;
