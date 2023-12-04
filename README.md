@@ -9,12 +9,15 @@ Stability - AwaDB builds upon over 4 years experience at JD.com running producti
 ## Install
 ```bash
 # 1. Pull AwaDB docker image
-docker pull ljeagle/awadb:v0.08
+docker pull ljeagle/awadb:v0.10
 
 # 2. Run AwaDB Server
-docker run -itd -p 50005:50005 ljeagle/awadb:v0.08
+docker run -itd -p 50005:50005 ljeagle/awadb:v0.10
 
-# 3. Install AwaDB Client
+# 3. Install the dependency of grpcio
+pip3 install grpcio
+
+# 4. Install AwaDB Client
 pip3 install awadb-client
 ```
 
@@ -23,7 +26,7 @@ pip3 install awadb-client
 ### A simple example show usage
 ```bash
 # Import the package and module
-from awadb.client import Awa
+from awadb_client import Awa
 
 # Initialize awadb client
 client = Awa()

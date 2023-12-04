@@ -8,15 +8,16 @@
 #pragma once
 
 #include <vector>
+#include "storage/storage_manager.h"
 
 namespace tig_gamma  {
 
 class FixedFieldColumnData  {
  public:
-  FixedFieldColumnData();
+  FixedFieldColumnData(const std::string &name);
   ~FixedFieldColumnData();
 
-  bool Init(const uint32_t &slot_element_count, const DataType &element_type);
+  bool Init(const std::string &root_path, const DataType &element_type);
 
   //int Put(const Field &field);
   int Put(Field &field);
@@ -28,24 +29,30 @@ class FixedFieldColumnData  {
   int Get(const std::vector<uint32_t> &ids,
     std::vector<Field> &field_value_array); 
 
+  
   uint32_t GetCurMaxId()  {
     return max_id_;
   }
+  
 
  private:
-  std::vector<char *> data_;
-  uint32_t slot_element_count_;
+  //std::vector<char *> data_;
+  //uint32_t slot_element_count_;
+  std::string name_;  
   uint32_t element_size_;
-
+  std::string root_path_; 
   uint32_t max_id_;
+
+  StorageManager *storage_mgr_;
 };	
 
 class StrFieldColumnData  {
  public:
-  StrFieldColumnData();
+  StrFieldColumnData(const std::string &name);
   ~StrFieldColumnData();
  
-  bool Init(const uint32_t &slot_str_size, const uint32_t &str_max_size);
+  //bool Init(const uint32_t &slot_str_size, const uint32_t &str_max_size);
+  bool Init(const std::string &root_path);
   
   int Put(const Field &field);
   int Put(const std::vector<Field> &fields_array);
@@ -59,28 +66,33 @@ class StrFieldColumnData  {
   }
 
 
-  int Put(const std::string &str);
+  //int Put(const std::string &str);
 
-  int Get(const uint32_t &id, char *&str, uint32_t &str_size);
+  //int Get(const uint32_t &id, char *&str, uint32_t &str_size);
 
  private:
 
-  bool ExtendSlotData();
-  int IdInSlot(const uint32_t &id, const uint32_t &slot_id);
-  int Seek(const uint32_t &id, uint32_t &slot_id, uint32_t &pos_in_slot);
+  //bool ExtendSlotData();
+  //int IdInSlot(const uint32_t &id, const uint32_t &slot_id);
+  //int Seek(const uint32_t &id, uint32_t &slot_id, uint32_t &pos_in_slot);
 
-  std::vector<char *> str_data_;
-  std::vector<std::vector<uint32_t>> str_offset_;
-  std::vector<uint32_t> cur_slot_str_size_; 
-  std::vector<uint32_t> max_id_in_slot_;
+  //std::vector<char *> str_data_;
+  //std::vector<std::vector<uint32_t>> str_offset_;
+  //std::vector<uint32_t> cur_slot_str_size_; 
+  //std::vector<uint32_t> max_id_in_slot_;
 
-  uint32_t latest_slot_id_;
-  uint32_t latest_offset_; 
-  uint32_t slot_str_size_;
-  uint32_t str_max_size_;
+  //uint32_t latest_slot_id_;
+  //uint32_t latest_offset_; 
+  //uint32_t slot_str_size_;
+  //uint32_t str_max_size_;
+  std::string name_;
+  std::string root_path_;
+  uint32_t element_size_; 
   uint32_t total_str_count_;
+  StorageManager *storage_mgr_;
 };
 
+/*
 struct MultiStrUnit  {
   MultiStrUnit()  { base_offset = 0; }
   ~MultiStrUnit()  {
@@ -91,18 +103,19 @@ struct MultiStrUnit  {
   uint32_t base_offset;
   std::vector<uint16_t> str_size_seq; 
 };	
-
+*/
 
 class MultiStrFieldColumnData  {
  public:
-  MultiStrFieldColumnData();
+  MultiStrFieldColumnData(const std::string &name);
   ~MultiStrFieldColumnData();
 
-  bool Init(const uint32_t &slot_str_size, const uint32_t &str_max_size);
+  //bool Init(const uint32_t &slot_str_size, const uint32_t &str_max_size);
+  bool Init(const std::string &root_path);
    
-  int Put(const std::vector<std::string> &vec_str, const uint32_t &all_str_size);
+  //int Put(const std::vector<std::string> &vec_str, const uint32_t &all_str_size);
 
-  int Get(const uint32_t &id, std::vector<char *> &vec_str, std::vector<uint32_t> &vec_str_size);
+  //int Get(const uint32_t &id, std::vector<char *> &vec_str, std::vector<uint32_t> &vec_str_size);
 
 
   int Put(const Field &field);
@@ -115,6 +128,7 @@ class MultiStrFieldColumnData  {
 
  private:
 
+  /*
   bool ExtendSlotData();
   int IdInSlot(const uint32_t &id, const uint32_t &slot_id);
   int Seek(const uint32_t &id, uint32_t &slot_id, uint32_t &pos_in_slot);
@@ -129,7 +143,14 @@ class MultiStrFieldColumnData  {
   uint32_t latest_offset_; 
   uint32_t slot_str_size_;
   uint32_t str_max_size_;
+  */
+
+  std::string name_;
+  std::string root_path_;
+  uint32_t element_size_; 
   uint32_t total_str_count_;
+  StorageManager *storage_mgr_;
+
 };
 
 }

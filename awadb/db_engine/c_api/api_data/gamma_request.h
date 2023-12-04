@@ -46,6 +46,8 @@ class Request : public RawData {
     topn_ = 0;
     multi_vec_logic_op_ = 0;
     is_l2_ = false;
+    has_rank_ = true; 
+    multi_vector_rank_ = 0;
   }
 
   virtual ~Request() {}

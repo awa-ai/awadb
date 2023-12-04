@@ -136,7 +136,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="awadb",
-    version="0.3.11",
+    version="0.3.12",
     author="Vincent",
     author_email="awadb.vincent@gmail.com",
     description="AI Native database for embedding vectors",
@@ -144,7 +144,7 @@ setup(
     license="Apache 2.0",
     ext_modules=[CMakeExtension("awa")],
     cmdclass={"build_ext": CMakeBuild},
-    packages=["awadb", "awadb.llm_embedding", "awadb.awa_embedding", "awadb.service_clients", "awadb.py_idl"],
+    packages=["awadb", "awadb.llm_embedding", "awadb.awa_embedding"],
     
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},

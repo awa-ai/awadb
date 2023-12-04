@@ -5,6 +5,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+#include <stdio.h>
 #include "util/log.h" 
 #include "docid_fields_mgr.h"
 
@@ -15,17 +16,17 @@ DocidFieldsMgr::DocidFieldsMgr()  {
   docid_fields_map_ = nullptr;
   capacity_ = 0;
   size_ = 0;
+  last_flushed_size_ = 0;
   field_id_bytes_ = sizeof(uint8_t);
   field_pos_bytes_ = sizeof(uint32_t);
   fields_size_ = 0;
 
   block_docs_num_ = 0;
-  slot_str_size_ = 0;
-  str_max_size_ = 0;
 }
 
 DocidFieldsMgr::~DocidFieldsMgr()  {
   Destroy(docid_fields_map_, size_, true);
+  flush_thread_.join();
   if (docid_fields_map_)  {
     for (size_t i = 0; i < size_; i++)  {
       if (docid_fields_map_[i])  {
@@ -39,7 +40,7 @@ DocidFieldsMgr::~DocidFieldsMgr()  {
 }
 
 void DocidFieldsMgr::Destroy(char ** &ptr, const uint32_t &size, bool destroy_all)  {
-   if (ptr)  {
+  if (ptr)  {
     if (destroy_all)  {
       for (uint32_t i = 0; i < size; i++)  {
         if (ptr[i])  {
@@ -55,20 +56,42 @@ void DocidFieldsMgr::Destroy(char ** &ptr, const uint32_t &size, bool destroy_al
 
 
 bool DocidFieldsMgr::Init(const uint32_t &block_docs_num,
-  const uint32_t &slot_str_size,
-  const uint32_t &str_max_size)  {
+  //const uint32_t &slot_str_size,
+  //const uint32_t &str_max_size)  {
+  const std::string &root_path)  {
   block_docs_num_ = block_docs_num;
-  slot_str_size_ = slot_str_size;
-  str_max_size_ = str_max_size;
-  docid_fields_map_ = new char *[block_docs_num_];
+  //slot_str_size_ = slot_str_size;
+  //str_max_size_ = str_max_size;
+  root_path_ = root_path;
+ 
+  persist_file_ = root_path_ + "/docid_fields.mgr";
+
+  bool ret = false;
+  if (utils::file_exist(persist_file_))  {
+    ret = Load(persist_file_); 
+  }  else  {
+    docid_fields_map_ = new char *[block_docs_num_];
   
-  for (uint32_t i = 0; i < block_docs_num_; i++)  {
-    docid_fields_map_[i] = nullptr;
-  }  
-  capacity_ = block_docs_num_;
-  return  docid_fields_map_ != nullptr ? true : false;
+    for (uint32_t i = 0; i < block_docs_num_; i++)  {
+      docid_fields_map_[i] = nullptr;
+    }  
+    capacity_ = block_docs_num_;
+  }
+
+  auto flush_op = std::bind(&DocidFieldsMgr::Flush, this);
+  flush_thread_ = std::thread(flush_op);
+  return  ret ? true : (docid_fields_map_ != nullptr ? true : false);
 }
 
+
+void DocidFieldsMgr::Flush()  {
+  while (true)  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if (last_flushed_size_ < size_)  {
+      Dump(persist_file_, last_flushed_size_);
+    } 
+  }  
+}
 
 int DocidFieldsMgr::AddField(
   const FieldInfo &field_info,
@@ -78,23 +101,38 @@ int DocidFieldsMgr::AddField(
     fid_id2name_[fid] = field_info.name;
     fid_name2type_[field_info.name] = field_info.data_type;
     fid2index_[field_info.name] = field_info.is_index;
+    
+    std::string path = root_path_ + "/" + field_info.name;
     if (field_info.data_type == DataType::INT ||
       field_info.data_type == DataType::LONG ||
       field_info.data_type == DataType::FLOAT ||
       field_info.data_type == DataType::DOUBLE)  {
-      FixedFieldColumnData *fixed_field = new FixedFieldColumnData();
-      if (!fixed_field->Init(block_docs_num_, field_info.data_type))  return -1;
-      fixed_field_map_[field_info.name] = fixed_field;  
+      if (!utils::isFolderExist(path.c_str())) {
+	mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      }
+
+      FixedFieldColumnData *fixed_field = new FixedFieldColumnData(field_info.name);
+      if (!fixed_field->Init(path, field_info.data_type))  return -1;
+      fixed_field_map_[field_info.name] = fixed_field;
     }  else if (field_info.data_type == DataType::STRING) {
-      StrFieldColumnData *str_field = new StrFieldColumnData();
-      if (!str_field->Init(slot_str_size_, str_max_size_))  return -2; 
+      
+      if (!utils::isFolderExist(path.c_str())) {
+	mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      }
+
+      StrFieldColumnData *str_field = new StrFieldColumnData(field_info.name);
+      if (!str_field->Init(path))  return -2; 
       str_field_map_[field_info.name] = str_field; 
     }  else if (field_info.data_type == DataType::MULTI_STRING) {
-      MultiStrFieldColumnData *mul_str_field = new MultiStrFieldColumnData();
-      if (!mul_str_field->Init(slot_str_size_, str_max_size_))  return -3; 
+      if (!utils::isFolderExist(path.c_str())) {
+	mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      }    
+
+      MultiStrFieldColumnData *mul_str_field = new MultiStrFieldColumnData(field_info.name);
+      if (!mul_str_field->Init(path))  return -3; 
       mul_str_field_map_[field_info.name] = mul_str_field; 
     } 
-    fields_size_++; 
+    fields_size_++;
   }  else  {
     LOG(INFO)<<"FIELD "<<field_info.name<<" already exists!";
   }
@@ -107,7 +145,7 @@ int DocidFieldsMgr::Put(
   const uint32_t &docid,
   //const std::vector<Field> &fields)  {
   std::vector<Field> &fields)  {
-  
+ 
   std::vector<uint8_t> field_ids;
   std::vector<uint32_t> field_posids;
   
@@ -117,7 +155,6 @@ int DocidFieldsMgr::Put(
       continue; 
     }
 
-
     uint32_t field_value_id = 0;
     if (fields[i].datatype == DataType::INT ||
       fields[i].datatype == DataType::LONG ||
@@ -126,6 +163,7 @@ int DocidFieldsMgr::Put(
       field_value_id = fixed_field_map_[fields[i].name]->GetCurMaxId();
       fixed_field_map_[fields[i].name]->Put(fields[i]);
     }  else if (fields[i].datatype == DataType::STRING)  {
+
       field_value_id = str_field_map_[fields[i].name]->GetCurMaxId();
       str_field_map_[fields[i].name]->Put(fields[i]);
     }  else if (fields[i].datatype == DataType::MULTI_STRING)  {
@@ -173,7 +211,7 @@ int DocidFieldsMgr::Get(
   Field &field)  {
   if (docid >= size_)  return -1;
   uint8_t fields_num = 0;
-  if (!docid_fields_map_ || !docid_fields_map_[docid])  return -2; 
+  if (!docid_fields_map_ || !docid_fields_map_[docid])  { return -2; } 
   memcpy((void *)&fields_num, (void *)docid_fields_map_[docid], field_id_bytes_);
   char *offset = docid_fields_map_[docid] + field_id_bytes_;
 
@@ -183,10 +221,11 @@ int DocidFieldsMgr::Get(
   uint8_t field_id = fid_name2id_[field.name];
   field.datatype = fid_name2type_[field.name];
   if (!offset)  {
-     LOG(ERROR)<<"offset is nullptr";
+    LOG(ERROR)<<"offset is nullptr";
   }
   int id_pos = Find(field_id, offset, (uint32_t)fields_num);
   if (id_pos < 0)  {
+    LOG(ERROR)<<"id_pos is "<<id_pos;
     return -4;
   }
   uint32_t id = *((uint32_t *)(docid_fields_map_[docid] + field_id_bytes_ + (uint32_t)fields_num * field_id_bytes_) + id_pos); 
@@ -199,7 +238,7 @@ int DocidFieldsMgr::Get(
   }  else if (field.datatype == DataType::STRING)  {
     str_field_map_[field.name]->Get(id, field);   
   }  else if (field.datatype == DataType::MULTI_STRING)  {
-    mul_str_field_map_[field.name]->Get(id, field); 
+    mul_str_field_map_[field.name]->Get(id, field);
   }
   return 0;
 }
@@ -253,7 +292,7 @@ int DocidFieldsMgr::GetAllFields(
   for (auto &iter: fid_name2id_)  {
     Field field; 
     field.name = iter.first; 
-    field.datatype = fid_name2type_[iter.first];  
+    field.datatype = fid_name2type_[iter.first]; 
     if (Get(docid, field) < 0)  continue;
     fields.push_back(field);
   }
@@ -274,9 +313,6 @@ int DocidFieldsMgr::GetAllFields(std::vector<FieldInfo> &fields)  {
   }
   return 0;
 }
-
-
-
 
 int DocidFieldsMgr::Put(
   const uint32_t &docid,
@@ -312,6 +348,167 @@ int DocidFieldsMgr::Put(
   size_++; 
 
   return 0;
+}
+
+bool DocidFieldsMgr::Load(const std::string &file_path) {
+  FILE *fp = fopen(file_path.c_str(), "rb");
+  fread((void *)&capacity_, sizeof(uint32_t), 1, fp);
+  fread((void *)&size_, sizeof(uint32_t), 1, fp);
+  fread((void *)&fields_size_, sizeof(uint8_t), 1, fp);
+
+  for (size_t i = 0; i < fields_size_; i++)  {
+    uint8_t field_name_len = 0;
+
+    fread((void *)&field_name_len, sizeof(uint8_t), 1, fp);
+    char buf[field_name_len]; 
+    fread((void *)buf, sizeof(char), field_name_len, fp);
+    std::string field_name(buf, field_name_len);
+    uint8_t field_id, data_type, is_index = 0;
+    fread((void *)&field_id, sizeof(uint8_t), 1, fp);
+    fread((void *)&data_type, sizeof(uint8_t), 1, fp);
+    fread((void *)&is_index, sizeof(uint8_t), 1, fp);
+    
+    DataType field_type = DataType::INT;
+    if (data_type == 0) {
+      field_type = DataType::INT;
+    } else if (data_type == 1)  {
+      field_type = DataType::LONG;
+    } else if (data_type == 2)  {
+      field_type = DataType::FLOAT;
+    } else if (data_type == 3)  {
+      field_type = DataType::DOUBLE;
+    } else if (data_type == 4)  {
+      field_type = DataType::STRING;
+    } else if (data_type == 5)  {
+      field_type = DataType::VECTOR;
+    } else if (data_type == 6)  {
+      field_type = DataType::MULTI_STRING;
+    }
+
+    std::string path = root_path_ + "/" + field_name;
+    if (field_type == DataType::INT ||
+      field_type == DataType::LONG ||
+      field_type == DataType::FLOAT ||
+      field_type == DataType::DOUBLE)  {
+      if (!utils::isFolderExist(path.c_str())) {
+	continue; 
+      }
+
+      FixedFieldColumnData *fixed_field = new FixedFieldColumnData(field_name);
+      if (!fixed_field->Init(path, field_type))  return -1;
+      fixed_field_map_[field_name] = fixed_field;
+    }  else if (field_type == DataType::STRING) {
+      if (!utils::isFolderExist(path.c_str())) {
+        continue; 
+      }
+
+      StrFieldColumnData *str_field = new StrFieldColumnData(field_name);
+      if (!str_field->Init(path))  return -2; 
+      str_field_map_[field_name] = str_field; 
+    }  else if (field_type == DataType::MULTI_STRING) {
+      if (!utils::isFolderExist(path.c_str())) {
+        continue;
+      }    
+
+      MultiStrFieldColumnData *mul_str_field = new MultiStrFieldColumnData(field_name);
+      if (!mul_str_field->Init(path))  return -3; 
+      mul_str_field_map_[field_name] = mul_str_field; 
+    } 
+
+    fid_id2name_[field_id] = field_name;
+    fid_name2id_[field_name] = field_id;
+    fid_name2type_[field_name] = field_type;
+    fid2index_[field_name] = is_index == 1 ? true : false;
+  }
+  
+  uint32_t fields_info[size_];
+  fread((void *)fields_info, sizeof(uint32_t), size_, fp);
+
+  docid_fields_map_ = new char *[capacity_];
+  for (size_t i = 0; i < capacity_; i++)  {
+    docid_fields_map_[i] = nullptr; 
+    if (i < size_)  {
+      docid_fields_map_[i] = new char[fields_info[i] + 1];
+      uint8_t fields_num = fields_info[i] / (sizeof(uint8_t) + sizeof(uint32_t));
+
+      memcpy((void *)docid_fields_map_[i], (void *)&fields_num, sizeof(uint8_t));
+      fread((void *)(docid_fields_map_[i] + 1), sizeof(char), fields_info[i], fp); 
+    }  
+  } 
+  
+  fclose(fp);
+  return true;
+}
+
+bool DocidFieldsMgr::Dump(const std::string &file_path, uint32_t &flushed_size) {
+  if (capacity_ < size_)  {
+    LOG(ERROR)<<"Capacity should be greater than size!!!";
+    return false;
+  }
+
+  if (fields_size_ != fid_id2name_.size())  {
+    LOG(ERROR)<<"fields num is conflict!!!"; 
+    return false;
+  }
+  
+  FILE *fp = fopen(file_path.c_str(), "wb");
+ 
+  fwrite((void *)&capacity_, sizeof(uint32_t), 1, fp);
+  flushed_size = size_;
+  fwrite((void *)&flushed_size, sizeof(uint32_t), 1, fp);
+  fwrite((void *)&fields_size_, sizeof(uint8_t), 1, fp);
+  for (auto iter: fid_id2name_)  {
+    if (fid_name2type_.find(iter.second) == fid_name2type_.end()
+	|| fid2index_.find(iter.second) == fid2index_.end())  {
+      LOG(ERROR)<<"Field "<<iter.second<<" information not complete!"; 
+      return false; 
+    }
+    uint8_t field_name_len = (uint8_t)(iter.second.length());
+
+    fwrite((void *)&field_name_len, sizeof(uint8_t), 1, fp);
+    fwrite((void *)(iter.second).c_str(), sizeof(char), field_name_len, fp);
+    fwrite((void *)&(iter.first), sizeof(uint8_t), 1, fp);
+    uint8_t data_type = 100;
+    if (fid_name2type_[iter.second] == DataType::INT) {
+      data_type = 0;
+    } else if (fid_name2type_[iter.second] == DataType::LONG)  {
+      data_type = 1;
+    } else if (fid_name2type_[iter.second] == DataType::FLOAT)  {
+      data_type = 2;
+    } else if (fid_name2type_[iter.second] == DataType::DOUBLE)  {
+      data_type = 3;
+    } else if (fid_name2type_[iter.second] == DataType::STRING)  {
+      data_type = 4;
+    } else if (fid_name2type_[iter.second] == DataType::VECTOR)  {
+      data_type = 5;
+    } else if (fid_name2type_[iter.second] == DataType::MULTI_STRING)  {
+      data_type = 6;
+    }
+    fwrite((void *)&data_type, sizeof(uint8_t), 1, fp);
+    uint8_t is_index = 0;
+    if (fid2index_[iter.second])  {
+      is_index = 1;
+    }
+    fwrite((void *)&is_index, sizeof(uint8_t), 1, fp);
+  }
+   
+  uint32_t fields_info[flushed_size]; 
+  for (uint32_t i = 0; i < flushed_size; i++)  {
+    if (!docid_fields_map_[i]) {
+      LOG(ERROR)<<"Data format error!";
+      return false;
+    }
+    uint8_t fids_size = 0;
+    memcpy((void *)&fids_size, (void *)docid_fields_map_[i], sizeof(char));  
+    fields_info[i] = fids_size * (sizeof(uint8_t) + sizeof(uint32_t)); 
+  }
+  fwrite((void *)fields_info, sizeof(uint32_t), flushed_size, fp);
+
+  for (uint32_t i = 0; i < flushed_size; i++)  {
+    fwrite((void *)(docid_fields_map_[i] + 1), sizeof(char), fields_info[i], fp); 
+  }  
+  fclose(fp);
+  return true;
 }
 
 }

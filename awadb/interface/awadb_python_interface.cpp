@@ -51,6 +51,21 @@ bool AddDoc(void *engine, const std::string &name, awadb::Doc &doc)  {
   return ret == 0 ? true : false;
 }
 
+bool AddDocs(
+  void *engine,
+  std::vector<awadb::Doc> &docs) {
+  awadb::Docs batch_docs;
+  for (auto &doc: docs)  {
+    batch_docs.AddDoc(doc);
+  }
+
+  awadb::BatchResult batch_results((int)docs.size());
+  int ret = static_cast<awadb::GammaEngine *>(engine)
+    ->AddOrUpdateDocs(batch_docs, batch_results);
+
+  return ret == 0 ? true : false;
+}
+
 bool AddTexts(
   void *engine,
   std::vector<awadb::Doc> &docs,
@@ -60,7 +75,7 @@ bool AddTexts(
     batch_docs.AddDoc(doc);
   }
 
-  awadb::BatchResult batch_results;
+  awadb::BatchResult batch_results((int)docs.size());
   int ret = static_cast<awadb::GammaEngine *>(engine)
     ->AddOrUpdateDocs(batch_docs, batch_results, words_count_in_docs);
 
@@ -210,6 +225,12 @@ PYBIND11_MODULE(awa, m) {
 	.def("Fields", &awadb::Request::Fields)
 	.def("RangeFilters", &awadb::Request::RangeFilters)
 	.def("TermFilters", &awadb::Request::TermFilters)
+	.def("HasRank", &awadb::Request::HasRank)
+	.def("SetHasRank", (void(awadb::Request::*)(bool)) &awadb::Request::SetHasRank)
+	.def("MultiVectorRank", &awadb::Request::MultiVectorRank)
+	.def("SetMultiVectorRank", (void(awadb::Request::*)(int)) &awadb::Request::SetMultiVectorRank)
+	.def("MetricType", &awadb::Request::MetricType)
+	.def("SetMetricType", (void(awadb::Request::*)(const bool &)) &awadb::Request::SetMetricType)
 	.def("SetRetrievalParams", (void(awadb::Request::*)(const std::string &)) &awadb::Request::SetRetrievalParams)
 	.def("RetrievalParams", &awadb::Request::RetrievalParams)
 	.def("SetOnlineLogLevel", (void(awadb::Request::*)(const std::string &)) &awadb::Request::SetOnlineLogLevel)
@@ -258,6 +279,7 @@ PYBIND11_MODULE(awa, m) {
     m.def("Create", &Create, "Create Table");   
     m.def("LoadFromLocal", &LoadFromLocal, "Load Table");
     m.def("AddDoc", &AddDoc, "Add Or UpdateDoc");   
+    m.def("AddDocs", &AddDocs, "Add Or UpdateDocs");   
     m.def("AddNewField", &AddNewField, "Add New Field");
     m.def("AddTexts", &AddTexts, "Add Or Update Texts and Embeddings");
     m.def("Delete", &Delete, "Delete Document");

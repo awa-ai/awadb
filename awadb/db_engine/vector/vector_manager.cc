@@ -438,9 +438,9 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
   size_t vec_num = query.vec_query.size();
   VectorResult all_vector_results[vec_num];
 
-  //query.condition->sort_by_docid = vec_num > 1 ? true : false;
+  query.condition->sort_by_docid = vec_num > 1 ? true : false;
   bool is_l2 = query.condition->metric_type == DistanceComputeType::L2 ? true : false;
-  float max_vec_boost = 0.0;
+  float max_vec_boost = 0.0; 
   std::string vec_names[vec_num];
   for (size_t i = 0; i < vec_num; i++) {
     struct VectorQuery &vec_query = query.vec_query[i];
@@ -489,7 +489,7 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
     query.condition->metric_type =
         query.condition->retrieval_params_->GetDistanceComputeType();
 
-    if (vec_query.boost > max_vec_boost)  max_vec_boost = vec_query.boost;
+    if (vec_query.boost > max_vec_boost) max_vec_boost = vec_query.boost;
 
     const uint8_t *x =
         reinterpret_cast<const uint8_t *>(vec_query.value.c_str());
@@ -541,11 +541,12 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
       for (size_t j = 0; j < vec_num; j++) {
         float field_boost = 1.0; 
 	if (query.vec_query[j].has_boost == 1)  {
-          if (!is_l2) {
+          /*if (!is_l2) {
             field_boost = query.vec_query[j].boost;	
 	  }  else {
 	    field_boost = query.vec_query[j].boost / max_vec_boost;
-	  }
+	  }*/
+          field_boost = query.vec_query[j].boost;	
 	}
 	fields_boost_array[j] = field_boost;
         total_boost += field_boost;
@@ -571,7 +572,7 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
       int result_idx = 0;
       if (query.condition->multi_vec_and_op)  {
         for (auto iter: doc2vec_count)  {
-	  if (iter.second == vec_num)  {
+	  if ((size_t)iter.second == vec_num)  {
             results[i].docs[result_idx]->docid = iter.first;
             results[i].docs[result_idx]->score = doc2vec_scores[iter.first];
             int total_and_op = INT_MAX; 
@@ -598,7 +599,7 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
 	for (auto iter: doc2vec_scores)  {
           results[i].docs[result_idx]->docid = iter.first;
           results[i].docs[result_idx]->score = doc2vec_scores[iter.first];
-          int total_or_op = -1; 
+	  int total_or_op = -1; 
 	  for (auto iter_field: doc2vec_idx[iter.first])  {
 	    int vec_no = iter_field.first;
             int idx = iter_field.second;
@@ -637,7 +638,6 @@ int VectorManager::Search(GammaQuery &query, GammaResult *results) {
     }
   } else {
     for (int i = 0; i < n; i++) {
-      // double score = 0;
       if (!results[i].init(query.condition->topn, vec_names, vec_num)) {
         LOG(ERROR) << "init gamma result error, topn=" << query.condition->topn
                    << ", vector number=" << vec_num;
