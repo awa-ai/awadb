@@ -1,40 +1,39 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/python3
 
-import os
+from __future__ import annotations
+
+import logging
+
 import json
+import os
+import struct
+import uuid
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Optional, Set
-import uuid
-import numpy as np
-import struct
 
 import grpc
-from awadb.py_idl.awadb_pb2 import * 
-from awadb.py_idl.awadb_pb2_grpc import AwaDBServerStub 
+import numpy as np
+from awadb_client.py_idl.awadb_pb2 import *
+from awadb_client.py_idl.awadb_pb2_grpc import AwaDBServerStub
+from awadb_client.awadb_api import AwaAPI
+from awadb_client.awadb_api import DEFAULT_DB_NAME
+from awadb_client.awadb_api import DEFAULT_TOPN
+from awadb_client.awadb_api import DOC_PRIMARY_KEY_NAME
+from awadb_client.awadb_api import MetricType
 
-
+__version__ = "0.0.9"
 
 DEFAULT_SERVER_ADDR = "0.0.0.0:50005"
-
-DEFAULT_DB_NAME = "default"
-
-DOC_PRIMARY_KEY_NAME = "_id"
-
-DEFAULT_TOPN = 10
-
-class MetricType(Enum):
-    L2 = 1
-    INNER_PRODUCT = 2
 
 class FieldDataType(Enum):
     INT = 1
     LONG = 2
-    FLOAT = 3 
+    FLOAT = 3
     STRING = 4 
     VECTOR = 5 
-    ERROR =6 
-    MULTI_STRING = 7 
+    ERROR = 6 
+    MULTI_STRING = 7
 
 def typeof(variate):
     v_type = FieldDataType.ERROR
@@ -67,12 +66,14 @@ def typeof(variate):
     return v_type
 
 
-class Awa:
+class Awa(AwaAPI):
+    """Interface implemented by AwaDB service client"""
     def __init__(
         self,
         server_addr: Optional[str] = None,
     ):
         """Initialize the AwaDB client.
+        
         Args:
             server_addr: AwaDB sever ip:port. Default to 0.0.0.0:50005.
 
@@ -94,11 +95,59 @@ class Awa:
         
     def close(self):
         """Close the connection of AwaDB client and server.
+
         Args: None.
+
         Returns: None.
         """
         if self.channel is not None:
             self.channel.close()
+
+    def create(
+        self,
+        db_meta: DBMeta,
+    ) -> bool: 
+        """Create db or specified table.
+        
+        Args:
+            db_meta: DB schema information.
+
+        Returns: True or False for creating db or tables 
+        """
+
+    def list(
+        self,
+        db_name: Optional[str] = None,
+        table_name: Optional[str] = None,
+    ):
+        """List the db or tables in db.
+
+        Args:
+            db_name: Database name, default to None.
+            table_name: Table name, default to None.
+
+        Returns: 
+            If db_name and table_name both are None, return all the databases.
+            If table_name is None, return all tables in db_name.
+            If neither db_name nor table_name is None, return the schema of the table. 
+        """
+
+
+    def drop(
+        self,
+        db_name: str,
+        table_name: Optional[str] = None,
+    ) -> bool:
+        """Drop the db or the table in db.
+
+        Args:
+            db_name: Database name, default to None.
+            table_name: Table name, default to None.
+
+        Returns: 
+            If table_name is None, and there are no tables in database "db_name",
+            the database can be dropped successfully, otherwise failed.
+        """
 
     def add(
         self,
@@ -107,10 +156,14 @@ class Awa:
         db_name: str = DEFAULT_DB_NAME,
     ) -> bool:
         """Add documents into the specified table.
+           If table not existed, it will be created automatically.
+
         Args:
             table_name: The specified table for search and storage.
+            
             docs: The adding documents which can be described as dict or list of dicts.
-                  Each key-value pair in dict is a field of document.
+                    Each key-value pair in dict is a field of document.
+            
             db_name: Database name, default to DEFAULT_DB_NAME.
 
         Returns:
@@ -162,10 +215,10 @@ class Awa:
     def search(
         self,
         table_name: str,
-        vec_query,
+        query,
         db_name: str = DEFAULT_DB_NAME,
         topn: int = DEFAULT_TOPN,
-        meta_filter: Optional[dict] = None,
+        filters: Optional[dict] = None,
         include_fields: Optional[Set[str]] = None,
         brute_force_search: bool = False,
         metric_type: MetricType = MetricType.L2,
@@ -173,24 +226,41 @@ class Awa:
         **kwargs: Any,
     ):
         """Vector search in the specified table.
-        Args:
+
+        Args: 
             table_name: The specified table for search.
-            vec_query: Querying vector.
+
+            query: Input query, including vector or text. now just support vector query.
+
             db_name: Database name, default to DEFAULT_DB_NAME.
+
             topn: The topn nearest neighborhood documents to return.
-            meta_filter (Optional[dict]): Filter by metadata. Defaults to None.
+
+            filters (Optional[dict]): Filter by filters. Defaults to None.
+
             E.g. `{"color" : "red", "price": 4.20}`. Optional.
+
             E.g. `{"max_price" : 15.66, "min_price": 4.20}`
+
             `price` is the metadata field, means range filter(4.20<'price'<15.66).
+
             E.g. `{"maxe_price" : 15.66, "mine_price": 4.20}`
+
             `price` is the metadata field, means range filter(4.20<='price'<=15.66).
+
             include_fields: The fields whether included in the search results.
+
             brute_force_search: Brute force search or not. Default to not.
-                                If vectors not indexed, automatically to use brute force search.
+                                        If vectors not indexed, automatically to use brute force search.
+
             metric_type: The distance type of computing vectors. Default to L2.
+
             mul_vec_weight: Multiple vector field search weights. Default to None.
+
             E.g. `{'f1': 2.0, 'f2': 1.0}`  vector field f1 weight is 2.0, vector field f2 weight is 1.0.
-            Notice that field f1 and f2 should have the same dimension compared to vec_query.
+
+            Notice that field f1 and f2 should have the same dimension compared to query.
+
             kwargs: Any possible extended parameters.
 
         Returns:
@@ -202,9 +272,7 @@ class Awa:
             print("Please specify the table name!")
             return ""
 
-        query_type = typeof(vec_query)
-
-        show_results = []
+        query_type = typeof(query)
 
         if query_type != FieldDataType.VECTOR:
             return ""
@@ -217,11 +285,11 @@ class Awa:
         vec_value = ""
         #notice: the added vectors should also be normalized
         if metric_type == MetricType.INNER_PRODUCT:
-            vec_value = self.__normalize(vec_query)
+            vec_value = self.__normalize(query)
             request.retrieval_params = "{\"metric_type\":\"InnerProduct\"}"
             request.is_l2 = False
         elif metric_type == MetricType.L2:
-            vec_value = np.array(vec_query, dtype=np.dtype("float32"))
+            vec_value = np.array(query, dtype=np.dtype("float32"))
             request.retrieval_params = "{\"metric_type\":\"L2\"}"
             request.is_l2 = True 
 
@@ -246,34 +314,109 @@ class Awa:
             print("Query vector dimension is not valid!")
             return ""
         elif vectors_num > 1:
-            request.mul_vec_logic_op = OR
+            #request.mul_vec_logic_op = OR
+            print("vector query > 1")
 
         request.topn = topn
         request.brute_force_search = brute_force_search
-        if meta_filter is not None:
-            __add_filter(db_table_name, request, meta_filter)
+        if filters is not None:
+            __add_filter(db_table_name, request, filters)
 
         if include_fields is None:
-            request.is_pack_all_fields = True
+            for field_name in self.tables_fields_type[db_table_name]:
+                if self.tables_fields_type[db_table_name][field_name] != FieldDataType.VECTOR:
+                    request.pack_fields.append(field_name)
+            #request.is_pack_all_fields = True
         else:
             for pack_field in include_fields:
                 request.pack_fields.append(pack_field)
        
         response = self.stub.Search(request)
-        return response
+        show_results = self.__transfer2results(response)
+
+        return show_results 
+
+    def __transfer2results(
+        self,
+        response,
+    ):
+        results = {}
+        results["Db"] = response.db_name
+        results["Table"] = response.table_name
+        search_results = []
+        for result in response.results:
+            search_result = {}
+            search_result["ResultSize"] = result.total
+            search_result["Msg"] = result.msg
+
+            each_query_result_items = []
+            for item in result.result_items:
+                result_item = {}
+                result_item["score"] = item.score
+                for field in item.fields:
+                    if field.type == FieldType.INT:
+                        result_item[field.name] = int(field.value)
+                    elif field.type == FieldType.LONG:
+                        result_item[field.name] = int(field.value)
+                    elif field.type == FieldType.FLOAT:
+                        result_item[field.name] = float(field.value)
+                    elif field.type == FieldType.DOUBLE:
+                        result_item[field.name] = float(field.value)
+                    elif field.type == FieldType.STRING:
+                        result_item[field.name] = field.value.decode('utf-8')
+                    elif field.type == FieldType.MULTI_STRING:
+                        mul_array = [] 
+                        for mul_str in field.mul_str_value:
+                            mul_array.append(mul_str)
+                        result_item[field.name] = mul_array
+                    elif field.type == FieldType.VECTOR:
+                        print("vector")
+                each_query_result_items.append(result_item)
+            search_result["ResultItems"] = each_query_result_items
+            search_results.append(search_result)
+
+        if response.results.__len__() == 1:
+            results["SearchResults"] = search_results[0]
+        else:
+            results["SearchResults"] = search_results
+
+        return results
+
 
     def get(
         self,
         table_name: str,
         db_name: str = DEFAULT_DB_NAME,
         ids: Optional[list] = None,
+        filters: Optional[dict] = None,
+        include_fields: Optional[Set[str]] = None,
+        limit: Optional[int] = None,
         **kwargs: Any,
     ):
         """Get documents of the primary keys in the the specified table.
+
         Args:
             table_name: The specified table for search and storage.
+
             db_name: Database name, default to DEFAULT_DB_NAME.
+
             ids: The primary keys of the queried documents.
+
+            filters: Filter by fields. Defaults to None.
+
+            E.g. `{"color" : "red", "price": 4.20}`. Optional.
+
+            E.g. `{"max_price" : 15.66, "min_price": 4.20}`
+
+            `price` is the metadata field, means range filter(4.20<'price'<15.66).
+
+            E.g. `{"maxe_price" : 15.66, "mine_price": 4.20}`
+
+            `price` is the metadata field, means range filter(4.20<='price'<=15.66).
+
+            include_fields: The fields whether included in the get results.
+
+            limit: The limited return results.
 
         Returns:
             The detailed information of the queried documents.
@@ -311,14 +454,29 @@ class Awa:
         table_name: str,
         db_name: str = DEFAULT_DB_NAME,
         ids: Optional[list] = None,
+        filters: Optional[dict] = None, 
         **kwargs: Any,
     ) -> bool:
         """Delete docs in the specified table.
+
         Args:
             table_name: The specified table for deleting.
+
             db_name: Database name, default to DEFAULT_DB_NAME.
+
             ids: The primary keys of the deleted documents.
 
+            filters: Filter by fields. Defaults to None.
+
+            E.g. `{"color" : "red", "price": 4.20}`. Optional.
+
+            E.g. `{"max_price" : 15.66, "min_price": 4.20}`
+
+            `price` is the metadata field, means range filter(4.20<'price'<15.66).
+
+            E.g. `{"maxe_price" : 15.66, "mine_price": 4.20}`
+
+            `price` is the metadata field, means range filter(4.20<='price'<=15.66).
         Returns:
             True of False of the deleting operation.
         """
@@ -644,8 +802,9 @@ class Awa:
         elif field_type == FieldDataType.STRING:
             awadb_field.value = str.encode(field_value)
             awadb_field.type = STRING
-            if field_name == "embedding_text":
-                is_index = False
+            is_index = False
+            #if field_name == "embedding_text":
+            #    is_index = False
             self.__add_field(db_table_name, field_name, awadb_field.type, is_index, add_new_field)
         elif field_type == FieldDataType.MULTI_STRING:
             if isinstance(field_value, str):
