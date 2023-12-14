@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from awadb.py_idl import awadb_pb2 as awadb__pb2
+from awadb_client.py_idl import awadb_pb2 as awadb__pb2
 
 
 class AwaDBServerStub(object):
