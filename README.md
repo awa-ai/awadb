@@ -6,24 +6,54 @@ Realtime Search - Lock free realtime index keeps new data fresh with millisecond
 
 Stability - AwaDB builds upon over 4 years experience at JD.com running production workloads at scale using a system called [Vearch](https://github.com/vearch/vearch), combined with best-of-breed ideas and practices from the community.
 
-## Install
+## Run awadb locally on Mac OSX or Linux
+
+First install awadb:
 ```bash
-# 1. Pull AwaDB docker image
-docker pull ljeagle/awadb:v0.10
+pip3 install awadb'
+```
 
-# 2. Run AwaDB Server
-docker run -itd -p 50005:50005 ljeagle/awadb:v0.10
+Then use as below:
+```bash
+import awadb
+# 1. Initialize awadb client!
+awadb_client = awadb.Client()
 
-# 3. Install the dependency of grpcio
+# 2. Create table
+awadb_client.Create("test_llm1") 
+
+# 3. Add sentences, the sentence is embedded with SentenceTransformer by default
+#    You can also embed the sentences all by yourself with OpenAI or other LLMs
+awadb_client.Add([{'embedding_text':'The man is happy'}, {'source' : 'pic1'}])
+awadb_client.Add([{'embedding_text':'The man is very happy'}, {'source' : 'pic2'}])
+awadb_client.Add([{'embedding_text':'The cat is happy'}, {'source' : 'pic3'}])
+awadb_client.Add([{'embedding_text':'The man is eating'}, {'source':'pic4'}])
+
+# 4. Search the most Top3 sentences by the specified query
+query = "The man is happy"
+results = awadb_client.Search(query, 3)
+
+# Output the results
+print(results)
+```
+Here the text is embedded by SentenceTransformer which is supported by [Hugging Face](https://huggingface.co)  
+More detailed python local library usage you can read [here](https://ljeagle.github.io/awadb/)
+
+## Run AwaDB as a service 
+If you are on the Windows platform or want a awadb service, you can download and deploy the awadb docker.
+The installation of awadb docker please see [here](https://github.com/awa-ai/awadb/tree/main/docs/deploy.md)
+
+- Python Usage
+
+First, Install gRPC and awadb service python client as below:
+
+```bash
 pip3 install grpcio
-
-# 4. Install AwaDB Client
 pip3 install awadb-client
 ```
 
-## Quick start using AwaDB:
+A simple example as below:
 
-### A simple example show usage
 ```bash
 # Import the package and module
 from awadb_client import Awa
@@ -74,38 +104,19 @@ results {
 }
 result_code: SUCCESS
 ```
-
-More detailed sdk usage you can read [here](https://github.com/awa-ai/awadb/blob/main/clients/awadb/client.py)
-
+More python sdk for service is [here](https://ljeagle.github.io/awadb/)
 More detailed quick start examples you can find [here](https://github.com/awa-ai/awadb/blob/main/tests/test_awadb_client.py)
 
-
-## Semantic Search
-You can also directly use awadb to do the text semantic retrieval  
-Here the text is embedded by SentenceTransformer which is supported by [Hugging Face](https://huggingface.co)  
-Another example for 'pip3 install awadb', no AwaDB server is needed.
+- RESTful Usage
 ```bash
-import awadb
-# 1. Initialize awadb client!
-awadb_client = awadb.Client()
+# add documents to table 'test' of db 'default', no need to create table first
+curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "docs":[{"_id":1, "name":"lj", "age":23 "f":[1,0]},{"_id":2, "name":"david", "age":32, "f":[1,2]}]}' http://localhost:8080/add
 
-# 2. Create table
-awadb_client.Create("test_llm1") 
-
-# 3. Add sentences, the sentence is embedded with SentenceTransformer by default
-#    You can also embed the sentences all by yourself with OpenAI or other LLMs
-awadb_client.Add([{'embedding_text':'The man is happy'}, {'source' : 'pic1'}])
-awadb_client.Add([{'embedding_text':'The man is very happy'}, {'source' : 'pic2'}])
-awadb_client.Add([{'embedding_text':'The cat is happy'}, {'source' : 'pic3'}])
-awadb_client.Add([{'embedding_text':'The man is eating'}, {'source':'pic4'}])
-
-# 4. Search the most Top3 sentences by the specified query
-query = "The man is happy"
-results = awadb_client.Search(query, 3)
-
-# Output the results
-print(results)
+# search documents by the vector field 'f' of the value '[1, 1]'
+curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "vector_query":{"f":[1, 1]}}' http://localhost:8080/search
 ```
+More detailed RESTful API is [here](https://github.com/awa-ai/awadb/tree/main/docs/restful_tutorial.md)
+
 
 ## What are the Embeddings?
 
