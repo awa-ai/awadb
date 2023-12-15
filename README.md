@@ -104,7 +104,7 @@ results {
 }
 result_code: SUCCESS
 ```
-More python sdk for service is [here](https://ljeagle.github.io/awadb/)
+More python sdk for service is [here](https://ljeagle.github.io/awadb/)  
 More detailed quick start examples you can find [here](https://github.com/awa-ai/awadb/blob/main/tests/test_awadb_client.py)
 
 - RESTful Usage
