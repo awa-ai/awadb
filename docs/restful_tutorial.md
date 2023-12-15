@@ -80,7 +80,7 @@ http://localhost:8080/search
                 }
             }],
              "term_filters": [{
-                 "lables": ["100", "200", "300"],
+                 "labels": ["100", "200", "300"],
                  "operator": "or"
              }],
 }, 
@@ -93,4 +93,4 @@ http://localhost:8080/search
 "metric_type": L2
 }
 ```
-
+More description about RESTful API please see [here](https://github.com/awa-ai/awadb/tree/main/docs/restful_api.md)
