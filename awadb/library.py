@@ -24,7 +24,7 @@ from awadb.awadb_api import DEFAULT_TOPN
 from awadb.awadb_api import DOC_PRIMARY_KEY_NAME
 from awadb.awadb_api import MetricType
 
-__version__ = "0.3.12"
+__version__ = "0.3.13"
 
 __all__ = [
     "OpenAI",
@@ -142,6 +142,8 @@ class AwaLocal(AwaAPI):
                 field_dict = {}
                 if self.tables_fields_type[table_name][f_id] == FieldDataType.INT:
                     field_dict[f_id] = "INT"
+                if self.tables_fields_type[table_name][f_id] == FieldDataType.LONG:
+                    field_dict[f_id] = "LONG"
                 elif self.tables_fields_type[table_name][f_id] == FieldDataType.FLOAT:
                     field_dict[f_id] = "FLOAT"
                 elif self.tables_fields_type[table_name][f_id] == FieldDataType.STRING:
@@ -172,6 +174,8 @@ class AwaLocal(AwaAPI):
                 fields_dict["name"] = field_info.name
                 if field_info.data_type == awa.DataType.INT:
                     fields_dict["data_type"] = "INT"
+                elif field_info.data_type == awa.DataType.LONG:
+                    fields_dict["data_type"] = "LONG"
                 elif field_info.data_type == awa.DataType.FLOAT:
                     fields_dict["data_type"] = "FLOAT"
                 elif field_info.data_type == awa.DataType.STRING:
@@ -235,6 +239,8 @@ class AwaLocal(AwaAPI):
                     for f_id in each_field_type:
                         if each_field_type[f_id] == "INT":
                             table_field_dict[f_id] = FieldDataType.INT
+                        elif each_field_type[f_id] == "LONG":
+                            table_field_dict[f_id] = FieldDataType.LONG
                         elif each_field_type[f_id] == "FLOAT":
                             table_field_dict[f_id] = FieldDataType.FLOAT
                         elif each_field_type[f_id] == "STRING":
@@ -380,13 +386,15 @@ class AwaLocal(AwaAPI):
         if isinstance(docs, dict):
             doc = awa.Doc()
             for field_name in docs:
-                if field_name == self.key_confirmed_name:
-                    has_primary_key = True
                 awadb_field = awa.Field()
                 ret = self.__check_add_field(db_table_name, awadb_field, fields_type, field_name, docs[field_name])
                 if ret < 0:
                     continue
                 doc.AddField(awadb_field)
+                if field_name == self.key_confirmed_name:
+                    has_primary_key = True
+                    doc.SetKey(awadb_field.value)
+
             if not has_primary_key:
                 key_fid = awa.Field()
                 ret = self.__check_add_field(
@@ -404,13 +412,15 @@ class AwaLocal(AwaAPI):
                 if type(doc_item).__name__ == "dict":
                     doc = awa.Doc()
                     for field_name in doc_item:
-                        if field_name == self.key_confirmed_name:
-                            has_primary_key = True
                         awadb_field = awa.Field()
                         ret = self.__check_add_field(db_table_name, awadb_field, fields_type, field_name, doc_item[field_name])
                         if ret < 0:
                             continue
                         doc.AddField(awadb_field)
+                        if field_name == self.key_confirmed_name:
+                            has_primary_key = True
+                            doc.SetKey(awadb_field.value)
+
                     if not has_primary_key:
                         key_fid = awa.Field()
                         ret = self.__check_add_field(
@@ -524,7 +534,7 @@ class AwaLocal(AwaAPI):
         Returns:
             Results of searching.
         """
-        show_results = []
+        show_results = {} 
         db_table_name = db_name + "/" + table_name
         if db_table_name not in self.tables:
             return show_results 
@@ -600,12 +610,16 @@ class AwaLocal(AwaAPI):
         ret = awa.DoSearch(self.tables[db_table_name], req, response)
         response.PackResults(fvec_names)
 
+        show_results["Db"] = db_name
+        show_results["Table"] = table_name
+
         search_result_vec = response.Results()
         search_result_index = 0
+        search_results = []
         while search_result_index < search_result_vec.__len__():
             search_result = search_result_vec[search_result_index]
             result_per_request = {}
-            result_per_request["ResultSize"] = search_result.result_items.__len__()
+            result_per_request["ResultSize"] = search_result.total
 
             result_items_list = []
             items = search_result.result_items
@@ -626,6 +640,9 @@ class AwaLocal(AwaAPI):
                     if f_type == FieldDataType.INT:
                         int_value = int(item.values[i])
                         item_detail[name] = int_value
+                    if f_type == FieldDataType.LONG:
+                        long_value = int(item.values[i])
+                        item_detail[name] = long_value
                     elif f_type == FieldDataType.FLOAT:
                         float_value = float(item.values[i])
                         item_detail[name] = float_value
@@ -664,10 +681,14 @@ class AwaLocal(AwaAPI):
                 item_index = item_index + 1
 
             result_per_request["ResultItems"] = result_items_list
-            show_results.append(result_per_request)
+            search_results.append(result_per_request)
             search_result_index = search_result_index + 1
+        
+        if response.Results().__len__() == 1:
+            show_results["SearchResults"] = search_results[0]
+        else:
+            show_results["SearchResults"] = search_results
         return show_results
-
 
     def get(
         self,

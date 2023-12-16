@@ -20,7 +20,7 @@ from awadb.words_stem_en import PorterStemmer
 from awadb.library import AwaLocal
 
 
-__version__ = "0.3.12"
+__version__ = "0.3.13"
 
 
 class FieldDataType(Enum):
