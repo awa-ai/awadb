@@ -45,7 +45,7 @@ int DocDetail::Seek(const uint32_t &docid, size_t &pos)  {
   int expect_docid = -1;
   int len = ids_len_;
   while (true)  {
-    if (pos >= len)  return -1;
+    if (pos >= (size_t)len)  return -1;
     if (ids_list_[pos] >= docid)  {
       expect_docid = (int)ids_list_[pos];
       pos++;
@@ -126,7 +126,7 @@ int AwadbRetrieval::Retrieve(
       if (base_no == count)  { count++; continue; }
       next_docid = inverted_list_[query[count]]->Seek(start_docid, pos_array[count]);
       if (next_docid == -1)  return docids.size();
-      else if (next_docid == start_docid) count++;
+      else if ((uint32_t)next_docid == start_docid) count++;
       else  {
         start_docid = next_docid;
 	base_no = count;
