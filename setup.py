@@ -132,6 +132,10 @@ class CMakeBuild(build_ext):
         )
 
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
@@ -139,9 +143,12 @@ setup(
     version="0.3.13",
     author="Vincent",
     author_email="awadb.vincent@gmail.com",
-    description="AI Native database for embedding vectors",
-    long_description="AI Native database for embedding vectors",
+    description="Local lightweight AI Native database for RAG, incluing embedding vectors and text search for LLM generation",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     license="Apache 2.0",
+    keywords = ["AI Native SearchEngine", "RAG", "Embedding vectors", "Multi-model search"],
+    url = "https://github.com/awa-ai/awadb",
     ext_modules=[CMakeExtension("awa")],
     cmdclass={"build_ext": CMakeBuild},
     packages=["awadb", "awadb.llm_embedding", "awadb.awa_embedding"],
