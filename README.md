@@ -10,7 +10,7 @@ Stability - AwaDB builds upon over 4 years experience at JD.com running producti
 
 First install awadb:
 ```bash
-pip3 install awadb'
+pip3 install awadb
 ```
 
 Then use as below:
