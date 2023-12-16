@@ -1241,8 +1241,8 @@ int MultiFieldsRangeIndex::AddNewField(
   bt_param.bits = 16;
   bt_param.kDelim = "\001";
 
-  if (fid < fields_.size())  return -1;
-  for (size_t i = fields_.size(); i <= fid; i++)  {
+  if ((size_t)fid < fields_.size())  return -1;
+  for (size_t i = fields_.size(); i <= (size_t)fid; i++)  {
     fields_.push_back(nullptr);
   } 
   FieldRangeIndex *index =

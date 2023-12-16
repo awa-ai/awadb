@@ -652,7 +652,7 @@ int MultiStrFieldColumnData::Get(
   if (mul_strs.length() <= 2)  return -2;
   uint8_t strs_count = 0;
   memcpy((void *)&strs_count, (void *)mul_strs.c_str(), sizeof(uint8_t));
-  if (mul_strs.size() <= strs_count + 1)  return -3;
+  if (mul_strs.size() <= (size_t)strs_count + 1)  return -3;
  
   size_t acc_bytes = 0; 
   for (size_t i = 0; i < strs_count; i++)  {
