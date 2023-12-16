@@ -17,7 +17,7 @@ If all are right, the container service of awadb and awadb_proxy will be started
 
 - Restful usage 
 ```bash
-curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "docs":[{"_id":1, "name":"lj", "age":23 "f":[1,0]},{"_id":2, "name":"david", "age":32, "f":[1,2]}]}' http://localhost:8080/add
+curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "docs":[{"_id":1, "name":"lj", "age":23, "f":[1,0]},{"_id":2, "name":"david", "age":32, "f":[1,2]}]}' http://localhost:8080/add
 ```
 If show add successfully. Congrats! You can start to use awadb!
 Detailed usage of RESTful API please see [here](https://github.com/awa-ai/awadb/tree/main/docs/restful_tutorial.md)

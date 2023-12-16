@@ -793,6 +793,8 @@ func DocsToJson(docs *awadb_pb.Documents, c *gin.Context) {
 			}  else if *field.Type == awadb_pb.FieldType_MULTI_STRING {
 				//MulStrValue []string
 				//json_doc[*field.Name] = 
+			}  else if *field.Type == awadb_pb.FieldType_VECTOR {
+				json_doc[*field.Name] = string(field.Value)
 			}
 		}
 		docs_struct = append(docs_struct, json_doc)
@@ -800,7 +802,6 @@ func DocsToJson(docs *awadb_pb.Documents, c *gin.Context) {
 	json_docs["Docs"] = docs_struct
 	c.JSON(http.StatusOK, json_docs)
 }
-
 
 func SearchResultsToJson(res *awadb_pb.SearchResponse, c *gin.Context) {
 	results := make(map[string]interface{})

@@ -6,7 +6,7 @@ services:
   awadb_proxy:
     depends_on:
       - awadb
-    image: ljeagle/awadb_proxy:v0.11
+    image: ljeagle/awadb_proxy:v0.12
     ports:
       - 8080:8080
       - 50005:50005
