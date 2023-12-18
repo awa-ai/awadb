@@ -74,6 +74,8 @@ class GammaEngine {
 
   int GetDocs(const std::vector<std::string> &keys, std::map<std::string, Doc> &docs);
 
+  int GetDocs(Request &request, std::map<std::string, Doc> &docs);
+
   int GetDoc(int docid, Doc &doc);
 
   /**

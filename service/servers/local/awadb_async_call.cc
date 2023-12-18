@@ -27,7 +27,7 @@ bool CreateCall::ProcessCreateRequest()  {
   bool status = true;
   std::string db_table_name = request_.db_name() + "/";
   if (request_.tables_meta_size() == 0)  return false;
-  for (size_t i = 0; i < request_.tables_meta_size(); i++)  {
+  for (int i = 0; i < request_.tables_meta_size(); i++)  {
     awadb_grpc::TableMeta *table_meta_ptr = request_.mutable_tables_meta((int)i);
     // create table 
     if (!table_meta_ptr->name().empty())  {
@@ -69,7 +69,7 @@ bool CreateCall::ProcessCreateRequest()  {
       awadb::TableInfo table_info;
       table_info.SetName(table_meta_ptr->name());
       
-      for (size_t j = 0; j < table_meta_ptr->fields_meta_size(); j++)  {
+      for (int j = 0; j < table_meta_ptr->fields_meta_size(); j++)  {
         awadb_grpc::FieldMeta *field_meta_ptr = table_meta_ptr->mutable_fields_meta((int)j);
         awadb::FieldInfo field_info;
         field_info.name = field_meta_ptr->name();
@@ -331,7 +331,7 @@ bool AddFieldsCall::ProcessAddFieldsRequest() {
   if (!request_.has_db_name() || request_.db_name().empty())  return false; 
   bool status = true; 
   std::string db_table_name = request_.db_name() + "/";
-  for (size_t i = 0; i < request_.tables_meta_size(); i++)  {
+  for (int i = 0; i < request_.tables_meta_size(); i++)  {
     awadb_grpc::TableMeta *table_meta_ptr = request_.mutable_tables_meta((int)i);
     if (table_meta_ptr->has_name() && !table_meta_ptr->name().empty())  {
       db_table_name += table_meta_ptr->name();
@@ -348,7 +348,7 @@ bool AddFieldsCall::ProcessAddFieldsRequest() {
         return false;
       }
 
-      for (size_t j = 0; j < table_meta_ptr->fields_meta_size(); j++)  {
+      for (int j = 0; j < table_meta_ptr->fields_meta_size(); j++)  {
         awadb_grpc::FieldMeta *field_meta_ptr = table_meta_ptr->mutable_fields_meta((int)j);
         awadb::FieldInfo field_info;
         field_info.name = field_meta_ptr->name();
@@ -456,14 +456,14 @@ bool AddOrUpdateCall::ProcessAddOrUpdateRequest()  {
     }
     status = true;
     awadb::Docs batch_docs;
-    for (size_t i = 0; i < request_.docs_size(); i++)  {
+    for (int i = 0; i < request_.docs_size(); i++)  {
       awadb::Doc doc;
       awadb_grpc::Document *doc_ptr = request_.mutable_docs((int)i);
       if (!doc_ptr->has_id())  {
         continue;
       }
       doc.SetKey(doc_ptr->id());
-      for (size_t j = 0; j < doc_ptr->fields_size(); j++)  {
+      for (int j = 0; j < doc_ptr->fields_size(); j++)  {
 	awadb_grpc::Field *field_ptr = doc_ptr->mutable_fields(j);
 	if (!field_ptr->has_name() || field_ptr->name().empty())  continue;
         awadb::Field field;
@@ -506,7 +506,7 @@ bool AddOrUpdateCall::ProcessAddOrUpdateRequest()  {
 	}
 	if (field_ptr->has_source())  field.source = field_ptr->source();
         if (field.datatype == awadb::DataType::MULTI_STRING)  {
-          for (size_t k = 0; k < field_ptr->mul_str_value_size(); k++)  {
+          for (int k = 0; k < field_ptr->mul_str_value_size(); k++)  {
 	    field.mul_str_value.push_back(field_ptr->mul_str_value(k));
 	  }
 	}	
@@ -626,18 +626,37 @@ void GetCall::ProcessGetRequest()  {
       LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" is empty!";
       return;
     }
-    
+   
+    awadb::Request request;
+    for (size_t i = 0; i < request_.range_filters_size(); i++)  {
+      awadb::RangeFilter range_filter;
+      range_filter.field = (request_.mutable_range_filters(i))->field_name();
+      range_filter.lower_value = (request_.mutable_range_filters(i))->lower_value();
+      range_filter.upper_value = (request_.mutable_range_filters(i))->upper_value();
+      range_filter.include_lower = (request_.mutable_range_filters(i))->include_lower();
+      range_filter.include_upper = (request_.mutable_range_filters(i))->include_upper();
+
+      request.AddRangeFilter(range_filter); 
+    }
+
+    for (size_t i = 0; i < request_.term_filters_size(); i++)  {
+      awadb::TermFilter term_filter;
+      term_filter.field = (request_.mutable_term_filters(i))->field_name();
+      term_filter.value = (request_.mutable_term_filters(i))->value();
+      term_filter.is_union = (request_.mutable_term_filters(i))->is_union();
+      request.AddTermFilter(term_filter); 
+    }  
+
     size_t request_ids_size = request_.ids_size();
     if (request_ids_size == 0)  {
-      LOG(ERROR)<<"Get ids set is empty!";
-      return;
+      LOG(INFO)<<"Get ids set is empty!";
     }
     std::vector<std::string> ids;
     std::map<std::string, awadb::Doc> docs; 
     for (size_t i = 0; i < request_ids_size; i++)  {
       ids.push_back(request_.ids(i)); 
     }
-    GetDocs(engine, ids, docs);
+    GetDocs(engine, ids, request, docs);
 
     reply_.set_db_name(request_.db_name());
     reply_.set_table_name(request_.table_name());
@@ -768,7 +787,6 @@ void SearchCall::ProcessSearchRequest()  {
       LOG(WARNING)<<"Search has problem! return value "<<ret;
     }
 
-
     std::vector<std::string> pack_fields;
     for (int i = 0; i < request_.pack_fields_size(); i++)  {
       pack_fields.push_back(request_.pack_fields(i));
@@ -776,6 +794,7 @@ void SearchCall::ProcessSearchRequest()  {
 
     std::map<std::string, awadb::DataType> fields_type;
     GetFieldsType(engine, pack_fields, fields_type);   
+    
     ret = search_res.PackResults(pack_fields);
     reply_.set_db_name(request_.db_name());
     reply_.set_table_name(request_.table_name());
@@ -792,10 +811,13 @@ void SearchCall::ProcessSearchRequest()  {
 	result_ptr->set_msg(results[i].msg);
       }
       int return_topn = request_.topn();
-      if (return_topn > results[i].result_items.size())  return_topn = results[i].result_items.size();
+      LOG(ERROR)<<"result items size is "<<results[i].result_items.size();
+      if ((size_t)return_topn > results[i].result_items.size())  return_topn = results[i].result_items.size();
       for (int j = 0; j < return_topn; j++)  {
         awadb_grpc::ResultItem *item_ptr = result_ptr->add_result_items();
 	item_ptr->set_score((float)results[i].result_items[j].score);
+
+        LOG(ERROR)<<"result score is "<<(float)results[i].result_items[j].score;
 	awadb::ResultItem &item_tmp = results[i].result_items[j];
         for (size_t k = 0; k < item_tmp.names.size(); k++)  {
 	  awadb_grpc::Field *new_field = item_ptr->add_fields();
@@ -889,17 +911,36 @@ bool DeleteCall::ProcessDeleteRequest()  {
       LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" is empty!";
       return status;
     }
-    
+   
+    awadb::Request request;
+    for (size_t i = 0; i < request_.range_filters_size(); i++)  {
+      awadb::RangeFilter range_filter;
+      range_filter.field = (request_.mutable_range_filters(i))->field_name();
+      range_filter.lower_value = (request_.mutable_range_filters(i))->lower_value();
+      range_filter.upper_value = (request_.mutable_range_filters(i))->upper_value();
+      range_filter.include_lower = (request_.mutable_range_filters(i))->include_lower();
+      range_filter.include_upper = (request_.mutable_range_filters(i))->include_upper();
+
+      request.AddRangeFilter(range_filter); 
+    }
+
+    for (size_t i = 0; i < request_.term_filters_size(); i++)  {
+      awadb::TermFilter term_filter;
+      term_filter.field = (request_.mutable_term_filters(i))->field_name();
+      term_filter.value = (request_.mutable_term_filters(i))->value();
+      term_filter.is_union = (request_.mutable_term_filters(i))->is_union();
+      request.AddTermFilter(term_filter); 
+    }  
+
     size_t request_ids_size = request_.ids_size();
     if (request_ids_size == 0)  {
-      LOG(ERROR)<<"Delete ids is empty!";
-      return false;
+      LOG(INFO)<<"Delete ids is empty!";
     }
     std::vector<std::string> ids;
     for (size_t i = 0; i < request_ids_size; i++)  {
       ids.push_back(request_.ids(i)); 
     }
-    status = Delete(engine, ids);
+    status = Delete(engine, ids, request);
      
   }  else  {
     LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" not exist!";

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 gRPC authors.
+ * Copyright 2023 AwaDB authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -163,14 +163,27 @@ func Float32tobytes(a float32) []byte {
 	return res
 }
 
-func AssembleRangeFilters(range_filters []*awadb_pb.RangeFilter, filter_value interface{})  {
+func AssembleRangeFilters(range_filters *[]*awadb_pb.RangeFilter, filter_value interface{})  {
 	switch filter_value.(type) {
 	case map[string]interface{}:
-		if len(range_filters) == 0 {
-			range_filters = make([]*awadb_pb.RangeFilter, 0)
+		if len(*range_filters) == 0 {
+			*range_filters = make([]*awadb_pb.RangeFilter, 0)
 		}
 		for filter_field_name, filter_field_value := range filter_value.(map[string]interface{}) {
 			range_filter := &awadb_pb.RangeFilter{}
+			range_filter.LowerValue = make([]byte, 4)
+			bits := math.Float32bits((float32)(-9999999))
+			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
+
+			range_filter.UpperValue = make([]byte, 4)
+			bits = math.Float32bits((float32)(99999999))
+			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
+
+			default_include_lower := false
+			default_include_upper := false
+			range_filter.IncludeLower = &default_include_lower
+			range_filter.IncludeUpper = &default_include_upper
+
 			range_filter.FieldName = &filter_field_name
 			// todo : check filter is ok?
 			is_data_ok := true
@@ -192,7 +205,7 @@ func AssembleRangeFilters(range_filters []*awadb_pb.RangeFilter, filter_value in
 				continue
 			}
 			if is_data_ok  {
-				range_filters = append(range_filters, range_filter)
+				*range_filters = append(*range_filters, range_filter)
 			}
 		}
 	default:
@@ -346,33 +359,30 @@ func AssembleTermFilters(term_filters []*awadb_pb.TermFilter, filter_value inter
 	}
 }
 
-
 func AssignRangeValue(value float64, range_filter *awadb_pb.RangeFilter, value_type *string) {
         if *value_type != "eq" && *value_type != "lt" && *value_type != "lte" && *value_type != "gt" && *value_type != "gte"  {
 		fmt.Println("filter parameter error!")
 		return
 	}
 	if IsDecimal(value)  {
-		bytes_value := Float32tobytes((float32)(value))
-		tmp_value := string(bytes_value)
+		bits := math.Float32bits((float32)(value))
 		if *value_type == "lt" || *value_type == "lte" {
-			range_filter.UpperValue = &tmp_value
+			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
 		}  else if *value_type == "gt" || *value_type == "gte"  {
-			range_filter.LowerValue = &tmp_value
+			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
 		}  else if  *value_type == "eq"  {
-			range_filter.UpperValue = &tmp_value
-			range_filter.LowerValue = &tmp_value
+			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
+			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
 		}
 	}  else  {
-		bytes_value := Int32tobytes((int32)(value))
-		tmp_value := string(bytes_value)
+		bits := math.Float32bits((float32)(value))
 		if *value_type == "lt" || *value_type == "lte" {
-			range_filter.UpperValue = &tmp_value
+			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
 		}  else if *value_type == "gt" || *value_type == "gte"  {
-			range_filter.LowerValue = &tmp_value
+			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
 		}  else if *value_type == "eq"  {
-			range_filter.UpperValue = &tmp_value
-			range_filter.LowerValue = &tmp_value
+			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
+			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
 		}
 	}
 
@@ -1217,7 +1227,7 @@ func RunHttpServer(http_port int) error {
 				case map[string]interface{}:
 					for filter_name, filter_value := range filters_value.(map[string]interface{})  {
 						if  filter_name == "range_filters"  {
-							AssembleRangeFilters(search_request.RangeFilters, filter_value)
+							AssembleRangeFilters(&search_request.RangeFilters, filter_value)
 						}  else if filter_name == "term_filters"  {
 							AssembleTermFilters(search_request.TermFilters, filter_value)
 						}  else  {
@@ -1413,7 +1423,7 @@ func RunHttpServer(http_port int) error {
 				}  else if key == "filters" {
 					for filter_name, filter_value := range value.(map[string]interface{})  {
 						if  filter_name == "range_filters"  {
-							AssembleRangeFilters(condition.RangeFilters, filter_value)
+							AssembleRangeFilters(&condition.RangeFilters, filter_value)
 						}  else if filter_name == "term_filters"  {
 							AssembleTermFilters(condition.TermFilters, filter_value)
 						}  else  {
@@ -1479,6 +1489,9 @@ func RunHttpServer(http_port int) error {
 				if err != nil  {
 					c.JSON(http.StatusBadRequest, gin.H{"Get docs failed :": err.Error()})
 					return
+				}
+				if docs == nil {
+					fmt.Println("get docs is nil")
 				}
 				DocsToJson(docs, c)
 				//c.JSON(http.StatusOK, gin.H{"message": "Get docs success!",})
@@ -1567,7 +1580,7 @@ func RunHttpServer(http_port int) error {
 				}  else if key == "filters" {
 					for filter_name, filter_value := range value.(map[string]interface{})  {
 						if  filter_name == "range_filters"  {
-							AssembleRangeFilters(condition.RangeFilters, filter_value)
+							AssembleRangeFilters(&condition.RangeFilters, filter_value)
 						}  else if filter_name == "term_filters"  {
 							AssembleTermFilters(condition.TermFilters, filter_value)
 						}  else  {
