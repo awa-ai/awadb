@@ -93,6 +93,9 @@ message DocCondition {
   optional bool include_all_fields = 5; 
   repeated string not_include_fields = 6;
   optional int32 limit = 7;
+  repeated string pack_fields = 8;
+  repeated RangeFilter range_filters = 9;
+  repeated TermFilter term_filters = 10;
 }
 
 message Field {
@@ -122,8 +125,8 @@ message TermFilter {
 
 message RangeFilter {
   optional string field_name = 1;
-  optional string lower_value = 2;
-  optional string upper_value = 3;
+  optional bytes lower_value = 2;
+  optional bytes upper_value = 3;
   optional bool include_lower = 4;
   optional bool include_upper = 5;
 }

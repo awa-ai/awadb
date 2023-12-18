@@ -58,8 +58,17 @@ bool AddTexts(
   return ret == 0 ? true : false;
 }
 
-bool Delete(void *engine, std::vector<std::string> &keys)  {
-  return static_cast<awadb::GammaEngine *>(engine)->DeleteDocs(keys);
+bool Delete(
+  void *engine,
+  std::vector<std::string> &keys,
+  awadb::Request &request)  {
+  if (keys.size() > 0) {
+    return static_cast<awadb::GammaEngine *>(engine)->DeleteDocs(keys);
+  }
+
+  int ret = static_cast<awadb::GammaEngine *>(engine)->DelDocByQuery(request);
+
+  return ret == 0 ? true : false;
 }
 
 bool GetDocs(
@@ -72,6 +81,20 @@ bool GetDocs(
   return ret == 0 ? true : false;
 }
 
+bool GetDocs(
+  void *engine,
+  const std::vector<std::string> &keys,
+  awadb::Request &request,
+  std::map<std::string, awadb::Doc> &docs)  {
+
+  if (keys.size() > 0) {
+    return GetDocs(engine, keys, docs);
+  }
+
+  int ret = static_cast<awadb::GammaEngine *>(engine)->GetDocs(request, docs);
+
+  return ret == 0 ? true : false;
+}
 
 bool Update(void *engine, awadb::Doc &doc)  {
   int ret = static_cast<awadb::GammaEngine *>(engine)->AddOrUpdate(doc);

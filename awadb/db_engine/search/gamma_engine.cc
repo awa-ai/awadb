@@ -361,6 +361,7 @@ int GammaEngine::Search(Request &request, Response &response_results) {
   gamma_query.condition->retrieval_parameters = request.RetrievalParams();
   gamma_query.condition->has_rank = request.HasRank();
 
+  LOG(ERROR)<<"metric type is "<<request.MetricType();
   if (request.MetricType())  {
     gamma_query.condition->metric_type = DistanceComputeType::L2;
   }
@@ -1290,6 +1291,57 @@ int GammaEngine::GetDoc(const std::string &key, Doc &doc) {
   }
 
   return GetDoc(docid, doc);
+}
+
+int GammaEngine::GetDocs(
+  Request &request,
+  std::map<std::string, Doc> &docs) {
+  MultiRangeQueryResults range_query_result;
+  std::vector<FilterInfo> filters;
+  std::vector<struct RangeFilter> &range_filters = request.RangeFilters();
+  std::vector<struct TermFilter> &term_filters = request.TermFilters();
+
+  int range_filters_size = range_filters.size();
+  int term_filters_size = term_filters.size();
+
+  filters.resize(range_filters_size + term_filters_size);
+  int idx = 0;
+
+  for (int i = 0; i < range_filters_size; ++i) {
+    struct RangeFilter &filter = range_filters[i];
+
+    filters[idx].field = table_->GetAttrIdx(filter.field);
+    filters[idx].lower_value = filter.lower_value;
+    filters[idx].upper_value = filter.upper_value;
+
+    ++idx;
+  }
+
+  for (int i = 0; i < term_filters_size; ++i) {
+    struct TermFilter &filter = term_filters[i];
+
+    filters[idx].field = table_->GetAttrIdx(filter.field);
+    filters[idx].lower_value = filter.value;
+    filters[idx].is_union = static_cast<FilterOperator>(filter.is_union);
+
+    ++idx;
+  }
+
+  int retval = field_range_index_->Search(filters, &range_query_result);
+  if (retval <= 0) {
+    LOG(ERROR) << "numeric index search error, ret=" << retval;
+    return -1;
+  }
+
+  const std::vector<int> &doc_ids = range_query_result.ToDocs();
+  for (size_t i = 0; i < doc_ids.size(); ++i) {
+    std::string key = "";
+    if (table_->GetKeyByDocid(doc_ids[i], key) < 0)  continue; 
+    if (GetDoc(doc_ids[i], docs[key]) < 0) {
+      continue;
+    }
+  }
+  return 0;
 }
 
 int GammaEngine::GetDocs(
