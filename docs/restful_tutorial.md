@@ -69,20 +69,22 @@ http://localhost:8080/search
 ],
 # filter condition, default all and
 "filters": {
-            "range_filters": [{
+            "range_filters": {
                 "price": {
                     "gte": 160,
                     "lte": 180
                 },
                 "sales": {
-                    "gte":100
+                    "gte":100,
                     "lte":10
                 }
-            }],
-             "term_filters": [{
-                 "labels": ["100", "200", "300"],
-                 "operator": "or"
-             }],
+            },
+            "term_filters": {
+                "labels": {
+                    "value": ["100", "200", "300"],
+                    "operator": "or"
+                }
+            },
 }, 
 
 "force_brute_search": false,

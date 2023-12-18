@@ -96,20 +96,22 @@ http://localhost:8080/search
 ],
 # filter condition, default all intersection 
 "filters": { # keyword for field filters
-            "range_filters": [{ # keyword for range filters of fields
+            "range_filters": { # keyword for range filters of fields
                 "price": { # filtering field 'price'
                     "gte": 160,  # field value greater than or equal to 160
                     "lte": 180   # field value less then or equal to 180
                 },
                 "sales": { # filtering field 'sales'
-                    "gt":100 # field value greater than 100 
-                    "lt":200 # field value less than 200 
+                    "gt":100, # field value greater than 100 
+                    "lt":200  # field value less than 200 
                 }
-            }],
-             "term_filters": [{ # keyword for term filters of fields
-                 "labels": ["100", "200", "300"], # here 'labels' is the term field name, '100', '200', '300' is the term field value
-                 "operator": "or" # or logic operation
-             }],
+            },
+             "term_filters": {    # keyword for term filters of fields
+                 "labels": {      # 'labels' is the term field name
+                     "value": ["100", "200", "300"], # '100', '200', '300' are the term field values
+                     "operator": "or"  # or logic operation
+                 }
+             },
 }, 
 
 "force_brute_search": false,  # whether to force to use brute search
