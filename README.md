@@ -110,7 +110,7 @@ More detailed quick start examples you can find [here](https://github.com/awa-ai
 - RESTful Usage
 ```bash
 # add documents to table 'test' of db 'default', no need to create table first
-curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "docs":[{"_id":1, "name":"lj", "age":23 "f":[1,0]},{"_id":2, "name":"david", "age":32, "f":[1,2]}]}' http://localhost:8080/add
+curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "docs":[{"_id":1, "name":"lj", "age":23, "f":[1,0]},{"_id":2, "name":"david", "age":32, "f":[1,2]}]}' http://localhost:8080/add
 
 # search documents by the vector field 'f' of the value '[1, 1]'
 curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "vector_query":{"f":[1, 1]}}' http://localhost:8080/search
