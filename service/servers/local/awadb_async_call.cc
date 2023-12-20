@@ -676,7 +676,7 @@ void GetCall::ProcessGetRequest()  {
     }
    
     awadb::Request request;
-    for (size_t i = 0; i < request_.range_filters_size(); i++)  {
+    for (int i = 0; i < request_.range_filters_size(); i++)  {
       awadb::RangeFilter range_filter;
       range_filter.field = (request_.mutable_range_filters(i))->field_name();
       range_filter.lower_value = (request_.mutable_range_filters(i))->lower_value();
@@ -687,7 +687,7 @@ void GetCall::ProcessGetRequest()  {
       request.AddRangeFilter(range_filter); 
     }
 
-    for (size_t i = 0; i < request_.term_filters_size(); i++)  {
+    for (int i = 0; i < request_.term_filters_size(); i++)  {
       awadb::TermFilter term_filter;
       term_filter.field = (request_.mutable_term_filters(i))->field_name();
       term_filter.value = (request_.mutable_term_filters(i))->value();
@@ -961,7 +961,7 @@ bool DeleteCall::ProcessDeleteRequest()  {
     }
    
     awadb::Request request;
-    for (size_t i = 0; i < request_.range_filters_size(); i++)  {
+    for (int i = 0; i < request_.range_filters_size(); i++)  {
       awadb::RangeFilter range_filter;
       range_filter.field = (request_.mutable_range_filters(i))->field_name();
       range_filter.lower_value = (request_.mutable_range_filters(i))->lower_value();
@@ -972,7 +972,7 @@ bool DeleteCall::ProcessDeleteRequest()  {
       request.AddRangeFilter(range_filter); 
     }
 
-    for (size_t i = 0; i < request_.term_filters_size(); i++)  {
+    for (int i = 0; i < request_.term_filters_size(); i++)  {
       awadb::TermFilter term_filter;
       term_filter.field = (request_.mutable_term_filters(i))->field_name();
       term_filter.value = (request_.mutable_term_filters(i))->value();

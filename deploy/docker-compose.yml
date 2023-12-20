@@ -1,12 +1,12 @@
 version: '3'
 services:
   awadb:
-    image: ljeagle/awadb:v0.14
+    image: ljeagle/awadb:v0.15
     restart: always
   awadb_proxy:
     depends_on:
       - awadb
-    image: ljeagle/awadb_proxy:v0.13
+    image: ljeagle/awadb_proxy:v0.15
     ports:
       - 8080:8080
       - 50005:50005
