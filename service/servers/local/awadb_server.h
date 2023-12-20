@@ -65,6 +65,7 @@ class LocalAsyncServer final {
   std::string root_data_dir_;
   std::string root_log_dir_; 
   cuckoohash_map<std::string, void *> table2engine_;
+  cuckoohash_map<std::string, std::string> db2tables_;
 };
 
 #endif

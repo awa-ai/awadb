@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package awadb_grpc;
 
+option go_package = "awadb.io/go/pb_grpc";
+
 service AwaDBServer {
   rpc Create(DBMeta) returns (ResponseStatus) {}
 
@@ -17,6 +19,7 @@ service AwaDBServer {
   rpc Get(DocCondition) returns (Documents) {}
   rpc Search(SearchRequest) returns (SearchResponse) {}
   rpc Delete(DocCondition) returns (ResponseStatus) {}
+  
 }
 
 message DBName {
@@ -45,6 +48,9 @@ message FieldMeta {
   optional bool is_store = 4;
   optional bool reindex = 5;
   optional VectorMeta vec_meta = 6;
+  optional string desc = 7;
+  optional string embedding_model = 8;
+  optional string words_tokenizer = 9;
 }
 
 message TableNames {
@@ -60,6 +66,7 @@ message TableMeta {
 message TableStatus {
   bool is_existed = 1;
   optional DBMeta exist_table = 2;
+  repeated string db_names = 3;
 }
 
 enum FieldType {
@@ -70,6 +77,7 @@ enum FieldType {
   STRING = 4;
   MULTI_STRING = 5;
   VECTOR = 6;
+  KEYWORD = 7;
 }
 
 enum MultiVectorLogicOp {
@@ -83,13 +91,14 @@ message VectorMeta {
   optional string store_type = 3;
   optional string store_param = 4;
   optional bool has_source = 5;
+  optional bool is_normalization = 6;
 }
 
 message DocCondition {
   string db_name = 1;
   string table_name = 2;
   repeated bytes ids = 3;
-  map<string, string> filter_fields = 4;
+  map<string, string> filter_fields = 4; // default all intersection
   optional bool include_all_fields = 5; 
   repeated string not_include_fields = 6;
   optional int32 limit = 7;
@@ -141,6 +150,13 @@ message VectorQuery {
   optional string retrieval_type = 7;
 }
 
+message Query {
+  repeated VectorQuery vec_queries = 1;
+  repeated RangeFilter range_filters = 2;
+  repeated TermFilter term_filters = 3;
+  optional MultiVectorLogicOp vecs_logic_op = 4;
+}
+
 message SearchRequest {
   optional string db_name = 1;
   optional string table_name = 2;
@@ -156,6 +172,7 @@ message SearchRequest {
   repeated string pack_fields = 12; 
   optional MultiVectorLogicOp mul_vec_logic_op = 13;
   optional bool is_l2 = 14;
+  repeated Query queries = 15;
 }
 
 enum SearchResultCode {
@@ -191,6 +208,7 @@ enum ResponseCode {
   TIME_OUT = 201;
   INTERNAL_ERROR = 202;
   NETWORK_ERROR = 203;
+  TABLE_EXIST = 204;
 }
 
 message ResponseStatus {

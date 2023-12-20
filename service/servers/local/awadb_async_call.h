@@ -45,6 +45,7 @@ struct CallData {
   ServerCompletionQueue* cq_;
 
   cuckoohash_map<std::string, void *> &engines_;
+  cuckoohash_map<std::string, std::string> &db2tables_;
   std::string &data_dir_;
   std::string &log_dir_; 
 };
