@@ -479,7 +479,9 @@ int Table::BatchAdd(int start_id, int batch_size, int docid,
       }
     }
 
-    docid_fields_mgr_->Put((uint32_t)id, new_column_fields); 
+    if (new_column_fields.size() > 0)  {
+      docid_fields_mgr_->Put((uint32_t)id, new_column_fields);
+    }
 
     storage_mgr_->Add((const uint8_t *)doc_value, item_length_);
     if (id % 10000 == 0) {
