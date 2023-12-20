@@ -66,7 +66,7 @@ class CreateCall final : public Call {
   void Proceed();
 
  private:
-  bool ProcessCreateRequest();
+  int ProcessCreateRequest();
   CallData *data_;
   // Context for the rpc, allowing to tweak aspects of it such as the use
   // of compression, authentication, as well as to send metadata back to the
