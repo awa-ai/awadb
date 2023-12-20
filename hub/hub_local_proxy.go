@@ -986,12 +986,22 @@ func RunHttpServer(http_port int) error {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
 
-				_, err := (*local_awadb_client).Create(ctx, db_meta)
+				status, err := (*local_awadb_client).Create(ctx, db_meta)
 				if err != nil  {
 					c.JSON(http.StatusBadRequest, gin.H{"Create table failed :":err.Error()})
 					return
 				}
-				c.JSON(http.StatusOK, gin.H{"message": "Create table success!",})
+				if status.Code == awadb_pb.ResponseCode_INPUT_PARAMETER_ERROR {
+					c.JSON(http.StatusOK, gin.H{"Message": "Input parameters error!",})
+				} else if status.Code == awadb_pb.ResponseCode_INTERNAL_ERROR {
+					c.JSON(http.StatusBadRequest, gin.H{"Message": "Internal server error!",})
+				} else if status.Code == awadb_pb.ResponseCode_TABLE_EXIST {
+					c.JSON(http.StatusOK, gin.H{"Message": "Table exist!",})
+				} else if status.Code == awadb_pb.ResponseCode_OK {
+					c.JSON(http.StatusOK, gin.H{"Message": "Create table success!",})
+				} else {
+					c.JSON(http.StatusBadRequest, gin.H{"Message": "Unknown error!",})
+				}
 			}  else  {
 				c.JSON(http.StatusBadRequest, gin.H{"Error":"awadb server client has error!"})
 			}
@@ -1619,18 +1629,144 @@ func RunHttpServer(http_port int) error {
 	})
 
 	r.POST("/list", func(c *gin.Context) {
-		obj := struct {
-			Db	string	`json:"db"`
-			Table	string	`json:"table"`
-		}{}
-
-		err := c.BindJSON(&obj)
+		json := make(map[string]interface{})
+		err := c.BindJSON(&json)
 		if err != nil  {
-			fmt.Println(err)
-                        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+			fmt.Printf("bind error:%v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"Error:": err})
 		}  else  {
-			fmt.Println(obj)
+			db_name := ""
+			table_name := ""
+			db_value, ok := json["db"]
+			if !ok {
+				log.Println("DB name not specified!")
+			}  else {
+				switch db_value.(type) {
+				case string:
+					db_name = db_value.(string)
+				default:
+					fmt.Println("DB name not specified!")
+				}
+		        }
+
+			table_value, ok := json["table"]
+			if !ok {
+				log.Println("Table name not specified!")
+			}  else {
+				switch table_value.(type) {
+				case string:
+					table_name = table_value.(string)
+				default:
+					fmt.Println("Table name not specified!")
+				}
+			}
+
+			if len(db_name) == 0 || len(table_name) == 0  {
+				table_status, err := CheckTableFromServer(&db_name, &table_name)
+				if err != nil  {
+					c.JSON(http.StatusBadRequest, gin.H{"Error:": err.Error()})
+					return
+				}
+				if len(db_name) == 0  {
+					results := make(map[string][]string)
+					results["DBs"] = table_status.DbNames
+					c.JSON(http.StatusOK, results)
+					return
+				} else {
+					results := make(map[string]interface{})
+					results["Db"] = db_name
+					tables := make([]string, 0)
+					if table_status.ExistTable == nil {
+						results["Tables"] = tables
+						c.JSON(http.StatusOK, results)
+						return
+					}
+					for _, table_meta := range table_status.ExistTable.TablesMeta {
+						tables = append(tables, *table_meta.Name)
+					}
+					results["Tables"] = tables
+					c.JSON(http.StatusOK, results)
+					return
+				}
+			}
+			db_table_name := db_name + "/" + table_name
+			_, ok = checked_tables_schema[db_table_name]
+                        results := make(map[string]interface{})
+			results["Db"] = db_name
+			results["Table"] = table_name
+
+			if !ok  {
+				table_status, err := CheckTableFromServer(&db_name, &table_name)
+				if err != nil  {
+					c.JSON(http.StatusBadRequest, gin.H{"Error:": err.Error()})
+					return
+				}
+				if !table_status.IsExisted {
+					c.JSON(http.StatusOK, results)
+					return
+				} else {
+					if table_status.ExistTable == nil {
+						c.JSON(http.StatusOK, results)
+						return
+					}
+					for _, table_meta := range table_status.ExistTable.TablesMeta {
+					        if table_name != *table_meta.Name {
+							continue
+						}
+						table_fields := make(map[string]*awadb_pb.FieldType)
+					        json_fields := make(map[string]string)
+						for _, field_meta := range table_meta.FieldsMeta {
+							table_fields[*field_meta.Name] = field_meta.Type
+							switch *field_meta.Type {
+							case awadb_pb.FieldType_INT:
+								json_fields[*field_meta.Name] = "int"
+							case awadb_pb.FieldType_LONG:
+								json_fields[*field_meta.Name] = "long"
+							case awadb_pb.FieldType_FLOAT:
+								json_fields[*field_meta.Name] = "float"
+							case awadb_pb.FieldType_DOUBLE:
+								json_fields[*field_meta.Name] = "double"
+							case awadb_pb.FieldType_STRING:
+								json_fields[*field_meta.Name] = "string"
+							case awadb_pb.FieldType_MULTI_STRING:
+								json_fields[*field_meta.Name] = "multi_string"
+							case awadb_pb.FieldType_VECTOR:
+								json_fields[*field_meta.Name] = "vector"
+							case awadb_pb.FieldType_KEYWORD:
+								json_fields[*field_meta.Name] = "keyword"
+							}
+						}
+						checked_tables_schema[db_table_name] = table_fields
+						results["Fields"] = json_fields
+					}
+				}
+				c.JSON(http.StatusOK, results)
+				return
+			}
+			json_fields := make(map[string]string)
+			for key, value := range checked_tables_schema[db_table_name].(map[string]*awadb_pb.FieldType) {
+				switch *value {
+				case awadb_pb.FieldType_INT:
+					json_fields[key] = "int"
+				case awadb_pb.FieldType_LONG:
+					json_fields[key] = "long"
+				case awadb_pb.FieldType_FLOAT:
+					json_fields[key] = "float"
+				case awadb_pb.FieldType_DOUBLE:
+					json_fields[key] = "double"
+				case awadb_pb.FieldType_STRING:
+					json_fields[key] = "string"
+				case awadb_pb.FieldType_MULTI_STRING:
+					json_fields[key] = "multi_string"
+				case awadb_pb.FieldType_VECTOR:
+					json_fields[key] = "vector"
+				case awadb_pb.FieldType_KEYWORD:
+					json_fields[key] = "keyword"
+				}
+			}
+			results["Fields"] = json_fields
+			c.JSON(http.StatusOK, results)
+			return
 		}
 	})
 

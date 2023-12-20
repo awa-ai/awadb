@@ -50,7 +50,7 @@ void LocalAsyncServer::Run(const uint16_t &port)  {
 
 void LocalAsyncServer::HandleRpcs()  {
   // Spawn a new CallData instance to serve new clients.
-  CallData data{&service_, cq_.get(), table2engine_, root_data_dir_, root_log_dir_};
+  CallData data{&service_, cq_.get(), table2engine_, db2tables_, root_data_dir_, root_log_dir_};
   new CreateCall(&data);
   new CheckTableCall(&data);
   new AddFieldsCall(&data);
@@ -80,6 +80,7 @@ bool LocalAsyncServer::InitTableEngines()  {
     std::string db_path = root_data_dir_ + "/";
     db_path += db;
     std::vector<std::string> tables = utils::ls_folder(db_path, false);
+    std::string table_names = "";
     for (auto &table: tables)  {
       std::string table_data_path = db_path + "/" + table;
       std::string table_log_path = root_log_dir_ + "/" + db + "/" + table;
@@ -91,9 +92,18 @@ bool LocalAsyncServer::InitTableEngines()  {
       if (0 == Load(table_engine))  {
 	std::string key = db + "/" + table;
         table2engine_.insert(key, table_engine);
+	if (table_names.length() == 0)  {
+	  table_names = table;
+	}  else  {
+	  table_names += ":";
+	  table_names += table;
+	}
       }  else  {
 	std::cout<<"Table "<<table<<" in db "<<db<<" load failed!"<<std::endl;
       }
+    }
+    if (!table_names.empty()) {
+      db2tables_.insert(db, table_names);
     }
   }
   return true;

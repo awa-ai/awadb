@@ -17,16 +17,17 @@
  */
 
 #include "util/log.h"
+#include "util/utils.h"
 
 #include "c_api/gamma_api.h"
 #include "cpp_api/awadb_cpp_interface.h"
 #include "awadb_async_call.h"
 
-bool CreateCall::ProcessCreateRequest()  {
-  if (!request_.has_db_name() || request_.db_name().empty())  return false; 
+int CreateCall::ProcessCreateRequest()  {
+  if (!request_.has_db_name() || request_.db_name().empty())  return -1; 
   bool status = true;
   std::string db_table_name = request_.db_name() + "/";
-  if (request_.tables_meta_size() == 0)  return false;
+  if (request_.tables_meta_size() == 0)  return -2;
   for (int i = 0; i < request_.tables_meta_size(); i++)  {
     awadb_grpc::TableMeta *table_meta_ptr = request_.mutable_tables_meta((int)i);
     // create table 
@@ -41,6 +42,7 @@ bool CreateCall::ProcessCreateRequest()  {
 	  status = false;
 	  continue;
 	}
+	return 1;
       }	else  {
         std::string data_dir = data_->data_dir_ + "/";
         if (!utils::isFolderExist(data_dir.c_str())) {
@@ -142,10 +144,24 @@ bool CreateCall::ProcessCreateRequest()  {
 
       status = Create(engine, table_info);
 
-      if (is_init_engine)  data_->engines_.insert(db_table_name, engine);
+      if (is_init_engine) {
+	data_->engines_.insert(db_table_name, engine);
+	std::string tables = "";
+	if (data_->db2tables_.find(request_.db_name(), tables)) {
+	  if (!tables.empty())  {
+	    tables += ":";
+	    tables += table_meta_ptr->name(); 
+	  }  else {
+	    tables = table_meta_ptr->name();
+	  }
+	}  else {
+	  tables = table_meta_ptr->name();
+	}
+	data_->db2tables_.insert(request_.db_name(), tables);
+      } 
     }
   }
-  return status; 
+  return status ? 0 : -3; 
 }
 
 void CreateCall::Proceed() {
@@ -166,11 +182,15 @@ void CreateCall::Proceed() {
     // part of its FINISH state.
     new CreateCall(data_);
 
-    bool ret = ProcessCreateRequest();
+    int ret = ProcessCreateRequest();
 
-    if (ret)  {
+    if (0 == ret)  {
       reply_.set_code(awadb_grpc::OK);
-    }  else  {
+    }  else if (-1 == ret || -2 == ret)  {
+      reply_.set_code(awadb_grpc::INPUT_PARAMETER_ERROR);
+    }  else if (1 == ret) {
+      reply_.set_code(awadb_grpc::TABLE_EXIST);
+    }  else {
       reply_.set_code(awadb_grpc::INTERNAL_ERROR);
     }
 
@@ -187,18 +207,46 @@ void CreateCall::Proceed() {
 }
 
 bool CheckTableCall::ProcessCheckTableRequest()  {
-  if (!request_.has_db_name() || request_.db_name().empty() ||
-      !request_.has_table_name() || request_.table_name().empty())  return false; 
+  if (!request_.has_db_name() || request_.db_name().empty()) {
+    if (data_->db2tables_.size() == 0) return false;
+
+    std::vector<std::string> dbs = utils::ls_folder(data_->data_dir_, false);
+    for (auto &db: dbs) {
+      reply_.add_db_names(db);
+    } 
+    return true;
+  } 
+  
+  if (!request_.has_table_name() || request_.table_name().empty())  {
+    std::string tables = "";
+    if (data_->db2tables_.find(request_.db_name(), tables)) {
+      if (!tables.empty()) {
+	awadb_grpc::DBMeta *exist_table_ptr = reply_.mutable_exist_table(); 
+	exist_table_ptr->set_db_name(request_.db_name());
+	
+	std::vector<std::string> tables_vec = utils::split(tables, ":");
+	if (tables_vec.empty()) return false;
+        for (auto &table_name: tables_vec) {
+	  awadb_grpc::TableMeta *table_meta = exist_table_ptr->add_tables_meta();
+          table_meta->set_name(table_name);
+	}
+	return true;
+      } 
+    }
+    return false; 
+  }
+
   bool status = false;
   std::string db_table_name = request_.db_name() + "/";
   db_table_name += request_.table_name();
 
   void *engine = nullptr;
   if (data_->engines_.find(db_table_name, engine)) {
+    status = true;
     if (!engine)  {
       LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" is empty!";
+      status = false;
     }
-    status = true;
   }
   if (!status)  {
     return status;
