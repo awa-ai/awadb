@@ -1,6 +1,6 @@
 # RESTful API tutorial
 
-Now support "create", "add", "get", "delete" and "search".
+Now support "create", "add", "get", "delete", "search" and "list".
 
 ## create table
 ```bash
