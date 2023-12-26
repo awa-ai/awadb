@@ -124,3 +124,15 @@ http://localhost:8080/search
 
 ```
 
+## list the table fields information
+```bash
+http://localhost:8080/list
+{
+# if neither db nor table is specified, list all db names
+# if db is specified, table not specified, list all tables in specified db
+# if both db and table are specified, list the fields information in specified table
+"db":"default", 
+"table":"test",
+}
+```
+
