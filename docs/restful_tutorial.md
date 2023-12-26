@@ -32,6 +32,21 @@ http://localhost:8080/get
 "table":"test",
 #ids value type can be long or string
 "ids":[1,2,3]
+# filter condition, if ids is not empty, filter is not valid.
+"filters": {
+            "range_filters": {
+                "price": {
+                    "gte": 160,
+                    "lte": 180
+                }
+            },
+            "term_filters": {
+                "labels": {
+                    "value": ["100", "200", "300"],
+                    "operator": "or"
+                }
+            }
+} 
 }
 ```
 
@@ -42,7 +57,22 @@ http://localhost:8080/delete
 "db":"default",
 "table":"test",
 #ids value type can be long or string
-"ids":[1,2,3]
+"ids":[1,2,3],
+# filter condition, if ids is not empty, filter is not valid.
+"filters": {
+            "range_filters": {
+                "price": {
+                    "gte": 160,
+                    "lte": 180
+                }
+            },
+            "term_filters": {
+                "labels": {
+                    "value": ["100", "200", "300"],
+                    "operator": "or"
+                }
+            }
+} 
 }
 ```
 
@@ -95,4 +125,14 @@ http://localhost:8080/search
 "metric_type": L2
 }
 ```
+
+## list the table fields information
+```bash
+http://localhost:8080/list
+{
+"db":"default",
+"table":"test",
+}
+```
+
 More description about RESTful API please see [here](https://github.com/awa-ai/awadb/tree/main/docs/restful_api.md)
