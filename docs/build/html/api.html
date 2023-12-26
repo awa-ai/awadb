@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Native Python API" href="native_python_api.html" /><link rel="prev" title="Delete documents from table" href="delete_tutorial.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.09.10 -->
-        <title>API - AwaDB 0.3.10 documentation</title>
+        <title>API - AwaDB 0.3.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">AwaDB 0.3.10 documentation</div></a>
+      <a href="index.html"><div class="brand">AwaDB 0.3.13 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">AwaDB 0.3.10 documentation</span>
+  <span class="sidebar-brand-text">AwaDB 0.3.13 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -172,9 +172,14 @@
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="native_python_api.html">Native Python API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="docker_python_api.html">Docker Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html">RESTful API tutorial</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Integrations</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Integrations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="deploy.html">Deployment</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Deployment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="docker_deploy.html">Docker deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Integrations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Integrations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="langchain.html">langchain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="llamaindex.html">llamaindex</a></li>
 </ul>
@@ -232,13 +237,22 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="docker_python_api.html">Docker Python API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa"><code class="docutils literal notranslate"><span class="pre">Awa()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa.add"><code class="docutils literal notranslate"><span class="pre">add()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb.client.Awa.close"><code class="docutils literal notranslate"><span class="pre">close()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa"><code class="docutils literal notranslate"><span class="pre">Awa()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa.add"><code class="docutils literal notranslate"><span class="pre">add()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html#awadb_client.client.Awa.close"><code class="docutils literal notranslate"><span class="pre">close()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="restful_tutorial.html">RESTful API tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html#create-table">create table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html#add-documents-to-table">add documents to table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html#get-document-based-on-ids-or-filter-condition">get document based on ids or filter condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html#delete-documents-by-ids-or-condition">delete documents by ids or condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html#search-documents-by-vector-query-and-filter-condition">search documents by vector query and filter condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html#list-the-table-fields-information">list the table fields information</a></li>
 </ul>
 </li>
 </ul>

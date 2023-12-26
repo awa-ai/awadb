@@ -27,4 +27,5 @@ Contents
    getstarted
    tutorials
    api
+   deploy
    integrations

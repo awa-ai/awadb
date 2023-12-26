@@ -12,7 +12,7 @@ import sys
 project = 'AwaDB'
 copyright = '2023, Vincent'
 author = 'Vincent'
-release = '0.3.10'
+release = '0.3.13'
 
 sys.path.insert(0, os.path.abspath('../../awadb'))
 sys.path.insert(0, os.path.abspath('../../clients'))

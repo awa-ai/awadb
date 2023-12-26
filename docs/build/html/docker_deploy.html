@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Initialize an awadb client" href="init_client_tutorial.html" /><link rel="prev" title="Main Features" href="features.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Integrations" href="integrations.html" /><link rel="prev" title="Deployment" href="deploy.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.09.10 -->
-        <title>Tutorials - AwaDB 0.3.13 documentation</title>
+        <title>Docker deployment - AwaDB 0.3.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -161,7 +161,7 @@
 <li class="toctree-l2"><a class="reference internal" href="features.html">Main Features</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="init_client_tutorial.html">Initialize an awadb client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="add_tutorial.html">Add documents to table</a></li>
 <li class="toctree-l2"><a class="reference internal" href="search_tutorial.html">Search from table</a></li>
@@ -175,8 +175,8 @@
 <li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html">RESTful API tutorial</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="deploy.html">Deployment</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Deployment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="docker_deploy.html">Docker deployment</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="deploy.html">Deployment</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Deployment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Docker deployment</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Integrations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Integrations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -212,43 +212,58 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="tutorials">
-<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="init_client_tutorial.html">Initialize an awadb client</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="init_client_tutorial.html#native-python-usage">Native python usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="init_client_tutorial.html#docker-usage">Docker usage</a></li>
+          <section id="docker-deployment">
+<h1>Docker deployment<a class="headerlink" href="#docker-deployment" title="Permalink to this heading">#</a></h1>
+<section id="preparation">
+<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>docker pull ljeagle/awadb:v0.15</p></li>
+<li><p>docker pull ljeagle/awadb_proxy:v0.15</p></li>
+</ol>
+</section>
+<section id="docker-compose-deployment">
+<h2>Docker compose deployment<a class="headerlink" href="#docker-compose-deployment" title="Permalink to this heading">#</a></h2>
+<ol class="arabic simple" start="3">
+<li><p>enter the project <a class="reference external" href="https://github.com/awa-ai/awadb/tree/main/deploy">deploy directory</a>, then input the command “docker-compose up -d”</p></li>
+</ol>
+<p>Note, docker and docker compose should be installed first.</p>
+</section>
+<section id="check-and-usage">
+<h2>Check and usage<a class="headerlink" href="#check-and-usage" title="Permalink to this heading">#</a></h2>
+<p>If all are right, the container service of awadb and awadb_proxy will be started normally.</p>
+<ul class="simple">
+<li><p>Restful usage</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="add_tutorial.html">Add documents to table</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="add_tutorial.html#native-python-usage">Native python usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="add_tutorial.html#docker-usage">Docker usage</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="search_tutorial.html">Search from table</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="search_tutorial.html#native-python-usage">Native python usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="search_tutorial.html#docker-usage">Docker usage</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="get_tutorial.html">Get documents from table</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="get_tutorial.html#native-python-usage">Native python usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_tutorial.html#docker-usage">Docker usage</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="delete_tutorial.html">Delete documents from table</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="delete_tutorial.html#native-python-usage">Native python usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="delete_tutorial.html#docker-usage">Docker usage</a></li>
-</ul>
-</li>
-</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;db&quot;:&quot;default&quot;, &quot;table&quot;:&quot;test&quot;, &quot;docs&quot;:[{&quot;_id&quot;:1, &quot;name&quot;:&quot;lj&quot;, &quot;age&quot;:23, &quot;f&quot;:[1,0]},{&quot;_id&quot;:2, &quot;name&quot;:&quot;david&quot;, &quot;age&quot;:32, &quot;f&quot;:[1,2]}]}&#39;</span><span class="w"> </span>http://localhost:8080/add
+</pre></div>
 </div>
+<p>If show add successfully. Congrats! You can start to use awadb!
+Detailed usage of RESTful API please see <a class="reference external" href="https://github.com/awa-ai/awadb/tree/main/docs/restful_tutorial.md">here</a></p>
+<ul class="simple">
+<li><p>Python usage</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>grpcio
+pip3<span class="w"> </span>install<span class="w"> </span>awadb-client
+
+<span class="c1"># Import the package and module</span>
+from<span class="w"> </span>awadb_client<span class="w"> </span>import<span class="w"> </span>Awa
+
+<span class="c1"># Initialize awadb client</span>
+<span class="nv">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Awa<span class="o">()</span>
+
+<span class="c1"># Add dict with vector to table &#39;example1&#39;</span>
+client.add<span class="o">(</span><span class="s2">&quot;example1&quot;</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;name&#39;</span>:<span class="s1">&#39;david&#39;</span>,<span class="w"> </span><span class="s1">&#39;feature&#39;</span>:<span class="o">[</span><span class="m">1</span>.3,<span class="w"> </span><span class="m">2</span>.5,<span class="w"> </span><span class="m">1</span>.9<span class="o">]})</span>
+</pre></div>
+</div>
+<p>If show add successfully. Congrats! AwaDB docker installed all right, you can try what you want next!
+Detailed usage of Python API please see <a class="reference external" href="https://ljeagle.github.io/awadb/">here</a></p>
+</section>
 </section>
 
         </article>
@@ -256,23 +271,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="init_client_tutorial.html">
+          <a class="next-page" href="integrations.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Initialize an awadb client</div>
+                <div class="title">Integrations</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="features.html">
+          <a class="prev-page" href="deploy.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Main Features</div>
+                <div class="title">Deployment</div>
                 
               </div>
             </a>
@@ -294,8 +309,29 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Docker deployment</a><ul>
+<li><a class="reference internal" href="#preparation">Preparation</a></li>
+<li><a class="reference internal" href="#docker-compose-deployment">Docker compose deployment</a></li>
+<li><a class="reference internal" href="#check-and-usage">Check and usage</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
