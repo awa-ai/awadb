@@ -1,10 +1,10 @@
 Docker Python API
 =================
 
-.. autofunction:: awadb.client.Awa
-.. autofunction:: awadb.client.Awa.__init__
-.. autofunction:: awadb.client.Awa.add
-.. autofunction:: awadb.client.Awa.search
-.. autofunction:: awadb.client.Awa.get
-.. autofunction:: awadb.client.Awa.delete
-.. autofunction:: awadb.client.Awa.close
+.. autofunction:: awadb_client.client.Awa
+.. autofunction:: awadb_client.client.Awa.__init__
+.. autofunction:: awadb_client.client.Awa.add
+.. autofunction:: awadb_client.client.Awa.search
+.. autofunction:: awadb_client.client.Awa.get
+.. autofunction:: awadb_client.client.Awa.delete
+.. autofunction:: awadb_client.client.Awa.close

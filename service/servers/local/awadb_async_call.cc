@@ -146,8 +146,10 @@ int CreateCall::ProcessCreateRequest()  {
 
       if (is_init_engine) {
 	data_->engines_.insert(db_table_name, engine);
+        bool ret = false;
 	std::string tables = "";
 	if (data_->db2tables_.find(request_.db_name(), tables)) {
+	  ret = true;
 	  if (!tables.empty())  {
 	    tables += ":";
 	    tables += table_meta_ptr->name(); 
@@ -157,7 +159,8 @@ int CreateCall::ProcessCreateRequest()  {
 	}  else {
 	  tables = table_meta_ptr->name();
 	}
-	data_->db2tables_.insert(request_.db_name(), tables);
+        if (!ret)  data_->db2tables_.insert(request_.db_name(), tables);
+	else  data_->db2tables_.update(request_.db_name(), tables);
       } 
     }
   }

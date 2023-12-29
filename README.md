@@ -41,7 +41,7 @@ More detailed python local library usage you can read [here](https://ljeagle.git
 
 ## Run AwaDB as a service 
 If you are on the Windows platform or want a awadb service, you can download and deploy the awadb docker.
-The installation of awadb docker please see [here](https://github.com/awa-ai/awadb/tree/main/docs/deploy.md)
+The installation of awadb docker please see [here](https://github.com/awa-ai/awadb/tree/main/docs/source/docker_deploy.md)
 
 - Python Usage
 
@@ -115,7 +115,7 @@ curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"t
 # search documents by the vector field 'f' of the value '[1, 1]'
 curl -H "Content-Type: application/json" -X POST -d '{"db":"default", "table":"test", "vector_query":{"f":[1, 1]}}' http://localhost:8080/search
 ```
-More detailed RESTful API is [here](https://github.com/awa-ai/awadb/tree/main/docs/restful_tutorial.md)
+More detailed RESTful API is [here](https://github.com/awa-ai/awadb/tree/main/docs/source/restful_tutorial.md)
 
 
 ## What are the Embeddings?

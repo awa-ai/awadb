@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Integrations" href="integrations.html" /><link rel="prev" title="Native Python API" href="native_python_api.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="RESTful API tutorial" href="restful_tutorial.html" /><link rel="prev" title="Native Python API" href="native_python_api.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.09.10 -->
-        <title>Docker Python API - AwaDB 0.3.10 documentation</title>
+        <title>Docker Python API - AwaDB 0.3.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">AwaDB 0.3.10 documentation</div></a>
+      <a href="index.html"><div class="brand">AwaDB 0.3.13 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">AwaDB 0.3.10 documentation</span>
+  <span class="sidebar-brand-text">AwaDB 0.3.13 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -172,9 +172,14 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="native_python_api.html">Native Python API</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Docker Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html">RESTful API tutorial</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Integrations</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Integrations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="deploy.html">Deployment</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Deployment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="docker_deploy.html">Docker deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Integrations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Integrations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="langchain.html">langchain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="llamaindex.html">llamaindex</a></li>
 </ul>
@@ -216,13 +221,14 @@
           <section id="docker-python-api">
 <h1>Docker Python API<a class="headerlink" href="#docker-python-api" title="Permalink to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.</span></span><span class="sig-name descname"><span class="pre">Awa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_addr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb.client.Awa" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="awadb_client.client.Awa">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.</span></span><span class="sig-name descname"><span class="pre">Awa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_addr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb_client.client.Awa" title="Permalink to this definition">#</a></dt>
+<dd><p>Interface implemented by AwaDB service client</p>
+</dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa.__init__">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.Awa.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_addr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb.client.Awa.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="awadb_client.client.Awa.__init__">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.Awa.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_addr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb_client.client.Awa.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize the AwaDB client.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>server_addr: AwaDB sever ip:port. Default to 0.0.0.0:50005.</p>
@@ -233,10 +239,11 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa.add">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.Awa.</span></span><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#awadb.client.Awa.add" title="Permalink to this definition">#</a></dt>
-<dd><p>Add documents into the specified table.</p>
-<dl>
+<dt class="sig sig-object py" id="awadb_client.client.Awa.add">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.Awa.</span></span><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#awadb_client.client.Awa.add" title="Permalink to this definition">#</a></dt>
+<dd><dl>
+<dt>Add documents into the specified table.</dt><dd><p>If table not existed, it will be created automatically.</p>
+</dd>
 <dt>Args:</dt><dd><p>table_name: The specified table for search and storage.</p>
 <dl class="simple">
 <dt>docs: The adding documents which can be described as dict or list of dicts.</dt><dd><p>Each key-value pair in dict is a field of document.</p>
@@ -250,15 +257,15 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa.search">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.Awa.</span></span><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vec_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brute_force_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MetricType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">MetricType.L2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mul_vec_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb.client.Awa.search" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="awadb_client.client.Awa.search">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.Awa.</span></span><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brute_force_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MetricType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">MetricType.L2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mul_vec_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb_client.client.Awa.search" title="Permalink to this definition">#</a></dt>
 <dd><p>Vector search in the specified table.</p>
 <dl>
 <dt>Args: </dt><dd><p>table_name: The specified table for search.</p>
-<p>vec_query: Querying vector.</p>
+<p>query: Input query, including vector or text. now just support vector query.</p>
 <p>db_name: Database name, default to DEFAULT_DB_NAME.</p>
 <p>topn: The topn nearest neighborhood documents to return.</p>
-<p>meta_filter (Optional[dict]): Filter by metadata. Defaults to None.</p>
+<p>filters (Optional[dict]): Filter by filters. Defaults to None.</p>
 <p>E.g. <cite>{“color” : “red”, “price”: 4.20}</cite>. Optional.</p>
 <p>E.g. <cite>{“max_price” : 15.66, “min_price”: 4.20}</cite></p>
 <p><cite>price</cite> is the metadata field, means range filter(4.20&lt;’price’&lt;15.66).</p>
@@ -272,7 +279,7 @@
 <p>metric_type: The distance type of computing vectors. Default to L2.</p>
 <p>mul_vec_weight: Multiple vector field search weights. Default to None.</p>
 <p>E.g. <cite>{‘f1’: 2.0, ‘f2’: 1.0}</cite>  vector field f1 weight is 2.0, vector field f2 weight is 1.0.</p>
-<p>Notice that field f1 and f2 should have the same dimension compared to vec_query.</p>
+<p>Notice that field f1 and f2 should have the same dimension compared to query.</p>
 <p>kwargs: Any possible extended parameters.</p>
 </dd>
 <dt>Returns:</dt><dd><p>Results of searching.</p>
@@ -281,13 +288,21 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa.get">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.Awa.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb.client.Awa.get" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="awadb_client.client.Awa.get">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.Awa.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb_client.client.Awa.get" title="Permalink to this definition">#</a></dt>
 <dd><p>Get documents of the primary keys in the the specified table.</p>
 <dl>
 <dt>Args:</dt><dd><p>table_name: The specified table for search and storage.</p>
 <p>db_name: Database name, default to DEFAULT_DB_NAME.</p>
 <p>ids: The primary keys of the queried documents.</p>
+<p>filters: Filter by fields. Defaults to None.</p>
+<p>E.g. <cite>{“color” : “red”, “price”: 4.20}</cite>. Optional.</p>
+<p>E.g. <cite>{“max_price” : 15.66, “min_price”: 4.20}</cite></p>
+<p><cite>price</cite> is the metadata field, means range filter(4.20&lt;’price’&lt;15.66).</p>
+<p>E.g. <cite>{“maxe_price” : 15.66, “mine_price”: 4.20}</cite></p>
+<p><cite>price</cite> is the metadata field, means range filter(4.20&lt;=’price’&lt;=15.66).</p>
+<p>include_fields: The fields whether included in the get results.</p>
+<p>limit: The limited return results.</p>
 </dd>
 <dt>Returns:</dt><dd><p>The detailed information of the queried documents.</p>
 </dd>
@@ -295,13 +310,19 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa.delete">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.Awa.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#awadb.client.Awa.delete" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="awadb_client.client.Awa.delete">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.Awa.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#awadb_client.client.Awa.delete" title="Permalink to this definition">#</a></dt>
 <dd><p>Delete docs in the specified table.</p>
 <dl>
 <dt>Args:</dt><dd><p>table_name: The specified table for deleting.</p>
 <p>db_name: Database name, default to DEFAULT_DB_NAME.</p>
 <p>ids: The primary keys of the deleted documents.</p>
+<p>filters: Filter by fields. Defaults to None.</p>
+<p>E.g. <cite>{“color” : “red”, “price”: 4.20}</cite>. Optional.</p>
+<p>E.g. <cite>{“max_price” : 15.66, “min_price”: 4.20}</cite></p>
+<p><cite>price</cite> is the metadata field, means range filter(4.20&lt;’price’&lt;15.66).</p>
+<p>E.g. <cite>{“maxe_price” : 15.66, “mine_price”: 4.20}</cite></p>
+<p><cite>price</cite> is the metadata field, means range filter(4.20&lt;=’price’&lt;=15.66).</p>
 </dd>
 <dt>Returns:</dt><dd><p>True of False of the deleting operation.</p>
 </dd>
@@ -309,8 +330,8 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="awadb.client.Awa.close">
-<span class="sig-prename descclassname"><span class="pre">awadb.client.Awa.</span></span><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb.client.Awa.close" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="awadb_client.client.Awa.close">
+<span class="sig-prename descclassname"><span class="pre">awadb_client.client.Awa.</span></span><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#awadb_client.client.Awa.close" title="Permalink to this definition">#</a></dt>
 <dd><p>Close the connection of AwaDB client and server.</p>
 <p>Args: None.</p>
 <p>Returns: None.</p>
@@ -323,12 +344,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="integrations.html">
+          <a class="next-page" href="restful_tutorial.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Integrations</div>
+                <div class="title">RESTful API tutorial</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -374,13 +395,13 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Docker Python API</a><ul>
-<li><a class="reference internal" href="#awadb.client.Awa"><code class="docutils literal notranslate"><span class="pre">Awa()</span></code></a></li>
-<li><a class="reference internal" href="#awadb.client.Awa.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#awadb.client.Awa.add"><code class="docutils literal notranslate"><span class="pre">add()</span></code></a></li>
-<li><a class="reference internal" href="#awadb.client.Awa.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
-<li><a class="reference internal" href="#awadb.client.Awa.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
-<li><a class="reference internal" href="#awadb.client.Awa.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li><a class="reference internal" href="#awadb.client.Awa.close"><code class="docutils literal notranslate"><span class="pre">close()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa"><code class="docutils literal notranslate"><span class="pre">Awa()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa.add"><code class="docutils literal notranslate"><span class="pre">add()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
+<li><a class="reference internal" href="#awadb_client.client.Awa.close"><code class="docutils literal notranslate"><span class="pre">close()</span></code></a></li>
 </ul>
 </li>
 </ul>

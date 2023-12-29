@@ -1,0 +1,426 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.09.10 -->
+        <title>RESTful API - AwaDB 0.3.13 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">AwaDB 0.3.13 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">AwaDB 0.3.13 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getstarted.html">Get started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Get started</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation and Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html">Main Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="init_client_tutorial.html">Initialize an awadb client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add_tutorial.html">Add documents to table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="search_tutorial.html">Search from table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_tutorial.html">Get documents from table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="delete_tutorial.html">Delete documents from table</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="native_python_api.html">Native Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker_python_api.html">Docker Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restful_tutorial.html">RESTful API tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="deploy.html">Deployment</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Deployment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="docker_deploy.html">Docker deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Integrations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Integrations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="langchain.html">langchain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="llamaindex.html">llamaindex</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="restful-api">
+<h1>RESTful API<a class="headerlink" href="#restful-api" title="Permalink to this heading">#</a></h1>
+<section id="create-table">
+<h2>create table<a class="headerlink" href="#create-table" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span># here the awadb proxy and server are deployed on the localhost port 8080 
+http://localhost:8080/create  
+{
+&quot;db&quot;: &quot;&quot;
+&quot;table&quot;: &quot;&quot;
+&quot;desc&quot;: &quot;&quot;
+&quot;fields&quot; : [{&quot;name&quot;: &quot;&quot;, &quot;type&quot;:&quot;&quot;, &quot;index&quot;:true, &quot;store&quot;:true}, {“name”:&quot;&quot;, &quot;type&quot;:&quot;&quot;, &quot;index&quot;:true, &quot;store&quot;:true, &quot;dimension&quot;:768}]
+}
+
+db: creating db name
+table: creating table name
+desc: optional, description about the db/table
+fields: the definition of each field in the table, can be a map or list of maps
+        each map denotes the definition of a field in the table
+name: field name
+type: field type, valid type include &#39;string&#39;, &#39;int&#39;, &#39;long&#39;, &#39;float&#39;, &quot;double&quot;, &quot;vector&quot; or &quot;multi_string&quot;, otherwise invalid
+index: whether the field is to index, bool type, true or false
+store: whether the field is to store, bool type, true or false
+dimension: the vector field&#39;s dimension
+</pre></div>
+</div>
+</section>
+<section id="add-documents-to-table">
+<h2>add documents to table<a class="headerlink" href="#add-documents-to-table" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/add<span class="w">  </span>
+<span class="o">{</span>
+<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
+<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
+<span class="s2">&quot;docs&quot;</span>:<span class="o">[{</span><span class="s2">&quot;nickname&quot;</span>:<span class="s2">&quot;lj&quot;</span><span class="w"> </span>,<span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">1</span>,2,3<span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s2">&quot;nickname&quot;</span>:<span class="s2">&quot;tk&quot;</span>,<span class="w"> </span><span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">1</span>,1,1<span class="o">]}]</span>
+<span class="o">}</span>
+
+db:<span class="w"> </span>creating<span class="w"> </span>db<span class="w"> </span>name
+table:<span class="w"> </span>creating<span class="w"> </span>table<span class="w"> </span>name
+docs:<span class="w"> </span>documents<span class="w"> </span>to<span class="w"> </span>add<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>table,<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>a<span class="w"> </span>map<span class="w"> </span>or<span class="w"> </span>list<span class="w"> </span>of<span class="w"> </span>maps
+<span class="w">      </span>each<span class="w"> </span>map<span class="w"> </span>denotes<span class="w"> </span>a<span class="w"> </span>document<span class="w"> </span>adding<span class="w"> </span>into<span class="w"> </span>table.<span class="w"> </span>In<span class="w"> </span>the<span class="w"> </span>map,<span class="w"> </span>key<span class="w"> </span>denotes<span class="w"> </span>a<span class="w"> </span>field<span class="w"> </span>name,<span class="w"> </span>value<span class="w"> </span>denotes<span class="w"> </span>the<span class="w"> </span>field<span class="w"> </span>value
+<span class="k">in</span><span class="w"> </span>the<span class="w"> </span>example<span class="w"> </span>above,<span class="w"> </span>two<span class="w"> </span>documents<span class="w"> </span>are<span class="w"> </span>adding<span class="w"> </span>into<span class="w"> </span>table.<span class="w"> </span><span class="s1">&#39;nickname&#39;</span><span class="w"> </span>denotes<span class="w"> </span>a<span class="w"> </span>field<span class="w"> </span>name,<span class="w"> </span><span class="s1">&#39;feature&#39;</span><span class="w"> </span>denotes<span class="w"> </span>a<span class="w"> </span>vector<span class="w"> </span>field<span class="w"> </span>name
+please<span class="w"> </span>note<span class="w"> </span>that<span class="w"> </span>each<span class="w"> </span>document<span class="w"> </span>has<span class="w"> </span>a<span class="w"> </span>primary<span class="w"> </span>key<span class="w"> </span>named<span class="w"> </span><span class="s1">&#39;_id&#39;</span>,<span class="w"> </span><span class="k">if</span><span class="w"> </span>not<span class="w"> </span>specified,<span class="w"> </span>it<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>automatically<span class="w"> </span>generated<span class="w"> </span>a<span class="w"> </span>string<span class="w"> </span>by<span class="w"> </span>awadb
+primary<span class="w"> </span>key<span class="w"> </span><span class="s1">&#39;_id&#39;</span><span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span><span class="s1">&#39;string&#39;</span><span class="w"> </span>or<span class="w"> </span><span class="s1">&#39;long&#39;</span><span class="w"> </span><span class="nb">type</span>
+</pre></div>
+</div>
+</section>
+<section id="get-document-based-on-ids-or-filter-condition">
+<h2>get document based on ids or filter condition<a class="headerlink" href="#get-document-based-on-ids-or-filter-condition" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/get  
+{
+&quot;db&quot;:&quot;default&quot;,
+&quot;table&quot;:&quot;test&quot;,
+#ids value type can be long or string
+&quot;ids&quot;:[1,2,3]
+}
+
+db: creating db name
+table: creating table name
+ids: the primary keys of getting documents
+     here 1, 2, 3 are the requested documents&#39; primary keys 
+</pre></div>
+</div>
+</section>
+<section id="delete-documents-by-ids-or-condition">
+<h2>delete documents by ids or condition<a class="headerlink" href="#delete-documents-by-ids-or-condition" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/delete  
+{
+&quot;db&quot;:&quot;default&quot;,
+&quot;table&quot;:&quot;test&quot;,
+#ids value type can be long or string
+&quot;ids&quot;:[1,2,3]
+}
+
+db: creating db name
+table: creating table name
+ids: the primary keys of deleting documents
+     here 1, 2, 3 are the requested documents&#39; primary keys
+</pre></div>
+</div>
+</section>
+<section id="search-documents-by-vector-query-and-filter-condition">
+<h2>search documents by vector query and filter condition<a class="headerlink" href="#search-documents-by-vector-query-and-filter-condition" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/search
+<span class="o">{</span>
+<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,<span class="w"> </span><span class="c1">#  creating db name</span>
+<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,<span class="w"> </span><span class="c1">#  creating table name</span>
+<span class="c1"># all the vector fields</span>
+“vector_query”:<span class="w"> </span><span class="o">[</span>
+<span class="o">{</span>
+<span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">0</span>.1,<span class="w"> </span><span class="m">1</span>.2,<span class="w"> </span><span class="m">3</span>.4<span class="o">]</span>,<span class="w"> </span><span class="c1"># vector field name and value, here the vector field name is &#39;feature&#39;, querying vector value is [0.1, 1.2, 3.4]</span>
+<span class="s2">&quot;min_score&quot;</span>:0,<span class="w">             </span><span class="c1"># the minimum score for querying vectors&#39; distance score</span>
+<span class="s2">&quot;max_score&quot;</span>:99999,<span class="w">         </span><span class="c1"># the maximum score for querying vectors&#39; distance score</span>
+<span class="s2">&quot;weight&quot;</span>:1,<span class="w">                </span><span class="c1"># the weight for querying vector field</span>
+<span class="o">}</span>,
+<span class="o">{</span>
+<span class="s2">&quot;feature1&quot;</span>:<span class="o">[</span><span class="m">0</span>.2,1.5,3.5<span class="o">]</span>,<span class="w"> </span><span class="c1"># vector field name and value, here the vector field name is &#39;feature1&#39;, querying vector value is [0.2, 1.5, 3.5]</span>
+<span class="s2">&quot;min_score&quot;</span>:0,<span class="w">            </span><span class="c1"># the minimum score for querying vectors&#39; distance score</span>
+<span class="s2">&quot;max_score&quot;</span>:9999,<span class="w">         </span><span class="c1"># the maximum score for querying vectors&#39; distance score</span>
+“weight”:2,<span class="w">               </span><span class="c1"># the weight for querying vector field</span>
+<span class="o">}</span>
+<span class="o">]</span>,
+<span class="c1"># filter condition, default all intersection </span>
+<span class="s2">&quot;filters&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># keyword for field filters</span>
+<span class="w">            </span><span class="s2">&quot;range_filters&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># keyword for range filters of fields</span>
+<span class="w">                </span><span class="s2">&quot;price&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># filtering field &#39;price&#39;</span>
+<span class="w">                    </span><span class="s2">&quot;gte&quot;</span>:<span class="w"> </span><span class="m">160</span>,<span class="w">  </span><span class="c1"># field value greater than or equal to 160</span>
+<span class="w">                    </span><span class="s2">&quot;lte&quot;</span>:<span class="w"> </span><span class="m">180</span><span class="w">   </span><span class="c1"># field value less then or equal to 180</span>
+<span class="w">                </span><span class="o">}</span>,
+<span class="w">                </span><span class="s2">&quot;sales&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># filtering field &#39;sales&#39;</span>
+<span class="w">                    </span><span class="s2">&quot;gt&quot;</span>:100,<span class="w"> </span><span class="c1"># field value greater than 100 </span>
+<span class="w">                    </span><span class="s2">&quot;lt&quot;</span>:200<span class="w">  </span><span class="c1"># field value less than 200 </span>
+<span class="w">                </span><span class="o">}</span>
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">             </span><span class="s2">&quot;term_filters&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w">    </span><span class="c1"># keyword for term filters of fields</span>
+<span class="w">                 </span><span class="s2">&quot;labels&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w">      </span><span class="c1"># &#39;labels&#39; is the term field name</span>
+<span class="w">                     </span><span class="s2">&quot;value&quot;</span>:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;100&quot;</span>,<span class="w"> </span><span class="s2">&quot;200&quot;</span>,<span class="w"> </span><span class="s2">&quot;300&quot;</span><span class="o">]</span>,<span class="w"> </span><span class="c1"># &#39;100&#39;, &#39;200&#39;, &#39;300&#39; are the term field values</span>
+<span class="w">                     </span><span class="s2">&quot;operator&quot;</span>:<span class="w"> </span><span class="s2">&quot;or&quot;</span><span class="w">  </span><span class="c1"># or logic operation</span>
+<span class="w">                 </span><span class="o">}</span>
+<span class="w">             </span><span class="o">}</span>,
+<span class="o">}</span>,<span class="w"> </span>
+
+<span class="s2">&quot;force_brute_search&quot;</span>:<span class="w"> </span>false,<span class="w">  </span><span class="c1"># whether to force to use brute search</span>
+<span class="s2">&quot;topn&quot;</span>:<span class="w"> </span><span class="m">30</span>,<span class="w">                   </span><span class="c1"># the most top n similar results</span>
+<span class="c1"># if pack_fields not specfied，display all fields except vector fields</span>
+<span class="s2">&quot;pack_fields&quot;</span>:<span class="o">[</span><span class="s2">&quot;nickname&quot;</span>,<span class="w"> </span><span class="s2">&quot;price&quot;</span><span class="o">]</span>,
+<span class="c1"># default L2</span>
+<span class="s2">&quot;metric_type&quot;</span>:<span class="w"> </span>L2
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+<section id="list-the-table-fields-information">
+<h2>list the table fields information<a class="headerlink" href="#list-the-table-fields-information" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/list
+<span class="o">{</span>
+<span class="c1"># if neither db nor table is specified, list all db names</span>
+<span class="c1"># if db is specified, table not specified, list all tables in specified db</span>
+<span class="c1"># if both db and table are specified, list the fields information in specified table</span>
+<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,<span class="w"> </span>
+<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Vincent
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">RESTful API</a><ul>
+<li><a class="reference internal" href="#create-table">create table</a></li>
+<li><a class="reference internal" href="#add-documents-to-table">add documents to table</a></li>
+<li><a class="reference internal" href="#get-document-based-on-ids-or-filter-condition">get document based on ids or filter condition</a></li>
+<li><a class="reference internal" href="#delete-documents-by-ids-or-condition">delete documents by ids or condition</a></li>
+<li><a class="reference internal" href="#search-documents-by-vector-query-and-filter-condition">search documents by vector query and filter condition</a></li>
+<li><a class="reference internal" href="#list-the-table-fields-information">list the table fields information</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/furo.js"></script>
+    </body>
+</html>
