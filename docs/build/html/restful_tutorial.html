@@ -224,142 +224,143 @@
 <section id="create-table">
 <h2>create table<a class="headerlink" href="#create-table" title="Permalink to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># here the awadb proxy and server are deployed on the localhost port 8080 </span>
-http://localhost:8080/create<span class="w">  </span>
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="w"> </span><span class="s2">&quot;default&quot;</span>
-<span class="s2">&quot;table&quot;</span>:<span class="w"> </span><span class="s2">&quot;test&quot;</span>
-<span class="s2">&quot;desc&quot;</span>:<span class="w"> </span><span class="s2">&quot;This is a schema description about the table default/test&quot;</span>
-<span class="s2">&quot;fields&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="o">[{</span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;nickname&quot;</span>,<span class="w"> </span><span class="s2">&quot;type&quot;</span>:<span class="s2">&quot;string&quot;</span>,<span class="w">  </span><span class="s2">&quot;desc&quot;</span>:<span class="s2">&quot;description about the field nickname&quot;</span>,<span class="w"> </span><span class="s2">&quot;index&quot;</span>:true,<span class="w">  </span><span class="s2">&quot;store&quot;</span>:true<span class="o">}</span>,<span class="w"> </span><span class="o">{</span>“name”:<span class="s2">&quot;feature&quot;</span>,<span class="w"> </span><span class="s2">&quot;type&quot;</span>:<span class="s2">&quot;vector&quot;</span>,<span class="w"> </span><span class="s2">&quot;desc&quot;</span>:<span class="s2">&quot;vector field feature&quot;</span>,<span class="w"> </span><span class="s2">&quot;index&quot;</span>:true,<span class="w"> </span><span class="s2">&quot;store&quot;</span>:true,<span class="w"> </span><span class="s2">&quot;dimension&quot;</span>:768<span class="o">}]</span>
-<span class="o">}</span>
+
+curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;: &quot;default&quot;</span>
+<span class="s1">&quot;table&quot;: &quot;test&quot;</span>
+<span class="s1">&quot;desc&quot;: &quot;This is a schema description about the table default/test&quot;</span>
+<span class="s1">&quot;fields&quot; : [{&quot;name&quot;: &quot;nickname&quot;, &quot;type&quot;:&quot;string&quot;,  &quot;desc&quot;:&quot;description about the field nickname&quot;, &quot;index&quot;:true,  &quot;store&quot;:true}, {“name”:&quot;feature&quot;, &quot;type&quot;:&quot;vector&quot;, &quot;desc&quot;:&quot;vector field feature&quot;, &quot;index&quot;:true, &quot;store&quot;:true, &quot;dimension&quot;:768}]</span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/create
 </pre></div>
 </div>
 </section>
 <section id="add-documents-to-table">
 <h2>add documents to table<a class="headerlink" href="#add-documents-to-table" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/add<span class="w">  </span>
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="s2">&quot;docs&quot;</span>:<span class="o">[{</span><span class="s2">&quot;nickname&quot;</span>:<span class="s2">&quot;lj&quot;</span><span class="w"> </span>,<span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">1</span>,2,3<span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s2">&quot;nickname&quot;</span>:<span class="s2">&quot;tk&quot;</span>,<span class="w"> </span><span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">1</span>,1,1<span class="o">]}]</span>
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;,</span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1">&quot;docs&quot;:[{&quot;nickname&quot;:&quot;lj&quot; ,&quot;feature&quot;:[1,2,3]}, {&quot;nickname&quot;:&quot;tk&quot;, &quot;feature&quot;:[1,1,1]}]</span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/add<span class="w">  </span>
 </pre></div>
 </div>
 </section>
 <section id="get-document-based-on-ids-or-filter-condition">
 <h2>get document based on ids or filter condition<a class="headerlink" href="#get-document-based-on-ids-or-filter-condition" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/get<span class="w">  </span>
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="c1">#ids value type can be long or string</span>
-<span class="s2">&quot;ids&quot;</span>:<span class="o">[</span><span class="m">1</span>,2,3<span class="o">]</span>
-<span class="c1"># filter condition, if ids is not empty, filter is not valid.</span>
-<span class="s2">&quot;filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">            </span><span class="s2">&quot;range_filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                </span><span class="s2">&quot;price&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;gte&quot;</span>:<span class="w"> </span><span class="m">160</span>,
-<span class="w">                    </span><span class="s2">&quot;lte&quot;</span>:<span class="w"> </span><span class="m">180</span>
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>,
-<span class="w">            </span><span class="s2">&quot;term_filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                </span><span class="s2">&quot;labels&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;value&quot;</span>:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;100&quot;</span>,<span class="w"> </span><span class="s2">&quot;200&quot;</span>,<span class="w"> </span><span class="s2">&quot;300&quot;</span><span class="o">]</span>,
-<span class="w">                    </span><span class="s2">&quot;operator&quot;</span>:<span class="w"> </span><span class="s2">&quot;or&quot;</span>
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>
-<span class="o">}</span><span class="w"> </span>
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;,</span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1">#ids value type can be long or string</span>
+<span class="s1">&quot;ids&quot;:[1,2,3]</span>
+<span class="s1"># filter condition, if ids is not empty, filter is not valid.</span>
+<span class="s1">&quot;filters&quot;: {</span>
+<span class="s1">            &quot;range_filters&quot;: {</span>
+<span class="s1">                &quot;price&quot;: {</span>
+<span class="s1">                    &quot;gte&quot;: 160,</span>
+<span class="s1">                    &quot;lte&quot;: 180</span>
+<span class="s1">                }</span>
+<span class="s1">            },</span>
+<span class="s1">            &quot;term_filters&quot;: {</span>
+<span class="s1">                &quot;labels&quot;: {</span>
+<span class="s1">                    &quot;value&quot;: [&quot;100&quot;, &quot;200&quot;, &quot;300&quot;],</span>
+<span class="s1">                    &quot;operator&quot;: &quot;or&quot;</span>
+<span class="s1">                }</span>
+<span class="s1">            }</span>
+<span class="s1">} </span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/get<span class="w">  </span>
 </pre></div>
 </div>
 </section>
 <section id="delete-documents-by-ids-or-condition">
 <h2>delete documents by ids or condition<a class="headerlink" href="#delete-documents-by-ids-or-condition" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/delete<span class="w">  </span>
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="c1">#ids value type can be long or string</span>
-<span class="s2">&quot;ids&quot;</span>:<span class="o">[</span><span class="m">1</span>,2,3<span class="o">]</span>,
-<span class="c1"># filter condition, if ids is not empty, filter is not valid.</span>
-<span class="s2">&quot;filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">            </span><span class="s2">&quot;range_filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                </span><span class="s2">&quot;price&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;gte&quot;</span>:<span class="w"> </span><span class="m">160</span>,
-<span class="w">                    </span><span class="s2">&quot;lte&quot;</span>:<span class="w"> </span><span class="m">180</span>
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>,
-<span class="w">            </span><span class="s2">&quot;term_filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                </span><span class="s2">&quot;labels&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;value&quot;</span>:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;100&quot;</span>,<span class="w"> </span><span class="s2">&quot;200&quot;</span>,<span class="w"> </span><span class="s2">&quot;300&quot;</span><span class="o">]</span>,
-<span class="w">                    </span><span class="s2">&quot;operator&quot;</span>:<span class="w"> </span><span class="s2">&quot;or&quot;</span>
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>
-<span class="o">}</span><span class="w"> </span>
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;,</span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1">#ids value type can be long or string</span>
+<span class="s1">&quot;ids&quot;:[1,2,3],</span>
+<span class="s1"># filter condition, if ids is not empty, filter is not valid.</span>
+<span class="s1">&quot;filters&quot;: {</span>
+<span class="s1">            &quot;range_filters&quot;: {</span>
+<span class="s1">                &quot;price&quot;: {</span>
+<span class="s1">                    &quot;gte&quot;: 160,</span>
+<span class="s1">                    &quot;lte&quot;: 180</span>
+<span class="s1">                }</span>
+<span class="s1">            },</span>
+<span class="s1">            &quot;term_filters&quot;: {</span>
+<span class="s1">                &quot;labels&quot;: {</span>
+<span class="s1">                    &quot;value&quot;: [&quot;100&quot;, &quot;200&quot;, &quot;300&quot;],</span>
+<span class="s1">                    &quot;operator&quot;: &quot;or&quot;</span>
+<span class="s1">                }</span>
+<span class="s1">            }</span>
+<span class="s1">} </span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/delete<span class="w">  </span>
 </pre></div>
 </div>
 </section>
 <section id="search-documents-by-vector-query-and-filter-condition">
 <h2>search documents by vector query and filter condition<a class="headerlink" href="#search-documents-by-vector-query-and-filter-condition" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/search
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="c1"># default or for all the vector fields</span>
-“vector_query”:<span class="w"> </span><span class="o">[</span>
-<span class="o">{</span>
-<span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">0</span>.1,<span class="w"> </span><span class="m">1</span>.2,<span class="w"> </span><span class="m">3</span>.4<span class="o">]</span>,
-<span class="s2">&quot;min_score&quot;</span>:0,
-<span class="s2">&quot;max_score&quot;</span>:99999,
-<span class="s2">&quot;weight&quot;</span>:1,
-<span class="o">}</span>,
-<span class="o">{</span>
-<span class="s2">&quot;feature1&quot;</span>:<span class="o">[</span><span class="m">0</span>.1,1.2,3.4<span class="o">]</span>,
-<span class="s2">&quot;min_score&quot;</span>:0,
-<span class="s2">&quot;max_score&quot;</span>:9999,
-“weight”:2,
-<span class="o">}</span>
-<span class="o">]</span>,
-<span class="c1"># filter condition, default all and</span>
-<span class="s2">&quot;filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">            </span><span class="s2">&quot;range_filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                </span><span class="s2">&quot;price&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;gte&quot;</span>:<span class="w"> </span><span class="m">160</span>,
-<span class="w">                    </span><span class="s2">&quot;lte&quot;</span>:<span class="w"> </span><span class="m">180</span>
-<span class="w">                </span><span class="o">}</span>,
-<span class="w">                </span><span class="s2">&quot;sales&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;gte&quot;</span>:100,
-<span class="w">                    </span><span class="s2">&quot;lte&quot;</span>:10
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>,
-<span class="w">            </span><span class="s2">&quot;term_filters&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                </span><span class="s2">&quot;labels&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">                    </span><span class="s2">&quot;value&quot;</span>:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;100&quot;</span>,<span class="w"> </span><span class="s2">&quot;200&quot;</span>,<span class="w"> </span><span class="s2">&quot;300&quot;</span><span class="o">]</span>,
-<span class="w">                    </span><span class="s2">&quot;operator&quot;</span>:<span class="w"> </span><span class="s2">&quot;or&quot;</span>
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>,
-<span class="o">}</span>,<span class="w"> </span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;,</span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1"># default or for all the vector fields</span>
+<span class="s1">“vector_query”: [</span>
+<span class="s1">{</span>
+<span class="s1">&quot;feature&quot;:[0.1, 1.2, 3.4],</span>
+<span class="s1">&quot;min_score&quot;:0,</span>
+<span class="s1">&quot;max_score&quot;:99999,</span>
+<span class="s1">&quot;weight&quot;:1,</span>
+<span class="s1">},</span>
+<span class="s1">{</span>
+<span class="s1">&quot;feature1&quot;:[0.1,1.2,3.4],</span>
+<span class="s1">&quot;min_score&quot;:0,</span>
+<span class="s1">&quot;max_score&quot;:9999,</span>
+<span class="s1">“weight”:2,</span>
+<span class="s1">}</span>
+<span class="s1">],</span>
+<span class="s1"># filter condition, default all and</span>
+<span class="s1">&quot;filters&quot;: {</span>
+<span class="s1">            &quot;range_filters&quot;: {</span>
+<span class="s1">                &quot;price&quot;: {</span>
+<span class="s1">                    &quot;gte&quot;: 160,</span>
+<span class="s1">                    &quot;lte&quot;: 180</span>
+<span class="s1">                },</span>
+<span class="s1">                &quot;sales&quot;: {</span>
+<span class="s1">                    &quot;gte&quot;:100,</span>
+<span class="s1">                    &quot;lte&quot;:10</span>
+<span class="s1">                }</span>
+<span class="s1">            },</span>
+<span class="s1">            &quot;term_filters&quot;: {</span>
+<span class="s1">                &quot;labels&quot;: {</span>
+<span class="s1">                    &quot;value&quot;: [&quot;100&quot;, &quot;200&quot;, &quot;300&quot;],</span>
+<span class="s1">                    &quot;operator&quot;: &quot;or&quot;</span>
+<span class="s1">                }</span>
+<span class="s1">            },</span>
+<span class="s1">}, </span>
 
-<span class="s2">&quot;force_brute_search&quot;</span>:<span class="w"> </span>false,
-<span class="s2">&quot;topn&quot;</span>:<span class="w"> </span><span class="m">30</span>,
-<span class="c1"># if pack_fields not specfied，display all fields except vector fields</span>
-<span class="s2">&quot;pack_fields&quot;</span>:<span class="o">[</span><span class="s2">&quot;nickname&quot;</span>,<span class="w"> </span><span class="s2">&quot;price&quot;</span><span class="o">]</span>,
-<span class="c1"># default L2</span>
-<span class="s2">&quot;metric_type&quot;</span>:<span class="w"> </span>L2
-<span class="o">}</span>
+<span class="s1">&quot;force_brute_search&quot;: false,</span>
+<span class="s1">&quot;topn&quot;: 30,</span>
+<span class="s1"># if pack_fields not specfied，display all fields except vector fields</span>
+<span class="s1">&quot;pack_fields&quot;:[&quot;nickname&quot;, &quot;price&quot;],</span>
+<span class="s1"># default L2</span>
+<span class="s1">&quot;metric_type&quot;: L2</span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/search
 </pre></div>
 </div>
 </section>
 <section id="list-the-table-fields-information">
 <h2>list the table fields information<a class="headerlink" href="#list-the-table-fields-information" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/list
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;,</span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/list
 </pre></div>
 </div>
-<p>More description about RESTful API please see <a class="reference external" href="https://github.com/awa-ai/awadb/tree/main/docs/restful_api.md">here</a></p>
+<p>More description about RESTful API please see <a class="reference external" href="https://github.com/awa-ai/awadb/tree/main/docs/source/restful_api.md">here</a></p>
 </section>
 </section>
 

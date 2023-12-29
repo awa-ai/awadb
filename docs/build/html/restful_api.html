@@ -223,13 +223,14 @@
 <section id="create-table">
 <h2>create table<a class="headerlink" href="#create-table" title="Permalink to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span># here the awadb proxy and server are deployed on the localhost port 8080 
-http://localhost:8080/create  
-{
+
+curl -H &quot;Content-Type: application/json&quot; -X POST -d \
+&#39;{
 &quot;db&quot;: &quot;&quot;
 &quot;table&quot;: &quot;&quot;
 &quot;desc&quot;: &quot;&quot;
 &quot;fields&quot; : [{&quot;name&quot;: &quot;&quot;, &quot;type&quot;:&quot;&quot;, &quot;index&quot;:true, &quot;store&quot;:true}, {“name”:&quot;&quot;, &quot;type&quot;:&quot;&quot;, &quot;index&quot;:true, &quot;store&quot;:true, &quot;dimension&quot;:768}]
-}
+}&#39; http://localhost:8080/create 
 
 db: creating db name
 table: creating table name
@@ -246,12 +247,12 @@ dimension: the vector field&#39;s dimension
 </section>
 <section id="add-documents-to-table">
 <h2>add documents to table<a class="headerlink" href="#add-documents-to-table" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/add<span class="w">  </span>
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="s2">&quot;docs&quot;</span>:<span class="o">[{</span><span class="s2">&quot;nickname&quot;</span>:<span class="s2">&quot;lj&quot;</span><span class="w"> </span>,<span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">1</span>,2,3<span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s2">&quot;nickname&quot;</span>:<span class="s2">&quot;tk&quot;</span>,<span class="w"> </span><span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">1</span>,1,1<span class="o">]}]</span>
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;,</span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1">&quot;docs&quot;:[{&quot;nickname&quot;:&quot;lj&quot; ,&quot;feature&quot;:[1,2,3]}, {&quot;nickname&quot;:&quot;tk&quot;, &quot;feature&quot;:[1,1,1]}]</span>
+<span class="s1">}&#39;</span><span class="w"> </span>http://localhost:8080/add<span class="w">  </span>
 
 db:<span class="w"> </span>creating<span class="w"> </span>db<span class="w"> </span>name
 table:<span class="w"> </span>creating<span class="w"> </span>table<span class="w"> </span>name
@@ -265,13 +266,13 @@ primary<span class="w"> </span>key<span class="w"> </span><span class="s1">&#39;
 </section>
 <section id="get-document-based-on-ids-or-filter-condition">
 <h2>get document based on ids or filter condition<a class="headerlink" href="#get-document-based-on-ids-or-filter-condition" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/get  
-{
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -H &quot;Content-Type: application/json&quot; -X POST -d \
+&#39;{
 &quot;db&quot;:&quot;default&quot;,
 &quot;table&quot;:&quot;test&quot;,
 #ids value type can be long or string
 &quot;ids&quot;:[1,2,3]
-}
+}&#39; http://localhost:8080/get  
 
 db: creating db name
 table: creating table name
@@ -282,13 +283,13 @@ ids: the primary keys of getting documents
 </section>
 <section id="delete-documents-by-ids-or-condition">
 <h2>delete documents by ids or condition<a class="headerlink" href="#delete-documents-by-ids-or-condition" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/delete  
-{
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -H &quot;Content-Type: application/json&quot; -X POST -d \
+&#39;{
 &quot;db&quot;:&quot;default&quot;,
 &quot;table&quot;:&quot;test&quot;,
 #ids value type can be long or string
 &quot;ids&quot;:[1,2,3]
-}
+}&#39; http://localhost:8080/delete  
 
 db: creating db name
 table: creating table name
@@ -299,65 +300,66 @@ ids: the primary keys of deleting documents
 </section>
 <section id="search-documents-by-vector-query-and-filter-condition">
 <h2>search documents by vector query and filter condition<a class="headerlink" href="#search-documents-by-vector-query-and-filter-condition" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/search
-<span class="o">{</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,<span class="w"> </span><span class="c1">#  creating db name</span>
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,<span class="w"> </span><span class="c1">#  creating table name</span>
-<span class="c1"># all the vector fields</span>
-“vector_query”:<span class="w"> </span><span class="o">[</span>
-<span class="o">{</span>
-<span class="s2">&quot;feature&quot;</span>:<span class="o">[</span><span class="m">0</span>.1,<span class="w"> </span><span class="m">1</span>.2,<span class="w"> </span><span class="m">3</span>.4<span class="o">]</span>,<span class="w"> </span><span class="c1"># vector field name and value, here the vector field name is &#39;feature&#39;, querying vector value is [0.1, 1.2, 3.4]</span>
-<span class="s2">&quot;min_score&quot;</span>:0,<span class="w">             </span><span class="c1"># the minimum score for querying vectors&#39; distance score</span>
-<span class="s2">&quot;max_score&quot;</span>:99999,<span class="w">         </span><span class="c1"># the maximum score for querying vectors&#39; distance score</span>
-<span class="s2">&quot;weight&quot;</span>:1,<span class="w">                </span><span class="c1"># the weight for querying vector field</span>
-<span class="o">}</span>,
-<span class="o">{</span>
-<span class="s2">&quot;feature1&quot;</span>:<span class="o">[</span><span class="m">0</span>.2,1.5,3.5<span class="o">]</span>,<span class="w"> </span><span class="c1"># vector field name and value, here the vector field name is &#39;feature1&#39;, querying vector value is [0.2, 1.5, 3.5]</span>
-<span class="s2">&quot;min_score&quot;</span>:0,<span class="w">            </span><span class="c1"># the minimum score for querying vectors&#39; distance score</span>
-<span class="s2">&quot;max_score&quot;</span>:9999,<span class="w">         </span><span class="c1"># the maximum score for querying vectors&#39; distance score</span>
-“weight”:2,<span class="w">               </span><span class="c1"># the weight for querying vector field</span>
-<span class="o">}</span>
-<span class="o">]</span>,
-<span class="c1"># filter condition, default all intersection </span>
-<span class="s2">&quot;filters&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># keyword for field filters</span>
-<span class="w">            </span><span class="s2">&quot;range_filters&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># keyword for range filters of fields</span>
-<span class="w">                </span><span class="s2">&quot;price&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># filtering field &#39;price&#39;</span>
-<span class="w">                    </span><span class="s2">&quot;gte&quot;</span>:<span class="w"> </span><span class="m">160</span>,<span class="w">  </span><span class="c1"># field value greater than or equal to 160</span>
-<span class="w">                    </span><span class="s2">&quot;lte&quot;</span>:<span class="w"> </span><span class="m">180</span><span class="w">   </span><span class="c1"># field value less then or equal to 180</span>
-<span class="w">                </span><span class="o">}</span>,
-<span class="w">                </span><span class="s2">&quot;sales&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="c1"># filtering field &#39;sales&#39;</span>
-<span class="w">                    </span><span class="s2">&quot;gt&quot;</span>:100,<span class="w"> </span><span class="c1"># field value greater than 100 </span>
-<span class="w">                    </span><span class="s2">&quot;lt&quot;</span>:200<span class="w">  </span><span class="c1"># field value less than 200 </span>
-<span class="w">                </span><span class="o">}</span>
-<span class="w">            </span><span class="o">}</span>,
-<span class="w">             </span><span class="s2">&quot;term_filters&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w">    </span><span class="c1"># keyword for term filters of fields</span>
-<span class="w">                 </span><span class="s2">&quot;labels&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="w">      </span><span class="c1"># &#39;labels&#39; is the term field name</span>
-<span class="w">                     </span><span class="s2">&quot;value&quot;</span>:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;100&quot;</span>,<span class="w"> </span><span class="s2">&quot;200&quot;</span>,<span class="w"> </span><span class="s2">&quot;300&quot;</span><span class="o">]</span>,<span class="w"> </span><span class="c1"># &#39;100&#39;, &#39;200&#39;, &#39;300&#39; are the term field values</span>
-<span class="w">                     </span><span class="s2">&quot;operator&quot;</span>:<span class="w"> </span><span class="s2">&quot;or&quot;</span><span class="w">  </span><span class="c1"># or logic operation</span>
-<span class="w">                 </span><span class="o">}</span>
-<span class="w">             </span><span class="o">}</span>,
-<span class="o">}</span>,<span class="w"> </span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -H &quot;Content-Type: application/json&quot; -X POST -d \
+&#39;{
+&quot;db&quot;:&quot;default&quot;, #  creating db name
+&quot;table&quot;:&quot;test&quot;, #  creating table name
+# all the vector fields
+“vector_query”: [
+{
+&quot;feature&quot;:[0.1, 1.2, 3.4], # vector field name and value, here the vector field name is &#39;feature&#39;, querying vector value is [0.1, 1.2, 3.4]
+&quot;min_score&quot;:0,             # the minimum score for querying vectors&#39; distance score
+&quot;max_score&quot;:99999,         # the maximum score for querying vectors&#39; distance score
+&quot;weight&quot;:1,                # the weight for querying vector field
+},
+{
+&quot;feature1&quot;:[0.2,1.5,3.5], # vector field name and value, here the vector field name is &#39;feature1&#39;, querying vector value is [0.2, 1.5, 3.5]
+&quot;min_score&quot;:0,            # the minimum score for querying vectors&#39; distance score
+&quot;max_score&quot;:9999,         # the maximum score for querying vectors&#39; distance score
+“weight”:2,               # the weight for querying vector field
+}
+],
+# filter condition, default all intersection 
+&quot;filters&quot;: { # keyword for field filters
+            &quot;range_filters&quot;: { # keyword for range filters of fields
+                &quot;price&quot;: { # filtering field &#39;price&#39;
+                    &quot;gte&quot;: 160,  # field value greater than or equal to 160
+                    &quot;lte&quot;: 180   # field value less then or equal to 180
+                },
+                &quot;sales&quot;: { # filtering field &#39;sales&#39;
+                    &quot;gt&quot;:100, # field value greater than 100 
+                    &quot;lt&quot;:200  # field value less than 200 
+                }
+            },
+             &quot;term_filters&quot;: {    # keyword for term filters of fields
+                 &quot;labels&quot;: {      # &#39;labels&#39; is the term field name
+                     &quot;value&quot;: [&quot;100&quot;, &quot;200&quot;, &quot;300&quot;], # &#39;100&#39;, &#39;200&#39;, &#39;300&#39; are the term field values
+                     &quot;operator&quot;: &quot;or&quot;  # or logic operation
+                 }
+             },
+}, 
 
-<span class="s2">&quot;force_brute_search&quot;</span>:<span class="w"> </span>false,<span class="w">  </span><span class="c1"># whether to force to use brute search</span>
-<span class="s2">&quot;topn&quot;</span>:<span class="w"> </span><span class="m">30</span>,<span class="w">                   </span><span class="c1"># the most top n similar results</span>
-<span class="c1"># if pack_fields not specfied，display all fields except vector fields</span>
-<span class="s2">&quot;pack_fields&quot;</span>:<span class="o">[</span><span class="s2">&quot;nickname&quot;</span>,<span class="w"> </span><span class="s2">&quot;price&quot;</span><span class="o">]</span>,
-<span class="c1"># default L2</span>
-<span class="s2">&quot;metric_type&quot;</span>:<span class="w"> </span>L2
-<span class="o">}</span>
+&quot;force_brute_search&quot;: false,  # whether to force to use brute search
+&quot;topn&quot;: 30,                   # the most top n similar results
+# if pack_fields not specfied，display all fields except vector fields
+&quot;pack_fields&quot;:[&quot;nickname&quot;, &quot;price&quot;],
+# default L2
+&quot;metric_type&quot;: L2
+}&#39; http://localhost:8080/search
+
 </pre></div>
 </div>
 </section>
 <section id="list-the-table-fields-information">
 <h2>list the table fields information<a class="headerlink" href="#list-the-table-fields-information" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>http://localhost:8080/list
-<span class="o">{</span>
-<span class="c1"># if neither db nor table is specified, list all db names</span>
-<span class="c1"># if db is specified, table not specified, list all tables in specified db</span>
-<span class="c1"># if both db and table are specified, list the fields information in specified table</span>
-<span class="s2">&quot;db&quot;</span>:<span class="s2">&quot;default&quot;</span>,<span class="w"> </span>
-<span class="s2">&quot;table&quot;</span>:<span class="s2">&quot;test&quot;</span>,
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="s1">&#39;{</span>
+<span class="s1"># if neither db nor table is specified, list all db names</span>
+<span class="s1"># if db is specified, table not specified, list all tables in specified db</span>
+<span class="s1"># if both db and table are specified, list the fields information in specified table</span>
+<span class="s1">&quot;db&quot;:&quot;default&quot;, </span>
+<span class="s1">&quot;table&quot;:&quot;test&quot;,</span>
+<span class="s1">}&#39;</span><span class="w"> </span>hhtp://localhost:8080/list
 </pre></div>
 </div>
 </section>

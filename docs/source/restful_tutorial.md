@@ -5,29 +5,30 @@ Now support "create", "add", "get", "delete", "search" and "list".
 ## create table
 ```bash
 # here the awadb proxy and server are deployed on the localhost port 8080 
-http://localhost:8080/create  
-{
+
+curl -H "Content-Type: application/json" -X POST -d \
+'{
 "db": "default"
 "table": "test"
 "desc": "This is a schema description about the table default/test"
 "fields" : [{"name": "nickname", "type":"string",  "desc":"description about the field nickname", "index":true,  "store":true}, {“name”:"feature", "type":"vector", "desc":"vector field feature", "index":true, "store":true, "dimension":768}]
-}
+}' http://localhost:8080/create
 ```
 
 ## add documents to table
 ```bash
-http://localhost:8080/add  
-{
+curl -H "Content-Type: application/json" -X POST -d \
+'{
 "db":"default",
 "table":"test",
 "docs":[{"nickname":"lj" ,"feature":[1,2,3]}, {"nickname":"tk", "feature":[1,1,1]}]
-}
+}' http://localhost:8080/add  
 ```
 
 ## get document based on ids or filter condition
 ```bash
-http://localhost:8080/get  
-{
+curl -H "Content-Type: application/json" -X POST -d \
+'{
 "db":"default",
 "table":"test",
 #ids value type can be long or string
@@ -47,13 +48,13 @@ http://localhost:8080/get
                 }
             }
 } 
-}
+}' http://localhost:8080/get  
 ```
 
 ## delete documents by ids or condition
 ```bash
-http://localhost:8080/delete  
-{
+curl -H "Content-Type: application/json" -X POST -d \
+'{
 "db":"default",
 "table":"test",
 #ids value type can be long or string
@@ -73,13 +74,13 @@ http://localhost:8080/delete
                 }
             }
 } 
-}
+}' http://localhost:8080/delete  
 ```
 
 ## search documents by vector query and filter condition
 ```bash
-http://localhost:8080/search
-{
+curl -H "Content-Type: application/json" -X POST -d \
+'{
 "db":"default",
 "table":"test",
 # default or for all the vector fields
@@ -123,16 +124,16 @@ http://localhost:8080/search
 "pack_fields":["nickname", "price"],
 # default L2
 "metric_type": L2
-}
+}' http://localhost:8080/search
 ```
 
 ## list the table fields information
 ```bash
-http://localhost:8080/list
-{
+curl -H "Content-Type: application/json" -X POST -d \
+'{
 "db":"default",
 "table":"test",
-}
+}' http://localhost:8080/list
 ```
 
-More description about RESTful API please see [here](https://github.com/awa-ai/awadb/tree/main/docs/restful_api.md)
+More description about RESTful API please see [here](https://github.com/awa-ai/awadb/tree/main/docs/source/restful_api.md)
