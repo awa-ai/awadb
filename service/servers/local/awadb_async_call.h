@@ -118,6 +118,37 @@ class CheckTableCall final : public Call {
   CallStatus status_;  // The current serving state.
 };
 
+// Class encompasing the state and logic needed to serve a QueryTableDetail request.
+class QueryTableDetailCall final : public Call {
+ public:
+  explicit QueryTableDetailCall(CallData *data) : data_(data), responder_(&ctx_), status_(CREATE) {
+      // Invoke the serving logic right away.
+    Proceed();
+  }
+
+  void Proceed();
+
+ private:
+  bool ProcessQueryTableDetailRequest();
+  CallData *data_;
+  // Context for the rpc, allowing to tweak aspects of it such as the use
+  // of compression, authentication, as well as to send metadata back to the
+  // client.
+  ServerContext ctx_;
+
+  // What we get from the client.
+  awadb_grpc::DBTableName request_;
+  // What we send back to the client.
+  awadb_grpc::TableDetail reply_;
+
+  // The means to get back to the client.
+  ServerAsyncResponseWriter<awadb_grpc::TableDetail> responder_;
+
+  // Let's implement a tiny state machine with the following states.
+  enum CallStatus { CREATE, PROCESS, FINISH };
+  CallStatus status_;  // The current serving state.
+};
+
 
 // Class encompasing the state and logic needed to serve an AddFields request.
 class AddFieldsCall final : public Call {

@@ -163,7 +163,7 @@ func Float32tobytes(a float32) []byte {
 	return res
 }
 
-func AssembleRangeFilters(range_filters *[]*awadb_pb.RangeFilter, filter_value interface{})  {
+func AssembleRangeFilters(range_filters *[]*awadb_pb.RangeFilter, filter_value interface{}) bool  {
 	switch filter_value.(type) {
 	case map[string]interface{}:
 		if len(*range_filters) == 0 {
@@ -208,9 +208,14 @@ func AssembleRangeFilters(range_filters *[]*awadb_pb.RangeFilter, filter_value i
 				*range_filters = append(*range_filters, range_filter)
 			}
 		}
+		if len(*range_filters) == 0 {
+			return false
+		}
 	default:
 		fmt.Println("range filters format error!")
+		return false
 	}
+	return true
 }
 
 func AssembleVectorQuery(db_table_name *string, vector_query *awadb_pb.VectorQuery, vector_struct map[string]interface{}) bool {
@@ -296,7 +301,7 @@ func AssembleVectorQuery(db_table_name *string, vector_query *awadb_pb.VectorQue
 	return true
 }
 
-func AssembleTermFilters(term_filters []*awadb_pb.TermFilter, filter_value interface{})  {
+func AssembleTermFilters(term_filters []*awadb_pb.TermFilter, filter_value interface{}) bool  {
 	switch filter_value.(type)  {
 	case map[string]interface{}:
 		if len(term_filters) == 0 {
@@ -354,9 +359,15 @@ func AssembleTermFilters(term_filters []*awadb_pb.TermFilter, filter_value inter
 				term_filters = append(term_filters, term_filter)
 			}
 		}
+
+		if len(term_filters) == 0 {
+			return false
+	        }
 	default:
 		fmt.Println("term filter format error!")
+		return false
 	}
+	return true
 }
 
 func AssignRangeValue(value float64, range_filter *awadb_pb.RangeFilter, value_type *string) {
@@ -664,8 +675,17 @@ func AssembleDoc(
 				field_schema := checked_tables_schema[db_table_name].(map[string]*awadb_pb.FieldType)
 				field_type, ok := field_schema[*field.Name]
 				if !ok || *field_type != *field.Type  {
-					fmt.Println(ok)
-					return false
+					if *field_type == awadb_pb.FieldType_LONG && *field.Type == awadb_pb.FieldType_INT  {
+						field.Value = Int64tobytes((int64)(field_value.(float64)))
+				                field_type := awadb_pb.FieldType_LONG
+					        field.Type = &field_type
+					}  else if *field_type == awadb_pb.FieldType_INT && *field.Type == awadb_pb.FieldType_LONG {
+						field.Value = Int32tobytes((int32)(field_value.(float64)))
+				                field_type := awadb_pb.FieldType_INT
+					        field.Type = &field_type
+					}  else  {
+						return false
+					}
 				}
 			}
 		}
@@ -772,7 +792,31 @@ func CheckTableFromServer(db *string, table *string) (*awadb_pb.TableStatus, err
 	return nil, err
 }
 
+func QueryTableDetail(db *string, table *string) (*awadb_pb.TableDetail, error) {
+	db_table := &awadb_pb.DBTableName{}
+	db_table.DbName = db
+	db_table.TableName = table
+
+	if local_awadb_client != nil  {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		table_detail, err := (*local_awadb_client).QueryTableDetail(ctx, db_table)
+		if err != nil  {
+			fmt.Println("Query table detail failed :", err.Error())
+			return nil, err
+		}
+		return table_detail, nil
+	}
+
+	err  := errors.New("local awadb client is nil!")
+	return nil, err
+}
+
 func DocsToJson(docs *awadb_pb.Documents, c *gin.Context) {
+	if docs.DbName == nil || docs.TableName == nil  {
+		c.JSON(http.StatusBadRequest, gin.H{"Error":"Db or table is empty in results!"})
+		return
+	}
 	json_docs := make(map[string]interface{})
 	json_docs["Db"] = *docs.DbName
 	json_docs["Table"] = *docs.TableName
@@ -811,6 +855,26 @@ func DocsToJson(docs *awadb_pb.Documents, c *gin.Context) {
 	}
 	json_docs["Docs"] = docs_struct
 	c.JSON(http.StatusOK, json_docs)
+}
+
+func TableDetailToJson(db_name *string, table_name *string, table_detail *awadb_pb.TableDetail, c *gin.Context) {
+	if table_detail == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error":"TableDetail is nil!"})
+		return
+	}
+	json_docs := make(map[string]interface{})
+	json_docs["Db"] = *db_name
+	json_docs["Table"] = *table_name
+	json_docs["CurrentDocs"] = *table_detail.CurrentValidDocs
+	json_docs["TotalDocs"] = *table_detail.TotalDocs
+	json_docs["DeletedDocs"] = *table_detail.DeletedDocs
+	//json_docs["TableMemBytes"] = *table_detail.TableMemBytes
+	//json_docs["VectorIndexBytes"] = *table_detail.VectorsIndexBytes
+        //json_docs["VectorMemBytes"] = *table_detail.VectorsMemBytes
+        //json_docs["FiltersIndexBytes"] = *table_detail.FiltersIndexBytes
+        //json_docs["BitmapMemBytes"] = *table_detail.BitmapMemBytes
+	c.JSON(http.StatusOK, json_docs)
+	return
 }
 
 func SearchResultsToJson(res *awadb_pb.SearchResponse, c *gin.Context) {
@@ -1082,6 +1146,7 @@ func RunHttpServer(http_port int) error {
 						doc := &awadb_pb.Document{}
 						ret := AssembleDoc(docs.DbName, docs.TableName, doc, doc_json.(map[string]interface{}), &table_existed)
 						if !ret {
+							fmt.Println("Error: this document format error, it can not be added!!!")
 							continue
 						}
 						table_existed = true
@@ -1361,127 +1426,160 @@ func RunHttpServer(http_port int) error {
 			fmt.Printf("bind error:%v\n", err)
 		}  else  {
 			condition := &awadb_pb.DocCondition{}
-			for key, value := range json  {
-				if key == "db"  {
-					switch value.(type) {
-					case string:
-						db_name := value.(string)
-						condition.DbName = db_name
-					default:
-						c.JSON(http.StatusBadRequest, gin.H{"Error":"db name should be specified!"})
-						return
-					}
-				}  else if key == "table"  {
-					switch value.(type) {
-					case string:
-						table_name := value.(string)
-						condition.TableName = table_name
-					default:
-						c.JSON(http.StatusBadRequest, gin.H{"Error":"table name should be specified!"})
-						return
-					}
-				}  else if key == "ids"  {
-					switch value.(type)  {
-					case []any:
-						id_format := true
-						id_type_string := false
-						id_type_long := false
-						ids_array := make([]any, 0)
-						for _, e := range value.([]any) {
-							switch e.(type)  {
-								case  float64:
-									if IsDecimal(e.(float64)) {
-										fmt.Println("id should not be decimal")
-										continue
-									}
-									id_type_long = true
-									ids_array = append(ids_array, e)
-								case string:
-									id_type_string = true
-									ids_array = append(ids_array, e)
-								default:
-									id_format = false
-							}
-						}
-						if id_format == false  {
-						     fmt.Println("id format error!")
-						     return
-					        }
-						if (!id_type_long && !id_type_string) || (id_type_long && id_type_string)  {
-							fmt.Println("id format not consistant!")
-							return
-						}
-						if id_type_string && !id_type_long  {
-							for _, id_string := range ids_array  {
-								condition.Ids = append(condition.Ids, []byte(id_string.(string)))
-							}
-						}
 
-						if !id_type_string && id_type_long  {
-							for _, id_long := range ids_array  {
-								condition.Ids = append(condition.Ids,  Int64tobytes((int64)(id_long.(float64))))
+			default_limit := int32(10)
+			condition.Limit = &default_limit
+
+			include_all_fields := true
+			condition.IncludeAllFields = &include_all_fields
+
+			has_ids := false
+			has_filters := false
+
+			db_value, ok := json["db"]
+			if !ok {
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"DB name should be specified!"})
+				return
+			}
+			switch db_value.(type) {
+			case string:
+				db_name := db_value.(string)
+				condition.DbName = db_name
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"DB name should be specified!"})
+				return
+			}
+
+			table_value, ok := json["table"]
+			if !ok {
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"table name should be specified!"})
+				return
+			}
+			switch table_value.(type) {
+			case string:
+				table_name := table_value.(string)
+				condition.TableName = table_name
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"Table name should be string!"})
+				return
+			}
+
+			ids_value, ok := json["ids"]
+			if ok {
+				switch ids_value.(type)  {
+				case []any:
+					id_format := true
+					id_type_string := false
+					id_type_long := false
+					ids_array := make([]any, 0)
+					for _, e := range ids_value.([]any) {
+						switch e.(type)  {
+						case  float64:
+							if IsDecimal(e.(float64)) {
+								fmt.Println("id should not be decimal")
+								continue
 							}
+							id_type_long = true
+							ids_array = append(ids_array, e)
+						case string:
+							id_type_string = true
+							ids_array = append(ids_array, e)
+						default:
+							id_format = false
 						}
-					case string:
-						condition.Ids = append(condition.Ids, []byte(value.(string)))
-					case float64:
-						condition.Ids = append(condition.Ids,  Int64tobytes((int64)(value.(float64))))
-					default:
-						fmt.Println("id format error!")
+					}
+					if id_format == false  {
+						c.JSON(http.StatusBadRequest, gin.H{"Error":"ids format error!"})
 						return
 					}
-				}  else if key == "filters" {
-					for filter_name, filter_value := range value.(map[string]interface{})  {
-						if  filter_name == "range_filters"  {
-							AssembleRangeFilters(&condition.RangeFilters, filter_value)
-						}  else if filter_name == "term_filters"  {
-							AssembleTermFilters(condition.TermFilters, filter_value)
-						}  else  {
-							fmt.Println("filter format error!")
-							continue
+					if (!id_type_long && !id_type_string) || (id_type_long && id_type_string)  {
+						c.JSON(http.StatusBadRequest, gin.H{"Error":"ids format not consistant!"})
+						return
+					}
+					if id_type_string && !id_type_long  {
+						has_ids = true
+						for _, id_string := range ids_array  {
+							condition.Ids = append(condition.Ids, []byte(id_string.(string)))
 						}
 					}
-				} else if key == "pack_fields" {
-					switch value.(type) {
-					case string:
-						condition.PackFields = make([]string, 0)
-						condition.PackFields = append(condition.PackFields, value.(string))
-					case []any:
-						condition.PackFields = make([]string, 0)
-						for _, e := range value.([]any) {
-							switch e.(type)  {
-								case  string:
-									condition.PackFields = append(condition.PackFields, e.(string))
-								default:
-									fmt.Println("pack fields format error!")
-							}
+
+					if !id_type_string && id_type_long  {
+						has_ids = true
+						for _, id_long := range ids_array  {
+							condition.Ids = append(condition.Ids,  Int64tobytes((int64)(id_long.(float64))))
 						}
-					default:
-						fmt.Println("pack fields format error!")
-						include_all_fields := true
-						condition.IncludeAllFields = &include_all_fields
 					}
-				} else if key == "limit" {
-					switch value.(type)  {
-					case float64:
-						if IsDecimal(value.(float64))  {
-							fmt.Println("limit parameter error!")
-							default_limit := int32(10)
-							condition.Limit = &default_limit
-						}  else  {
-							limit_value := int32(value.(float64))
-							condition.Limit = &limit_value
-						}
-					default:
-						fmt.Println("limit parameter error!")
-						default_limit := int32(10)
-						condition.Limit = &default_limit
-					}
-				} else  {
-					fmt.Println("Get document format error!")
-					continue
+				case string:
+					condition.Ids = append(condition.Ids, []byte(ids_value.(string)))
+					has_ids = true
+				case float64:
+					condition.Ids = append(condition.Ids,  Int64tobytes((int64)(ids_value.(float64))))
+					has_ids = true
+				default:
+					c.JSON(http.StatusBadRequest, gin.H{"Error":"ids format error!"})
+					return
 				}
 			}
+
+			filters_value, ok := json["filters"]
+			if ok {
+				for filter_name, filter_value := range filters_value.(map[string]interface{})  {
+					if  filter_name == "range_filters"  {
+						if AssembleRangeFilters(&condition.RangeFilters, filter_value) {
+							has_filters = true
+						}
+					}  else if filter_name == "term_filters"  {
+						if AssembleTermFilters(condition.TermFilters, filter_value) {
+							has_filters = true
+						}
+					}  else  {
+						c.JSON(http.StatusBadRequest, gin.H{"Error":"filter format error!"})
+						return
+					}
+				}
+			}
+
+			pack_fields_value, ok := json["pack_fields"]
+			if ok {
+				switch pack_fields_value.(type) {
+				case string:
+					condition.PackFields = make([]string, 0)
+					condition.PackFields = append(condition.PackFields, pack_fields_value.(string))
+				case []any:
+					condition.PackFields = make([]string, 0)
+					for _, e := range pack_fields_value.([]any) {
+						switch e.(type)  {
+						case  string:
+							condition.PackFields = append(condition.PackFields, e.(string))
+						default:
+							fmt.Println("pack fields format error!")
+						}
+					}
+				default:
+					fmt.Println("pack fields format error!")
+				}
+			}
+
+			limit, ok := json["limit"]
+			if ok {
+				switch limit.(type)  {
+				case float64:
+					if IsDecimal(limit.(float64))  {
+						fmt.Println("limit parameter error!")
+					}  else  {
+						limit_value := int32(limit.(float64))
+						condition.Limit = &limit_value
+					}
+				default:
+					fmt.Println("limit parameter error!")
+				}
+			}
+
+			if !has_ids && !has_filters  {
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"ids and filters should be specified one of them!"})
+				return
+			}
+
 			if len(condition.Ids) > 0  {
 				if len(condition.RangeFilters) > 0  {
 					condition.RangeFilters = condition.RangeFilters[:0]
@@ -1518,91 +1616,118 @@ func RunHttpServer(http_port int) error {
 			fmt.Printf("bind error:%v\n", err)
 		}  else  {
 			condition := &awadb_pb.DocCondition{}
-			for key, value := range json  {
-				if key == "db"  {
-					switch value.(type) {
-					case string:
-						db_name := value.(string)
-						condition.DbName = db_name
-					default:
-						c.JSON(http.StatusBadRequest, gin.H{"Error":"db name should be specified!"})
-						return
-					}
-				}  else if key == "table"  {
-					switch value.(type) {
-					case string:
-						table_name := value.(string)
-						condition.TableName = table_name
-					default:
-						c.JSON(http.StatusBadRequest, gin.H{"Error":"table name should be specified!"})
-						return
-					}
-				}  else if key == "ids"  {
-					switch value.(type)  {
-					case []any:
-						id_format := true
-						id_type_string := false
-						id_type_long := false
-						ids_array := make([]any, 0)
-						for _, e := range value.([]any) {
-							switch e.(type)  {
-								case  float64:
-									if IsDecimal(e.(float64)) {
-										fmt.Println("id should not be decimal")
-										continue
-									}
-									id_type_long = true
-									ids_array = append(ids_array, e)
-								case string:
-									id_type_string = true
-									ids_array = append(ids_array, e)
-								default:
-									id_format = false
-							}
-						}
-						if id_format == false  {
-						     fmt.Println("id format error!")
-						     return
-					        }
-						if (!id_type_long && !id_type_string) || (id_type_long && id_type_string)  {
-							fmt.Println("id format not consistant!")
-							return
-						}
-						if id_type_string && !id_type_long  {
-							for _, id_string := range ids_array  {
-								condition.Ids = append(condition.Ids, []byte(id_string.(string)))
-							}
-						}
 
-						if !id_type_string && id_type_long  {
-							for _, id_long := range ids_array  {
-								condition.Ids = append(condition.Ids,  Int64tobytes((int64)(id_long.(float64))))
+			has_ids := false
+			has_filters := false
+
+			db_value, ok := json["db"]
+			if !ok {
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"DB name should be specified!"})
+				return
+			}
+			switch db_value.(type) {
+			case string:
+				db_name := db_value.(string)
+				condition.DbName = db_name
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"DB name should be specified!"})
+				return
+			}
+
+			table_value, ok := json["table"]
+			if !ok {
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"table name should be specified!"})
+				return
+			}
+			switch table_value.(type) {
+			case string:
+				table_name := table_value.(string)
+				condition.TableName = table_name
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"Error":"Table name should be string!"})
+				return
+			}
+
+			ids_value, ok := json["ids"]
+			if ok {
+				switch ids_value.(type)  {
+				case []any:
+					id_format := true
+					id_type_string := false
+					id_type_long := false
+					ids_array := make([]any, 0)
+					for _, e := range ids_value.([]any) {
+						switch e.(type)  {
+						case  float64:
+							if IsDecimal(e.(float64)) {
+								fmt.Println("id should not be decimal")
+								continue
 							}
+							id_type_long = true
+							ids_array = append(ids_array, e)
+						case string:
+							id_type_string = true
+							ids_array = append(ids_array, e)
+						default:
+							id_format = false
 						}
-					case string:
-						condition.Ids = append(condition.Ids, []byte(value.(string)))
-					case float64:
-						condition.Ids = append(condition.Ids,  Int64tobytes((int64)(value.(float64))))
-					default:
-						fmt.Println("id format error!")
+					}
+					if id_format == false  {
+						c.JSON(http.StatusBadRequest, gin.H{"Error":"ids format error!"})
 						return
 					}
-				}  else if key == "filters" {
-					for filter_name, filter_value := range value.(map[string]interface{})  {
-						if  filter_name == "range_filters"  {
-							AssembleRangeFilters(&condition.RangeFilters, filter_value)
-						}  else if filter_name == "term_filters"  {
-							AssembleTermFilters(condition.TermFilters, filter_value)
-						}  else  {
-							fmt.Println("filter format error!")
-							continue
+					if (!id_type_long && !id_type_string) || (id_type_long && id_type_string)  {
+						c.JSON(http.StatusBadRequest, gin.H{"Error":"ids format not consistant!"})
+						return
+					}
+					if id_type_string && !id_type_long  {
+						has_ids = true
+						for _, id_string := range ids_array  {
+							condition.Ids = append(condition.Ids, []byte(id_string.(string)))
 						}
 					}
-				}  else  {
-					fmt.Println("Add document format error!")
-					continue
+
+					if !id_type_string && id_type_long  {
+						has_ids = true
+						for _, id_long := range ids_array  {
+							condition.Ids = append(condition.Ids,  Int64tobytes((int64)(id_long.(float64))))
+						}
+					}
+				case string:
+					condition.Ids = append(condition.Ids, []byte(ids_value.(string)))
+					has_ids = true
+				case float64:
+					condition.Ids = append(condition.Ids,  Int64tobytes((int64)(ids_value.(float64))))
+					has_ids = true
+				default:
+					c.JSON(http.StatusBadRequest, gin.H{"Error":"ids format error!"})
+					return
 				}
 			}
+
+			filters_value, ok := json["filters"]
+			if ok {
+				for filter_name, filter_value := range filters_value.(map[string]interface{})  {
+					if  filter_name == "range_filters"  {
+						if AssembleRangeFilters(&condition.RangeFilters, filter_value) {
+							has_filters = true
+						}
+					}  else if filter_name == "term_filters"  {
+						if AssembleTermFilters(condition.TermFilters, filter_value) {
+							has_filters = true
+						}
+					}  else  {
+						c.JSON(http.StatusBadRequest, gin.H{"Error":"filter format error!"})
+						return
+					}
+				}
+			}
+
+			if !has_ids && !has_filters  {
+				c.JSON(http.StatusOK, gin.H{"Message":"ids and filters should be specified one of them!"})
+				return
+			}
+
 			if len(condition.Ids) > 0  {
 				if len(condition.RangeFilters) > 0  {
 					condition.RangeFilters = condition.RangeFilters[:0]
@@ -1645,7 +1770,7 @@ func RunHttpServer(http_port int) error {
 				case string:
 					db_name = db_value.(string)
 				default:
-					fmt.Println("DB name not specified!")
+					log.Println("DB name format error!")
 				}
 		        }
 
@@ -1657,7 +1782,7 @@ func RunHttpServer(http_port int) error {
 				case string:
 					table_name = table_value.(string)
 				default:
-					fmt.Println("Table name not specified!")
+					log.Println("Table name format error!")
 				}
 			}
 
@@ -1767,6 +1892,62 @@ func RunHttpServer(http_port int) error {
 			results["Fields"] = json_fields
 			c.JSON(http.StatusOK, results)
 			return
+		}
+	})
+
+        r.POST("/count", func(c *gin.Context) {
+		json := make(map[string]interface{})
+		err := c.BindJSON(&json)
+		if err != nil  {
+			log.Printf("bind error:%v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"Error:": err})
+			return
+		}  else  {
+			db_name := ""
+			table_name := ""
+			db_value, ok := json["db"]
+			if !ok {
+				log.Println("DB name not specified!")
+				c.JSON(http.StatusBadRequest, gin.H{"Error:": "DB name not specified!"})
+				return
+			}  else {
+				switch db_value.(type) {
+				case string:
+					db_name = db_value.(string)
+				default:
+					log.Println("DB name format error!")
+					c.JSON(http.StatusBadRequest, gin.H{"Error:": "DB name format error!"})
+					return
+				}
+		        }
+
+			table_value, ok := json["table"]
+			if !ok {
+				log.Println("Table name not specified!")
+				c.JSON(http.StatusBadRequest, gin.H{"Error:": "Table name not specified!"})
+				return
+			}  else {
+				switch table_value.(type) {
+				case string:
+					table_name = table_value.(string)
+				default:
+					log.Println("Table name format error!")
+					c.JSON(http.StatusBadRequest, gin.H{"Error:": "Table name format error!"})
+					return
+				}
+			}
+
+			table_detail, err := QueryTableDetail(&db_name, &table_name)
+
+			if err != nil  {
+				c.JSON(http.StatusBadRequest, gin.H{"Error:": err.Error()})
+				return
+			}
+			if !table_detail.QueryStatus {
+				c.JSON(http.StatusOK, gin.H{"Message": "Query result none!",})
+				return
+			}
+			TableDetailToJson(&db_name, &table_name, table_detail, c)
 		}
 	})
 

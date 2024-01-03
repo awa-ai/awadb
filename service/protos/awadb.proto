@@ -8,7 +8,7 @@ service AwaDBServer {
   rpc Create(DBMeta) returns (ResponseStatus) {}
 
   rpc CheckTable(DBTableName) returns (TableStatus) {}
-  
+  rpc QueryTableDetail(DBTableName) returns (TableDetail) {}
   rpc DropDB(DBName) returns (ResponseStatus) {}
   rpc DropTable(TableName) returns (ResponseStatus) {}
   rpc ShowTables(DBName) returns (TableNames) {}
@@ -61,6 +61,18 @@ message TableMeta {
   optional string name = 1;
   optional string desc = 2;
   repeated FieldMeta fields_meta = 3;
+}
+
+message TableDetail {
+  bool query_status = 1;
+  optional int32 current_valid_docs = 2;
+  optional int32 total_docs = 3;
+  optional int32 deleted_docs = 4;
+  optional uint64 table_mem_bytes = 5;
+  optional uint64 vectors_index_bytes = 6;
+  optional uint64 vectors_mem_bytes = 7;
+  optional uint64 filters_index_bytes = 8;
+  optional uint64 bitmap_mem_bytes = 9;
 }
 
 message TableStatus {

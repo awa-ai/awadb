@@ -124,4 +124,10 @@ void GetFieldsInfo(
   return;
 }
 
+void GetEngineStatus(
+  void *engine,
+  awadb::EngineStatus &engine_status)  {
+  static_cast<awadb::GammaEngine *>(engine)->GetIndexStatus(engine_status);
+  return;
+}
 
