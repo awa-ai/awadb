@@ -2049,8 +2049,8 @@ func main() {
 			Usage()
 			return
 		}
-		local_awadb_addr := "0.0.0.0:" + strconv.Itoa(local_awadb_port)
-		//local_awadb_addr := "awadb:" + strconv.Itoa(local_awadb_port)
+		//local_awadb_addr := "0.0.0.0:" + strconv.Itoa(local_awadb_port)
+		local_awadb_addr := "awadb:" + strconv.Itoa(local_awadb_port)
 		local_awadb_client = CreateAwaDBClient(&local_awadb_addr)
 	}  else {
 		fmt.Println("Input Parameters error!\n")
