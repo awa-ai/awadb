@@ -2,8 +2,8 @@
 
 ## Preparation
 
-1. docker pull ljeagle/awadb:v0.15
-2. docker pull ljeagle/awadb_proxy:v0.15
+1. docker pull ljeagle/awadb:v0.16
+2. docker pull ljeagle/awadb_proxy:v0.16
 
 ## Docker compose deployment
 
