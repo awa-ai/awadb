@@ -53,6 +53,7 @@ void LocalAsyncServer::HandleRpcs()  {
   CallData data{&service_, cq_.get(), table2engine_, db2tables_, root_data_dir_, root_log_dir_};
   new CreateCall(&data);
   new CheckTableCall(&data);
+  new QueryTableDetailCall(&data);
   new AddFieldsCall(&data);
   new AddOrUpdateCall(&data);
   new GetCall(&data);

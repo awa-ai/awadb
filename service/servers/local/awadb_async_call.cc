@@ -20,6 +20,7 @@
 #include "util/utils.h"
 
 #include "c_api/gamma_api.h"
+#include "c_api/api_data/gamma_engine_status.h"
 #include "cpp_api/awadb_cpp_interface.h"
 #include "awadb_async_call.h"
 
@@ -365,6 +366,79 @@ void CheckTableCall::Proceed() {
       reply_.set_is_existed(false);
     }
 
+    // And we are done! Let the gRPC runtime know we've finished, using the
+    // memory address of this instance as the uniquely identifying tag for
+    // the event.
+    status_ = FINISH;
+    responder_.Finish(reply_, Status::OK, this);
+  } else {
+    GPR_ASSERT(status_ == FINISH);
+    // Once in the FINISH state, deallocate ourselves (CallData).
+    delete this;
+  }
+}
+
+bool QueryTableDetailCall::ProcessQueryTableDetailRequest()  {
+  if (!request_.has_db_name() || request_.db_name().empty() ||
+    !request_.has_table_name() || request_.table_name().empty()) return false;
+  bool status = false;
+  std::string db_table_name = request_.db_name() + "/";
+  db_table_name += request_.table_name();
+
+  LOG(ERROR)<<"db_table_name is "<<db_table_name;
+  void *engine = nullptr;
+  if (data_->engines_.find(db_table_name, engine)) {
+    status = true;
+    if (!engine)  {
+      LOG(ERROR)<<"table "<<request_.table_name()<<" engine in db "<<request_.db_name()<<" is empty!";
+      status = false;
+    }
+  }
+  if (!status)  {
+    return status;
+  }
+  
+  LOG(ERROR)<<"query table detail begin";
+
+  awadb::EngineStatus engine_status;
+
+  GetEngineStatus(engine, engine_status);
+  LOG(ERROR)<<"query table detail after";
+
+  reply_.set_current_valid_docs(engine_status.DocNum());
+  reply_.set_total_docs(engine_status.MaxDocID() + 1);
+  reply_.set_deleted_docs(engine_status.MaxDocID() + 1 - engine_status.DocNum());
+  reply_.set_table_mem_bytes(engine_status.TableMem());
+  reply_.set_vectors_index_bytes(engine_status.IndexMem());
+  reply_.set_vectors_mem_bytes(engine_status.VectorMem());
+  reply_.set_filters_index_bytes(engine_status.FieldRangeMem());
+  reply_.set_bitmap_mem_bytes(engine_status.BitmapMem());
+  return true;
+}
+
+
+void QueryTableDetailCall::Proceed() {
+  if (status_ == CREATE) {
+    // Make this instance progress to the PROCESS state.
+    status_ = PROCESS;
+
+    // As part of the initial CREATE state, we *request* that the system
+    // start processing SayHello requests. In this request, "this" acts are
+    // the tag uniquely identifying the request (so that different CallData
+    // instances can serve different requests concurrently), in this case
+    // the memory address of this CallData instance.
+    data_->service_->RequestQueryTableDetail(&ctx_, &request_, &responder_, data_->cq_, data_->cq_,
+          this);
+  } else if (status_ == PROCESS) {
+    // Spawn a new CallData instance to serve new clients while we process
+    // the one for this CallData. The instance will deallocate itself as
+    // part of its FINISH state.
+    new QueryTableDetailCall(data_);
+
+    // The actual processing.
+    bool ret = ProcessQueryTableDetailRequest();
+
+    reply_.set_query_status(ret);
     // And we are done! Let the gRPC runtime know we've finished, using the
     // memory address of this instance as the uniquely identifying tag for
     // the event.
