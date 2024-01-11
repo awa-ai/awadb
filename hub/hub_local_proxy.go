@@ -159,6 +159,7 @@ func Int32tobytes(a int32) []byte {
 func Float32tobytes(a float32) []byte {
 	bits := math.Float32bits(a)
 	res := make([]byte, 4)
+
 	binary.LittleEndian.PutUint32(res, bits)
 	return res
 }
@@ -185,7 +186,6 @@ func AssembleRangeFilters(range_filters *[]*awadb_pb.RangeFilter, filter_value i
 			range_filter.IncludeUpper = &default_include_upper
 
 			range_filter.FieldName = &filter_field_name
-			// todo : check filter is ok?
 			is_data_ok := true
 			switch filter_field_value.(type)  {
 			case map[string]interface{}:
@@ -370,30 +370,29 @@ func AssembleTermFilters(term_filters []*awadb_pb.TermFilter, filter_value inter
 	return true
 }
 
+
 func AssignRangeValue(value float64, range_filter *awadb_pb.RangeFilter, value_type *string) {
         if *value_type != "eq" && *value_type != "lt" && *value_type != "lte" && *value_type != "gt" && *value_type != "gte"  {
 		fmt.Println("filter parameter error!")
 		return
 	}
 	if IsDecimal(value)  {
-		bits := math.Float32bits((float32)(value))
 		if *value_type == "lt" || *value_type == "lte" {
-			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
+			range_filter.UpperValue = Float32tobytes((float32)(value))
 		}  else if *value_type == "gt" || *value_type == "gte"  {
-			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
+			range_filter.LowerValue = Float32tobytes((float32)(value))
 		}  else if  *value_type == "eq"  {
-			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
-			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
+			range_filter.LowerValue = Float32tobytes((float32)(value))
+			range_filter.UpperValue = Float32tobytes((float32)(value))
 		}
 	}  else  {
-		bits := math.Float32bits((float32)(value))
 		if *value_type == "lt" || *value_type == "lte" {
-			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
+			range_filter.UpperValue = Int32tobytes(int32(value))
 		}  else if *value_type == "gt" || *value_type == "gte"  {
-			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
+			range_filter.LowerValue = Int32tobytes(int32(value))
 		}  else if *value_type == "eq"  {
-			binary.LittleEndian.PutUint32(range_filter.UpperValue, bits)
-			binary.LittleEndian.PutUint32(range_filter.LowerValue, bits)
+			range_filter.UpperValue = Int32tobytes(int32(value))
+			range_filter.LowerValue = Int32tobytes(int32(value))
 		}
 	}
 
@@ -1242,6 +1241,7 @@ func RunHttpServer(http_port int) error {
 				}
 				if !table_status.IsExisted {
 					c.JSON(http.StatusBadRequest, gin.H{"Error:": "Searched table not exist!"})
+					return
 				} else {
 					for _, table_meta := range table_status.ExistTable.TablesMeta {
 						table_fields := make(map[string]*awadb_pb.FieldType)
